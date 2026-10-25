@@ -94,3 +94,21 @@ python -m pytest -q
 ## Bàn giao cho Người 3
 
 Dùng `preliminary_frame_features.csv` để khảo sát đặc trưng, nhưng hãy chia dữ liệu train/test theo `session_id`, không chia ngẫu nhiên từng frame của cùng phiên. Không coi `scenario_label` là nhãn thời gian chính xác cho từng frame khi sự kiện chỉ diễn ra trong một phần phiên.
+
+## Chi tiết
+Mảng Người 2 đã hoàn thành phần xử lý và kiểm tra chất lượng dữ liệu CSI Intel rồi nhé mọi người.
+
+Hiện tại dataset có 5.053 frame, gồm 3 lớp `room_empty`, `person_static`, `person_moving`. Dữ liệu đã được kiểm tra, không có frame thiếu mẫu hay lỗi chất lượng theo các tiêu chí đã kiểm tra.
+
+Người 3 có thể lấy dataset chính tại:
+
+`signal-processing/data/intel/data/processed/csi_dataset_complete_frames.csv`
+
+Ngoài ra, có các file hỗ trợ:
+- `preliminary_frame_features.csv`: các đặc trưng đã tính theo frame.
+- `frame_quality_report.csv`: báo cáo chất lượng frame.
+- `session_quality_summary.csv`: tổng hợp chất lượng các phiên thu.
+
+Metadata các phiên nằm tại `signal-processing/data/intel_raw/_sessions_metadata.csv`.
+
+**Lưu ý:** Dataset hiện có 3 lớp, chưa có `multiple_people`; dữ liệu chưa được lọc nhiễu hoặc chuẩn hóa. Người 3 có thể bắt đầu kiểm tra dữ liệu và xây dựng mô hình baseline trên dataset hiện tại trước nhé. Nếu cần bổ sung hoặc thay đổi cách tiền xử lý thì báo lại nhóm để thống nhất.

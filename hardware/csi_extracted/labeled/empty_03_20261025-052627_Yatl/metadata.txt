@@ -1,0 +1,4 @@
+label=empty
+trial=03
+duration_seconds=60
+recorder_exit_code=124

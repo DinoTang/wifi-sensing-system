@@ -1,0 +1,4 @@
+label=seated
+trial=01
+duration_seconds=60
+recorder_exit_code=124

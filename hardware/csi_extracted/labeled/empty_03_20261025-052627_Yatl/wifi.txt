@@ -1,0 +1,23 @@
+Connected to c0:06:c3:7f:e8:ae (on wlp0s20f3)
+	SSID: TP-Link_E8AF_5G
+	freq: 5180
+	RX: 310212 bytes (2705 packets)
+	TX: 288771 bytes (2703 packets)
+	signal: -48 dBm
+	rx bitrate: 173.3 MBit/s VHT-MCS 8 short GI VHT-NSS 2
+	tx bitrate: 173.3 MBit/s VHT-MCS 8 short GI VHT-NSS 2
+
+	bss flags:	short-slot-time
+	dtim period:	1
+	beacon int:	100
+Interface wlp0s20f3
+	ifindex 3
+	wdev 0x1
+	addr 54:14:f3:ab:53:b5
+	type managed
+	wiphy 0
+	channel 36 (5180 MHz), width: 20 MHz, center1: 5180 MHz
+	txpower 22.00 dBm
+	multicast TXQ:
+		qsz-byt	qsz-pkt	flows	drops	marks	overlmt	hashcol	tx-bytes	tx-packets
+		0	0	0	0	0	0	0	0		0

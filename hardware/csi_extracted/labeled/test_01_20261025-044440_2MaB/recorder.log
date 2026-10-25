@@ -1,0 +1,3496 @@
+* (nl_family,nl_pid,nl_groups), s_local(16,1941967044,0), s_peer(16,0,0)
+register_iwl_mvm_vendor_csi, send return 44
+register_iwl_mvm_vendor_csi, recv return 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3585871764) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(65) us(1386685509) rnf(0x8104) ts(1792917880171556897)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 1, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 900, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,900-4)
+* parse_csi_buf
+csi_len(896) ftm(3586257012) (nrx,ntx,ntone)=(2,2,56)
+rssi(-53,-51) seq(66) us(1386686712) rnf(0x11c318) ts(1792917880172833448)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 2, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3618242052) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(67) us(1386786666) rnf(0x8104) ts(1792917880272690770)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 3, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 900, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,900-4)
+* parse_csi_buf
+csi_len(896) ftm(3618796420) (nrx,ntx,ntone)=(2,2,56)
+rssi(-53,-51) seq(68) us(1386788398) rnf(0x11c318) ts(1792917880274541230)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 4, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3655877428) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(69) us(1386904277) rnf(0x8104) ts(1792917880390363554)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 5, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 900, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,900-4)
+* parse_csi_buf
+csi_len(896) ftm(3656202756) (nrx,ntx,ntone)=(2,2,56)
+rssi(-53,-51) seq(70) us(1386905294) rnf(0x11c318) ts(1792917880391429410)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 6, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3682754516) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(71) us(1386988268) rnf(0x8104) ts(1792917880474313867)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 7, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 900, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,900-4)
+* parse_csi_buf
+csi_len(896) ftm(3683070164) (nrx,ntx,ntone)=(2,2,56)
+rssi(-53,-51) seq(72) us(1386989255) rnf(0x11c318) ts(1792917880475331080)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 8, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3715790388) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(73) us(1387091506) rnf(0x8104) ts(1792917880577476901)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 9, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 900, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,900-4)
+* parse_csi_buf
+csi_len(896) ftm(3716082196) (nrx,ntx,ntone)=(2,2,56)
+rssi(-53,-51) seq(74) us(1387092418) rnf(0x11c318) ts(1792917880578473047)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 10, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 420, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,420-4)
+* parse_csi_buf
+csi_len(416) ftm(3747663140) (nrx,ntx,ntone)=(2,1,52)
+rssi(-50,-48) seq(75) us(1387191109) rnf(0xc104) ts(1792917880677175432)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(3) ldpc(0)
+* loop_recv_msg 11, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 900, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,900-4)
+* parse_csi_buf
+csi_len(896) ftm(3748325028) (nrx,ntx,ntone)=(2,2,56)
+rssi(-53,-51) seq(76) us(1387193177) rnf(0x11c318) ts(1792917880679302225)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 12, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3801309636) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(77) us(1387358755) rnf(0x8104) ts(1792917880844803629)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 13, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3832915812) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(78) us(1387457524) rnf(0x138308) ts(1792917880943635744)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 14, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3845497524) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(79) us(1387496842) rnf(0x138308) ts(1792917880982954483)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 15, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3877074228) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(80) us(1387595521) rnf(0x8104) ts(1792917881081541798)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 16, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3877324660) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(81) us(1387596303) rnf(0x138308) ts(1792917881082326463)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 17, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3908979940) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(82) us(1387695226) rnf(0x8104) ts(1792917881181164373)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 18, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3909214788) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(83) us(1387695960) rnf(0x138308) ts(1792917881181971987)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 19, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3941205092) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(84) us(1387795930) rnf(0x8104) ts(1792917881281896020)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 20, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3941492820) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(85) us(1387796829) rnf(0x138308) ts(1792917881282840940)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 21, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3973485444) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(86) us(1387896807) rnf(0x8104) ts(1792917881382756336)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 22, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3973779412) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(87) us(1387897725) rnf(0x138308) ts(1792917881383733842)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 23, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4005776436) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(88) us(1387997717) rnf(0x8104) ts(1792917881483689802)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 24, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4006003268) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(89) us(1387998425) rnf(0x138308) ts(1792917881484421453)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 25, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4038421428) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(90) us(1388099733) rnf(0x8104) ts(1792917881585718073)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 26, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4038563236) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(91) us(1388100175) rnf(0x138308) ts(1792917881586157539)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 27, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4070377060) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(92) us(1388199594) rnf(0x8104) ts(1792917881685588117)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 28, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4071169492) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(93) us(1388202070) rnf(0x138308) ts(1792917881688119497)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 29, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4102508372) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(94) us(1388300004) rnf(0x8104) ts(1792917881785898622)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 30, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4102806500) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(95) us(1388300936) rnf(0x138308) ts(1792917881786893606)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 31, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4134777060) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(96) us(1388400845) rnf(0x8104) ts(1792917881886766452)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 32, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4135026612) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(97) us(1388401624) rnf(0x138308) ts(1792917881887595542)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 33, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4167029876) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(98) us(1388501635) rnf(0x8104) ts(1792917881987565020)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 34, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4167229044) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(99) us(1388502257) rnf(0x138308) ts(1792917881988222402)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 35, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4199229268) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(100) us(1388602259) rnf(0x8104) ts(1792917882088217825)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 36, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4200038516) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(101) us(1388604787) rnf(0x138308) ts(1792917882090840687)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 37, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4231431540) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(102) us(1388702891) rnf(0x8104) ts(1792917882188785334)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 38, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4231582788) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(103) us(1388703364) rnf(0x138308) ts(1792917882189300324)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 39, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4263576548) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(104) us(1388803345) rnf(0x8104) ts(1792917882289239465)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 40, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4264625620) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(105) us(1388806623) rnf(0x138308) ts(1792917882292628914)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 41, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(701188) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(106) us(1388903632) rnf(0x8104) ts(1792917882389472241)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 42, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(973076) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(107) us(1388904482) rnf(0x138308) ts(1792917882390385034)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 43, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(32957460) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(108) us(1389004433) rnf(0x8104) ts(1792917882490309718)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 44, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(33614228) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(109) us(1389006486) rnf(0x138308) ts(1792917882492485300)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 45, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(65325492) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(110) us(1389105584) rnf(0x8104) ts(1792917882591469113)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 46, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(65512740) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(111) us(1389106169) rnf(0x138308) ts(1792917882592095003)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 47, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(97512980) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(112) us(1389206170) rnf(0x8104) ts(1792917882692027734)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 48, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(97743332) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(113) us(1389206890) rnf(0x138308) ts(1792917882692809883)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 49, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(129740916) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(114) us(1389306883) rnf(0x8104) ts(1792917882792714035)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 50, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(129957604) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(115) us(1389307560) rnf(0x138308) ts(1792917882793474199)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 51, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(161958388) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(116) us(1389407563) rnf(0x8104) ts(1792917882893402389)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 52, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(162538996) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(117) us(1389409377) rnf(0x138308) ts(1792917882895225913)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 53, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(194398596) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(118) us(1389508939) rnf(0x8104) ts(1792917882994750280)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 54, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(194801268) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(119) us(1389510197) rnf(0x138308) ts(1792917882996130965)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 55, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(227155428) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(120) us(1389611304) rnf(0x8104) ts(1792917883097180457)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 56, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(227429380) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(121) us(1389612161) rnf(0x138308) ts(1792917883098104559)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 57, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(258813380) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(122) us(1389710235) rnf(0x8104) ts(1792917883196058438)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 58, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(259238868) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(123) us(1389711566) rnf(0x138308) ts(1792917883197452074)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 59, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(290923332) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(124) us(1389810580) rnf(0x8104) ts(1792917883296388806)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 60, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(291582164) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(125) us(1389812639) rnf(0x138308) ts(1792917883298562289)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 61, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(323281364) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(126) us(1389911699) rnf(0x8104) ts(1792917883397562502)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 62, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(323492756) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(127) us(1389912360) rnf(0x138308) ts(1792917883398221811)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 63, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(355492116) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(128) us(1390012358) rnf(0x8104) ts(1792917883498161401)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 64, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(355707124) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(129) us(1390013030) rnf(0x138308) ts(1792917883498870489)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 65, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(387693988) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(130) us(1390112989) rnf(0x8104) ts(1792917883598671193)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 66, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(419927300) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(131) us(1390213719) rnf(0x8104) ts(1792917883699511339)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 67, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(423385252) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(132) us(1390224525) rnf(0x138308) ts(1792917883710370044)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 68, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(452034212) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(133) us(1390314054) rnf(0x8104) ts(1792917883799888747)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 69, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(484110084) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(134) us(1390414291) rnf(0x8104) ts(1792917883900046196)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 70, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(516337556) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(135) us(1390515002) rnf(0x8104) ts(1792917884000794774)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 71, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(527965716) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(136) us(1390551340) rnf(0x138308) ts(1792917884037270399)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 72, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(548592916) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(137) us(1390615801) rnf(0x138308) ts(1792917884101627906)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 73, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(580962404) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(138) us(1390716956) rnf(0x138308) ts(1792917884202666738)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 74, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(613757780) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(139) us(1390819442) rnf(0x138308) ts(1792917884305309493)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 75, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(645468132) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(140) us(1390918537) rnf(0x138308) ts(1792917884404336523)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 76, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(678198964) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(141) us(1391020821) rnf(0x138308) ts(1792917884506666668)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 77, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(709730692) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(142) us(1391119358) rnf(0x138308) ts(1792917884605129535)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 78, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(742461444) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(143) us(1391221642) rnf(0x138308) ts(1792917884707417542)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 79, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(774095956) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(144) us(1391320500) rnf(0x138308) ts(1792917884806250868)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 80, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(806045220) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(145) us(1391420342) rnf(0x8104) ts(1792917885211468745)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 81, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(806472788) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(146) us(1391421678) rnf(0x138308) ts(1792917885211474333)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 82, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(838374228) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(147) us(1391521371) rnf(0x8104) ts(1792917885211475850)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 83, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(838771220) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(148) us(1391522611) rnf(0x138308) ts(1792917885211477222)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 84, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(870674004) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(149) us(1391622308) rnf(0x8104) ts(1792917885211478400)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 85, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(871411812) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(150) us(1391624614) rnf(0x138308) ts(1792917885211479248)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 86, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(899888612) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(151) us(1391713604) rnf(0x8104) ts(1792917885211479949)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 87, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(900266692) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-46) seq(152) us(1391714786) rnf(0x8100) ts(1792917885211480555)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 88, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(935219764) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(153) us(1391824014) rnf(0x8104) ts(1792917885309607084)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 89, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(935525812) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(154) us(1391824971) rnf(0x138308) ts(1792917885310667135)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 90, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(967452756) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(155) us(1391924743) rnf(0x8104) ts(1792917885410420088)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 91, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(967655028) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(156) us(1391925375) rnf(0x138308) ts(1792917885411067651)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 92, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(999606628) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(157) us(1392025224) rnf(0x8104) ts(1792917885510887728)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 93, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1000374660) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(158) us(1392027624) rnf(0x138308) ts(1792917885513389702)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 94, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1031818020) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(159) us(1392125884) rnf(0x8104) ts(1792917885611528891)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 95, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1032009428) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(160) us(1392126483) rnf(0x138308) ts(1792917885612160540)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 96, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1064129428) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(161) us(1392226859) rnf(0x8104) ts(1792917885712526536)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 97, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1064894420) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(162) us(1392229249) rnf(0x138308) ts(1792917885714985512)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 98, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1096522980) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(163) us(1392328089) rnf(0x8104) ts(1792917885813763633)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 99, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1096771812) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(164) us(1392328866) rnf(0x138308) ts(1792917885814595115)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 100, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1128480676) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(165) us(1392427957) rnf(0x8104) ts(1792917885913623693)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 101, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1129252324) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(166) us(1392430368) rnf(0x138308) ts(1792917885916104890)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 102, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1161585652) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(167) us(1392531410) rnf(0x138308) ts(1792917886026277480)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 103, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1165186916) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(168) us(1392542664) rnf(0x138308) ts(1792917886028229014)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 104, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1168537380) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(169) us(1392553135) rnf(0x138308) ts(1792917886038678245)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 105, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1171863684) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(170) us(1392563529) rnf(0x138308) ts(1792917886049068129)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 106, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1176148468) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(171) us(1392576919) rnf(0x138308) ts(1792917886062491731)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 107, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1180194292) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(172) us(1392589563) rnf(0x138308) ts(1792917886075140269)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 108, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1183906596) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(173) us(1392601164) rnf(0x138308) ts(1792917886086725204)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 109, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1188072260) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(174) us(1392614181) rnf(0x138308) ts(1792917886099724664)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 110, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1191379844) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(175) us(1392624518) rnf(0x138308) ts(1792917886110055436)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 111, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1194954244) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(176) us(1392635688) rnf(0x138308) ts(1792917886121222033)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 112, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1198463988) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(177) us(1392646656) rnf(0x138308) ts(1792917886132231183)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 113, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1225013748) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(178) us(1392729624) rnf(0x8104) ts(1792917886215073862)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 114, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1225439236) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(179) us(1392730954) rnf(0x138308) ts(1792917886216478623)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 115, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1249782532) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(180) us(1392807027) rnf(0x8104) ts(1792917886292496584)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 116, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1250408500) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(181) us(1392808983) rnf(0x138308) ts(1792917886294508513)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 117, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1254837604) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(182) us(1392822824) rnf(0x138308) ts(1792917886308369471)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 118, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1289228708) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(183) us(1392930296) rnf(0x8104) ts(1792917886415767432)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 119, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1289508500) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(184) us(1392931171) rnf(0x138308) ts(1792917886416789428)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 120, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1321452980) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(185) us(1393030998) rnf(0x8104) ts(1792917886516527817)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 121, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1321718932) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(186) us(1393031829) rnf(0x138308) ts(1792917886517442706)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 122, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1353651092) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-47) seq(187) us(1393131617) rnf(0x8104) ts(1792917886617037360)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 123, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1354203700) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(188) us(1393133344) rnf(0x138308) ts(1792917886618856769)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 124, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1385796340) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(189) us(1393232072) rnf(0x8104) ts(1792917886717504750)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 125, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1386237812) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(190) us(1393233451) rnf(0x138308) ts(1792917886718974277)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 126, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1418113332) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(191) us(1393333062) rnf(0x8104) ts(1792917886818542631)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 127, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1418757364) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(192) us(1393335075) rnf(0x138308) ts(1792917886820643241)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 128, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1450425428) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(193) us(1393434038) rnf(0x8104) ts(1792917886919464806)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 129, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1450584196) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(194) us(1393434534) rnf(0x138308) ts(1792917886920076989)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 130, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1482639716) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(195) us(1393534708) rnf(0x8104) ts(1792917887020196107)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 131, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1483259268) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(196) us(1393536644) rnf(0x138308) ts(1792917887022210857)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 132, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1514567364) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(197) us(1393634483) rnf(0x8104) ts(1792917887119985994)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 133, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1514786516) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(198) us(1393635167) rnf(0x138308) ts(1792917887120667199)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 134, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1546803140) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(199) us(1393735220) rnf(0x8104) ts(1792917887220674875)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 135, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1547162788) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(200) us(1393736344) rnf(0x138308) ts(1792917887221794637)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 136, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1553783556) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(201) us(1393757034) rnf(0x138308) ts(1792917887242524188)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 137, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1561275060) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(202) us(1393780445) rnf(0x138308) ts(1792917887265895134)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 138, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1565071844) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(203) us(1393792310) rnf(0x138308) ts(1792917887277806186)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 139, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1568722388) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(204) us(1393803718) rnf(0x138308) ts(1792917887289178573)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 140, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1579399156) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(205) us(1393837083) rnf(0x138308) ts(1792917887322548053)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 141, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1611279604) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(206) us(1393936709) rnf(0x8104) ts(1792917887422161374)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 142, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1611592692) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(207) us(1393937688) rnf(0x138308) ts(1792917887423131240)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 143, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1643506692) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(208) us(1394037419) rnf(0x8104) ts(1792917887522893109)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 144, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1644129524) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(209) us(1394039366) rnf(0x138308) ts(1792917887524830630)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 145, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1675724724) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(210) us(1394138101) rnf(0x8104) ts(1792917887623501680)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 146, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1676007492) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(211) us(1394138985) rnf(0x138308) ts(1792917887624444406)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 147, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1707900276) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(212) us(1394238650) rnf(0x8104) ts(1792917887724084026)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 148, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1708231764) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(213) us(1394239686) rnf(0x138308) ts(1792917887725188047)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 149, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1714871412) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(214) us(1394260435) rnf(0x138308) ts(1792917887745959332)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 150, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1740138324) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(215) us(1394339394) rnf(0x8104) ts(1792917887824840849)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 151, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1740462676) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(216) us(1394340408) rnf(0x138308) ts(1792917887825833069)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 152, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1772371156) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(217) us(1394440122) rnf(0x8104) ts(1792917887925470677)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 153, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1772701268) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(218) us(1394441154) rnf(0x138308) ts(1792917887926635602)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 154, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1804658308) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-47) seq(219) us(1394541020) rnf(0x8104) ts(1792917888026441272)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 155, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1805291300) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(220) us(1394542998) rnf(0x138308) ts(1792917888028555336)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 156, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1836966180) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(221) us(1394641983) rnf(0x8104) ts(1792917888127408229)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 157, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1837442548) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(222) us(1394643471) rnf(0x138308) ts(1792917888128997824)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 158, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1869095652) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(223) us(1394742388) rnf(0x8104) ts(1792917888227791832)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 159, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1869296436) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(224) us(1394743016) rnf(0x138308) ts(1792917888228480652)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 160, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1901261060) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(225) us(1394842905) rnf(0x8104) ts(1792917888328353145)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 161, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1901514692) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(226) us(1394843698) rnf(0x138308) ts(1792917888329186122)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 162, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1932614388) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(227) us(1394940885) rnf(0x8104) ts(1792917888426339552)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 163, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1933961940) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(228) us(1394945096) rnf(0x138308) ts(1792917888430573024)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 164, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1965615364) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(229) us(1395044013) rnf(0x8104) ts(1792917888529410176)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 165, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1965916132) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(230) us(1395044953) rnf(0x138308) ts(1792917888530433402)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 166, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(1997894612) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(231) us(1395144886) rnf(0x8104) ts(1792917888630314741)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 167, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(1998245924) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(232) us(1395145984) rnf(0x138308) ts(1792917888631448981)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 168, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2030231604) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(233) us(1395245939) rnf(0x8104) ts(1792917888731347360)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 169, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2030570052) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(234) us(1395246997) rnf(0x138308) ts(1792917888732447341)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 170, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2060464756) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-47) seq(235) us(1395340418) rnf(0x8104) ts(1792917888825698485)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 171, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2060723796) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-46) seq(236) us(1395341228) rnf(0x8100) ts(1792917888826746215)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 172, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2064808260) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-46) seq(237) us(1395353992) rnf(0x8100) ts(1792917888839498882)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 173, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2094980468) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(238) us(1395448280) rnf(0x8104) ts(1792917888933613312)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 174, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2095141956) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(239) us(1395448785) rnf(0x138308) ts(1792917888934195053)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 175, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2127083060) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(240) us(1395548601) rnf(0x8104) ts(1792917889033945004)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 176, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2127694868) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(241) us(1395550513) rnf(0x138308) ts(1792917889035948293)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 177, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2159348788) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(242) us(1395649432) rnf(0x8104) ts(1792917889134874718)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 178, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2159732180) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(243) us(1395650630) rnf(0x138308) ts(1792917889136070245)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 179, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2191705700) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(244) us(1395750548) rnf(0x8104) ts(1792917889235882674)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 180, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2192299732) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(245) us(1395752404) rnf(0x138308) ts(1792917889237883678)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 181, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2200297860) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(246) us(1395777399) rnf(0x138308) ts(1792917889262825616)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 182, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2203747700) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(247) us(1395788179) rnf(0x138308) ts(1792917889273616922)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 183, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2223979332) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(248) us(1395851403) rnf(0x8104) ts(1792917889336766212)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 184, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2224354660) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(249) us(1395852576) rnf(0x138308) ts(1792917889337986079)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 185, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2256329220) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(250) us(1395952497) rnf(0x8104) ts(1792917889437836410)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 186, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2256564852) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(251) us(1395953234) rnf(0x138308) ts(1792917889438635586)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 187, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2288538836) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(252) us(1396053153) rnf(0x8104) ts(1792917889538488168)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 188, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2289118324) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(253) us(1396054964) rnf(0x138308) ts(1792917889540412713)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 189, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2320800084) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(254) us(1396153969) rnf(0x8104) ts(1792917889639361059)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 190, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2329713140) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(255) us(1396181823) rnf(0x138308) ts(1792917889667162976)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 191, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2333726884) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(0) us(1396194366) rnf(0x138308) ts(1792917889679812193)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 192, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2337599188) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(1) us(1396206467) rnf(0x138308) ts(1792917889691902989)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 193, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2352862052) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(2) us(1396254164) rnf(0x8104) ts(1792917889739547196)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 194, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2384974484) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(3) us(1396354515) rnf(0x8104) ts(1792917889839822931)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 195, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2417215396) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(4) us(1396455268) rnf(0x8104) ts(1792917889940634394)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 196, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2449804916) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(5) us(1396557111) rnf(0x138308) ts(1792917890042354320)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 197, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2481836548) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(6) us(1396657210) rnf(0x138308) ts(1792917890142441065)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 198, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2515715140) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(7) us(1396763081) rnf(0x138308) ts(1792917890248401069)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 199, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2548353092) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(8) us(1396865075) rnf(0x138308) ts(1792917890350302405)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 200, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2580136100) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(9) us(1396964398) rnf(0x138308) ts(1792917890449730413)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 201, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2612511652) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(10) us(1397065572) rnf(0x138308) ts(1792917890550907946)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 202, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2621546484) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(11) us(1397093806) rnf(0x138308) ts(1792917890579117607)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 203, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2624796724) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(12) us(1397103963) rnf(0x138308) ts(1792917890589274167)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 204, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2628141652) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(13) us(1397114416) rnf(0x138308) ts(1792917890599712938)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 205, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2631478612) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(14) us(1397124844) rnf(0x138308) ts(1792917890610222069)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 206, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2645444324) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(15) us(1397168487) rnf(0x138308) ts(1792917890653858740)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 207, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2677108596) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(16) us(1397267438) rnf(0x138308) ts(1792917890752751793)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 208, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2710524148) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(17) us(1397371862) rnf(0x138308) ts(1792917890857225151)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 209, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2742023860) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(18) us(1397470299) rnf(0x138308) ts(1792917890955634552)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 210, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2766594404) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(19) us(1397547082) rnf(0x138308) ts(1792917891032357048)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 211, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2771500948) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(20) us(1397562415) rnf(0x138308) ts(1792917891047749723)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 212, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2805751172) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(21) us(1397669448) rnf(0x8104) ts(1792917891154669007)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 213, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2806449300) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(22) us(1397671629) rnf(0x138308) ts(1792917891156974779)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 214, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2838046164) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(23) us(1397770371) rnf(0x8104) ts(1792917891255640029)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 215, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2838532692) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(24) us(1397771890) rnf(0x138308) ts(1792917891257224669)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 216, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2870408260) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(25) us(1397871502) rnf(0x8104) ts(1792917891356759931)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 217, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2870582548) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(26) us(1397872046) rnf(0x138308) ts(1792917891357293922)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 218, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2902552052) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(27) us(1397971953) rnf(0x8104) ts(1792917891457032423)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 219, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2903211860) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(28) us(1397974013) rnf(0x138308) ts(1792917891459208724)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 220, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2934952484) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(29) us(1398073204) rnf(0x8104) ts(1792917891558413878)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 221, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2935463172) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(30) us(1398074800) rnf(0x138308) ts(1792917891560089119)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 222, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2957384388) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(31) us(1398143304) rnf(0x8104) ts(1792917891628398437)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 223, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2958042436) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(32) us(1398145360) rnf(0x138308) ts(1792917891630668950)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 224, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(2967469268) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(33) us(1398174819) rnf(0x138308) ts(1792917891660043916)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 225, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(2999431732) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(34) us(1398274703) rnf(0x8104) ts(1792917891759858939)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 226, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3000263124) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(35) us(1398277299) rnf(0x138308) ts(1792917891762602822)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 227, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3031632228) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(36) us(1398375330) rnf(0x8104) ts(1792917891860497481)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 228, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3031795796) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(37) us(1398375840) rnf(0x138308) ts(1792917891861062208)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 229, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3063765940) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(38) us(1398475748) rnf(0x8104) ts(1792917891960868400)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 230, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3064014228) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(39) us(1398476523) rnf(0x138308) ts(1792917891961731938)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 231, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3095981972) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(40) us(1398576423) rnf(0x8104) ts(1792917892061635548)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 232, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3096378260) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(41) us(1398577661) rnf(0x138308) ts(1792917892062857376)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 233, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3128353124) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(42) us(1398677583) rnf(0x8104) ts(1792917892162708721)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 234, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3128940132) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(43) us(1398679417) rnf(0x138308) ts(1792917892164675989)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 235, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3160628116) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(44) us(1398778443) rnf(0x8104) ts(1792917892263597241)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 236, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3160835364) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(45) us(1398779090) rnf(0x138308) ts(1792917892264290667)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 237, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3192821908) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(46) us(1398879048) rnf(0x8104) ts(1792917892364161068)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 238, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3193231796) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(47) us(1398880329) rnf(0x138308) ts(1792917892365506158)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 239, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3225200036) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(48) us(1398980231) rnf(0x8104) ts(1792917892465324895)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 240, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3225518724) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(49) us(1398981226) rnf(0x138308) ts(1792917892466410926)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 241, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3257498148) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(50) us(1399081162) rnf(0x8104) ts(1792917892566273520)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 242, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3258064276) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(51) us(1399082932) rnf(0x138308) ts(1792917892568158391)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 243, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3289748100) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(52) us(1399181944) rnf(0x8104) ts(1792917892666987798)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 244, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3290027028) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(53) us(1399182816) rnf(0x138308) ts(1792917892668046479)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 245, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 420, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,420-4)
+* parse_csi_buf
+csi_len(416) ftm(3322010772) (nrx,ntx,ntone)=(2,1,52)
+rssi(-50,-48) seq(54) us(1399282765) rnf(0xc104) ts(1792917892767878608)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(3) ldpc(0)
+* loop_recv_msg 246, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 452, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,452-4)
+* parse_csi_buf
+csi_len(448) ftm(3322236500) (nrx,ntx,ntone)=(2,1,56)
+rssi(-53,-51) seq(55) us(1399283470) rnf(0x13c308) ts(1792917892768614078)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 247, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 420, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,420-4)
+* parse_csi_buf
+csi_len(416) ftm(3354208500) (nrx,ntx,ntone)=(2,1,52)
+rssi(-50,-48) seq(56) us(1399383383) rnf(0xc104) ts(1792917892868460326)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(3) ldpc(0)
+* loop_recv_msg 248, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 452, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,452-4)
+* parse_csi_buf
+csi_len(448) ftm(3354510052) (nrx,ntx,ntone)=(2,1,56)
+rssi(-53,-51) seq(57) us(1399384326) rnf(0x13c308) ts(1792917892869480109)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(3) ldpc(1)
+* loop_recv_msg 249, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3386486292) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(58) us(1399484252) rnf(0x8104) ts(1792917892969309922)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 250, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3387028020) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(59) us(1399485945) rnf(0x138308) ts(1792917892971027168)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 251, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3418705620) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(60) us(1399584938) rnf(0x8104) ts(1792917893070016477)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 252, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3419063732) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(61) us(1399586057) rnf(0x138308) ts(1792917893071195815)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 253, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3451045732) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(62) us(1399686001) rnf(0x8104) ts(1792917893171073355)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 254, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3451368324) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(63) us(1399687009) rnf(0x138308) ts(1792917893172140761)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 255, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3483351764) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(64) us(1399786958) rnf(0x8104) ts(1792917893272010453)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 256, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3483692692) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(65) us(1399788023) rnf(0x138308) ts(1792917893273146509)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 257, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3515671812) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(66) us(1399887958) rnf(0x8104) ts(1792917893373080740)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 258, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3516314724) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(67) us(1399889967) rnf(0x138308) ts(1792917893374987530)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 259, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3547981444) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(68) us(1399988926) rnf(0x8104) ts(1792917893473960115)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 260, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3548621156) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(69) us(1399990925) rnf(0x138308) ts(1792917893476091688)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 261, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3580398820) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(70) us(1400090231) rnf(0x8104) ts(1792917893575304965)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 262, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3580758964) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(71) us(1400091356) rnf(0x138308) ts(1792917893576454484)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 263, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3612423508) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(72) us(1400190308) rnf(0x8104) ts(1792917893675337854)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 264, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3612867956) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(73) us(1400191697) rnf(0x138308) ts(1792917893676793144)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 265, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3644512756) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(74) us(1400290588) rnf(0x8104) ts(1792917893775607936)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 266, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3645259892) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(75) us(1400292923) rnf(0x138308) ts(1792917893778058401)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 267, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3676619348) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(76) us(1400390921) rnf(0x8104) ts(1792917893875927650)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 268, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3676797060) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(77) us(1400391477) rnf(0x138308) ts(1792917893876551579)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 269, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3708779700) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(78) us(1400491423) rnf(0x8104) ts(1792917893976484961)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 270, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3709163412) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(79) us(1400492622) rnf(0x138308) ts(1792917893977678967)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 271, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3741136052) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(80) us(1400592537) rnf(0x8104) ts(1792917894077594123)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 272, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3741446500) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(81) us(1400593507) rnf(0x138308) ts(1792917894078575589)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 273, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3773425700) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(82) us(1400693442) rnf(0x8104) ts(1792917894178416332)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 274, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3773987492) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(83) us(1400695198) rnf(0x138308) ts(1792917894180236503)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 275, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3805646356) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(84) us(1400794132) rnf(0x8104) ts(1792917894279116778)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 276, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3805944564) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(85) us(1400795064) rnf(0x138308) ts(1792917894280106254)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 277, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3837928244) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(86) us(1400895013) rnf(0x8104) ts(1792917894380048289)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 278, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3838173876) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(87) us(1400895781) rnf(0x138308) ts(1792917894380835981)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 279, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3870159556) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(88) us(1400995737) rnf(0x8104) ts(1792917894480709971)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 280, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3870549764) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(89) us(1400996956) rnf(0x138308) ts(1792917894481984734)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 281, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3902523204) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-47) seq(90) us(1401096874) rnf(0x8104) ts(1792917894581817294)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 282, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3903088916) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-50) seq(91) us(1401098641) rnf(0x138308) ts(1792917894583711735)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 283, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3934762980) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-47) seq(92) us(1401197623) rnf(0x8104) ts(1792917894682560638)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 284, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3934968468) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-50) seq(93) us(1401198265) rnf(0x138308) ts(1792917894683273343)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 285, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3966948308) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(94) us(1401298203) rnf(0x8104) ts(1792917894783133471)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 286, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3967532516) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(95) us(1401300028) rnf(0x138308) ts(1792917894785081286)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 287, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(3999206340) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-49) seq(96) us(1401399010) rnf(0x8104) ts(1792917894883934159)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 288, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(3999483172) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(97) us(1401399875) rnf(0x138308) ts(1792917894884864595)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 289, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 212, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,212-4)
+* parse_csi_buf
+csi_len(208) ftm(4032725572) (nrx,ntx,ntone)=(1,1,52)
+rssi(-127,-48) seq(98) us(1401503757) rnf(0x8104) ts(1792917894988737961)
+mac(ef:be:ad:de:ad:de)
+rate_bw(NOHT,20,NOHT20) ant_sel(2) ldpc(0)
+* loop_recv_msg 290, 1941967044 nl_recvmsgs 0
+
+* valid_cb
+-- tb_msg[c5] is vendor_data
+-- tb_msg[4d]: len 276, type 4d
+-- tb_msg[4e]: len 228, type 4e
+-- (nla_type,nla_len) csi_hdr(4d,276-4) csi_data(4e,228-4)
+* parse_csi_buf
+csi_len(224) ftm(4033553780) (nrx,ntx,ntone)=(1,1,56)
+rssi(-127,-51) seq(99) us(1401506346) rnf(0x138308) ts(1792917894991399202)
+mac(c0:06:c3:7f:e8:ae)
+rate_bw(VHT,20,VHT20) ant_sel(2) ldpc(1)
+* loop_recv_msg 291, 1941967044 nl_recvmsgs 0
+

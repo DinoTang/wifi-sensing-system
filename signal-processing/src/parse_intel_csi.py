@@ -64,6 +64,12 @@ GROUPS = {
     "noht": {"csi_len": 208, "rate_prefix": "NOHT", "nrx": 1, "ntx": 1, "ntone": 52},
 }
 
+# Columns that can never be derived from the capture files; they are
+# typed in by the person who recorded the session.
+HAND_FIELDS = ["distance_m", "position", "environment", "notes"]
+
+PLACEHOLDER = "chưa ghi nhận"
+
 META_RE = re.compile(
     r"csi_len\((?P<csi_len>\d+)\)[^\n]*\(nrx,ntx,ntone\)="
     r"\((?P<nrx>\d+),(?P<ntx>\d+),(?P<ntone>\d+)\)\s*[\r\n]+"
@@ -287,6 +293,35 @@ def write_session_csv(output_dir: Path, session: dict) -> int:
     return count
 
 
+def load_previous_metadata(path: Path) -> dict[str, dict[str, str]]:
+    """
+    Read the hand-filled metadata columns of an existing metadata file.
+
+    Rerunning the parser must not wipe what the recording person typed
+    in. Only HAND_FIELDS are carried over, keyed by csv_file, and the
+    placeholder value is ignored.
+    """
+
+    if not path.exists():
+        return {}
+
+    carried: dict[str, dict[str, str]] = {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            file_name = (row.get("csv_file") or "").strip()
+            if not file_name:
+                continue
+            values = {
+                field: (row.get(field) or "").strip()
+                for field in HAND_FIELDS
+                if (row.get(field) or "").strip()
+                and (row.get(field) or "").strip() != PLACEHOLDER
+            }
+            if values:
+                carried[file_name] = values
+    return carried
+
+
 def main() -> None:
     args = parse_args()
     input_dir = Path(args.input_dir)
@@ -364,10 +399,15 @@ def main() -> None:
                 "rows_written": session["rows_written"],
                 "timestamp_backwards": session["timestamp_backwards"],
                 "null_tone_indices": "7;21;34;48",
-                "distance_m": "",
-                "position": "",
-                "environment": "",
-                "notes": "",
+                # These four fields cannot be derived from the capture
+                # files. They are filled in by the person who recorded
+                # the session; leave an explicit marker instead of
+                # blank. Values already typed in are carried over on
+                # rerun (see load_previous_metadata).
+                "distance_m": "chưa ghi nhận",
+                "position": "chưa ghi nhận",
+                "environment": "chưa ghi nhận",
+                "notes": "chưa ghi nhận",
             }
         )
         print(
@@ -381,6 +421,25 @@ def main() -> None:
         raise SystemExit("No session was converted.")
 
     meta_path = output_dir / "_sessions_metadata.csv"
+
+    # Keep whatever the recording person already typed in.
+    previous = load_previous_metadata(meta_path)
+    carried_over = 0
+    for row in metadata_rows:
+        values = previous.get(row["csv_file"])
+        if not values:
+            continue
+        for field, value in values.items():
+            row[field] = value
+        carried_over += 1
+
+    if carried_over:
+        print()
+        print(
+            f"[METADATA] carried over hand-filled fields for "
+            f"{carried_over} session(s) from {meta_path.name}."
+        )
+
     with meta_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(metadata_rows[0]))
         writer.writeheader()
@@ -393,8 +452,19 @@ def main() -> None:
     print(f"metadata : {meta_path}")
     print(f"skipped  : {len(skipped)}")
     print()
-    print("Fill the empty metadata columns before export: "
-          "distance_m, position, environment, notes.")
+    remaining = sum(
+        1
+        for row in metadata_rows
+        for field in HAND_FIELDS
+        if row[field] == PLACEHOLDER
+    )
+    if remaining:
+        print(
+            f"[METADATA] {remaining} field(s) still '{PLACEHOLDER}' — "
+            "fill distance_m, position, environment, notes by hand."
+        )
+    else:
+        print("[METADATA] all hand-filled fields are complete.")
 
 
 if __name__ == "__main__":

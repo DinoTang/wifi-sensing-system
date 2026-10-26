@@ -92,10 +92,77 @@ def parse_args():
         "--expected-samples",
         type=int,
         default=192,
-        help="Expected number of unique samples in each frame",
+        help=(
+            "Expected number of unique samples in each frame "
+            "(192 for the ESP32 dataset in data/raw, "
+            "224 for the Intel VHT dataset in data/intel_raw)"
+        ),
     )
 
-    return parser.parse_args()
+    parser.add_argument(
+        "--window-seconds",
+        type=float,
+        default=2.0,
+        help=(
+            "Length in seconds of the trailing window used for the "
+            "cross-frame (temporal) variability feature. The number of "
+            "frames is derived from the measured sampling interval."
+        ),
+    )
+
+    parser.add_argument(
+        "--normalization",
+        type=str,
+        choices=["none", "zscore", "minmax"],
+        default="none",
+        help=(
+            "Optional scaling of the exported feature tables. "
+            "'zscore' subtracts the mean and divides by the standard "
+            "deviation, 'minmax' rescales to [0, 1]. Statistics are "
+            "fitted ONLY on the sessions given to --train-sessions. "
+            "Default 'none' keeps the raw feature values."
+        ),
+    )
+
+    parser.add_argument(
+        "--train-sessions",
+        type=str,
+        default="",
+        help=(
+            "Comma-separated session ids used to fit the normalization "
+            "statistics, e.g. 'room_empty_01,person_static_01'. "
+            "Must be set once the train/test split is agreed with the "
+            "ML owner; when empty, statistics are fitted on all rows "
+            "and the pipeline prints a leakage warning."
+        ),
+    )
+
+    parser.add_argument(
+        "--filter-frames",
+        type=int,
+        default=5,
+        help=(
+            "Width in frames of the centered moving-average filter used "
+            "for the before/after noise-filtering experiment. "
+            "Values below 2 disable filtering."
+        ),
+    )
+
+    args = parser.parse_args()
+
+    if args.expected_samples <= 0:
+        raise ValueError("--expected-samples must be greater than 0.")
+
+    if args.window_seconds <= 0:
+        raise ValueError("--window-seconds must be greater than 0.")
+
+    args.train_sessions = [
+        item.strip()
+        for item in args.train_sessions.split(",")
+        if item.strip()
+    ]
+
+    return args
 
 
 # ============================================================
@@ -726,6 +793,568 @@ def build_session_summary(
 
 
 # ============================================================
+# 9B. TEMPORAL (CROSS-FRAME) FEATURES
+# ============================================================
+#
+# std_amplitude in section 8 varies BETWEEN samples inside one frame
+# (it mostly reflects the frequency selectivity of the channel).
+# To study human motion we also need the variability of the SAME
+# CSI point across many frames inside a short time window.
+
+
+def build_amplitude_matrix(
+    complete_df: pd.DataFrame,
+    expected_samples: int,
+) -> pd.DataFrame:
+    """
+    Build a frames x sample_index amplitude matrix for one session.
+
+    Only rows already flagged as frame_complete should be passed in.
+    """
+
+    pivot = complete_df.pivot_table(
+        index="frame_id",
+        columns="sample_index",
+        values="amplitude",
+        aggfunc="mean",
+    )
+
+    pivot = pivot.reindex(
+        columns=range(expected_samples)
+    )
+
+    return pivot.sort_index()
+
+
+def estimate_sampling_interval_ms(
+    timestamps: pd.Series,
+) -> tuple[float, float]:
+    """
+    Estimate the frame sampling interval from timestamps.
+
+    Returns (median_delta_ms, fps). Non-positive deltas (clock glitches)
+    are excluded before taking the median.
+    """
+
+    deltas = timestamps.diff().dropna()
+    deltas = deltas.loc[deltas > 0]
+
+    if deltas.empty:
+        return np.nan, np.nan
+
+    median_delta = float(deltas.median())
+
+    fps = (
+        1000.0 / median_delta
+        if median_delta > 0
+        else np.nan
+    )
+
+    return median_delta, fps
+
+
+def rolling_temporal_std(
+    matrix: np.ndarray,
+    window_frames: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Per-frame variability of each CSI point across a trailing window.
+
+    For every frame position, the same sample_index is compared across
+    all frames of the trailing window. Returns:
+      - mean over sample_index of that cross-frame std
+      - max  over sample_index of that cross-frame std
+    """
+
+    n_frames = matrix.shape[0]
+
+    width = max(2, min(int(window_frames), n_frames))
+
+    mean_std = np.full(n_frames, np.nan)
+    max_std = np.full(n_frames, np.nan)
+
+    for position in range(n_frames):
+        start = max(0, position - width + 1)
+
+        window = matrix[start : position + 1, :]
+
+        with np.errstate(invalid="ignore"):
+            per_point_std = np.nanstd(window, axis=0)
+
+        per_point_std = per_point_std[
+            np.isfinite(per_point_std)
+        ]
+
+        if per_point_std.size:
+            mean_std[position] = float(per_point_std.mean())
+            max_std[position] = float(per_point_std.max())
+
+    return mean_std, max_std
+
+
+def calculate_temporal_features(
+    data: pd.DataFrame,
+    expected_samples: int,
+    window_seconds: float,
+) -> pd.DataFrame:
+    """
+    Variability of the same CSI points across frames in a time window.
+
+    Window length in frames is derived from the measured sampling
+    interval (median timestamp delta of the session), so the requested
+    `window_seconds` corresponds to real elapsed time.
+    """
+
+    rows = []
+
+    for session_id, session_df in data.groupby(
+        "session_id",
+        sort=False,
+    ):
+        complete = session_df.loc[session_df["frame_complete"]]
+
+        if complete.empty:
+            continue
+
+        matrix_df = build_amplitude_matrix(
+            complete,
+            expected_samples,
+        )
+
+        if len(matrix_df) < 2:
+            continue
+
+        timestamps = (
+            complete.groupby("frame_id")["timestamp_ms"]
+            .first()
+            .reindex(matrix_df.index)
+        )
+
+        median_delta, fps = estimate_sampling_interval_ms(
+            timestamps
+        )
+
+        if np.isfinite(fps) and fps > 0:
+            window_frames = int(round(window_seconds * fps))
+        else:
+            window_frames = 2
+
+        window_frames = max(
+            2,
+            min(window_frames, len(matrix_df)),
+        )
+
+        matrix = matrix_df.to_numpy(dtype=float)
+
+        mean_std, max_std = rolling_temporal_std(
+            matrix,
+            window_frames,
+        )
+
+        scenario_label = session_df[
+            "scenario_label"
+        ].iloc[0]
+
+        for position, frame_id in enumerate(matrix_df.index):
+            rows.append(
+                {
+                    "session_id": session_id,
+                    "scenario_label": scenario_label,
+                    "frame_id": int(frame_id),
+                    "timestamp_ms": float(
+                        timestamps.iloc[position]
+                    ),
+                    "sampling_interval_ms": median_delta,
+                    "sampling_fps": fps,
+                    "window_frames": window_frames,
+                    "window_seconds_requested": window_seconds,
+                    "temporal_std_amplitude": mean_std[position],
+                    "temporal_std_amplitude_max": (
+                        max_std[position]
+                    ),
+                }
+            )
+
+    if not rows:
+        print(
+            "[TEMPORAL] No session had enough complete frames."
+        )
+        return pd.DataFrame()
+
+    return pd.DataFrame(rows)
+
+
+# ============================================================
+# 10b. OPTIONAL NORMALIZATION (FIT ON TRAIN SESSIONS ONLY)
+# ============================================================
+# Scaling is applied to the EXPORTED FEATURE TABLES only.
+# The raw sample dataset (i, q, amplitude) is never rescaled, so the
+# QC flags and the physical values stay interpretable.
+#
+# Statistics are always fitted on --train-sessions and then applied to
+# every row. This keeps the scaling parameters free of test data and
+# makes the same parameters reusable for live prediction later.
+
+IDENTITY_COLUMNS = {
+    "session_id",
+    "scenario_label",
+    "frame_id",
+    "timestamp_ms",
+    "frame_complete",
+    "sampling_interval_ms",
+    "sampling_fps",
+    "window_frames",
+    "window_seconds_requested",
+}
+
+NORMALIZATION_PARAM_COLUMNS = [
+    "dataset",
+    "column",
+    "method",
+    "center",
+    "scale",
+    "n_train_rows",
+    "n_total_rows",
+    "note",
+]
+
+
+def select_feature_columns(frame: pd.DataFrame) -> list[str]:
+    """Numeric columns that are measurements, not ids or labels."""
+
+    return [
+        column
+        for column in frame.columns
+        if column not in IDENTITY_COLUMNS
+        and pd.api.types.is_numeric_dtype(frame[column])
+    ]
+
+
+def normalize_features(
+    features: pd.DataFrame,
+    method: str,
+    train_sessions: list[str],
+    dataset_name: str,
+) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
+    """
+    Scale feature columns with statistics fitted on the train rows.
+
+    Returns the normalized table, the fitted parameters and a list of
+    human-readable notes (columns left unchanged, unknown sessions).
+    Columns that are constant on the train rows keep their raw values,
+    because their scale is undefined.
+    """
+
+    if features.empty:
+        return (
+            features.copy(),
+            pd.DataFrame(columns=NORMALIZATION_PARAM_COLUMNS),
+            [],
+        )
+
+    known_sessions = set(features["session_id"].unique())
+
+    if train_sessions:
+        unknown = sorted(set(train_sessions) - known_sessions)
+        if unknown:
+            raise ValueError(
+                f"--train-sessions contains ids that are absent from "
+                f"{dataset_name}: {unknown}"
+            )
+        train_mask = features["session_id"].isin(train_sessions)
+        if not train_mask.any():
+            raise ValueError(
+                f"--train-sessions matched no row of {dataset_name}."
+            )
+        fitted_on = f"{int(train_mask.sum()):,}/{len(features):,} train rows"
+    else:
+        train_mask = pd.Series(True, index=features.index)
+        fitted_on = f"ALL {len(features):,} rows (no split)"
+
+    normalized = features.copy()
+    param_rows: list[dict] = []
+    notes: list[str] = []
+
+    for column in select_feature_columns(features):
+        values = pd.to_numeric(features[column], errors="coerce")
+
+        train_values = (
+            values.loc[train_mask]
+            .replace([np.inf, -np.inf], np.nan)
+            .dropna()
+        )
+
+        if train_values.empty:
+            notes.append(
+                f"{dataset_name}.{column}: no finite train value, "
+                "left unchanged."
+            )
+            continue
+
+        if method == "zscore":
+            center = float(train_values.mean())
+            scale = float(train_values.std(ddof=0))
+        else:  # minmax
+            center = float(train_values.min())
+            scale = float(train_values.max()) - center
+
+        if not np.isfinite(scale) or scale == 0:
+            notes.append(
+                f"{dataset_name}.{column}: constant on the train rows, "
+                "left unchanged."
+            )
+            param_rows.append(
+                {
+                    "dataset": dataset_name,
+                    "column": column,
+                    "method": method,
+                    "center": center,
+                    "scale": np.nan,
+                    "n_train_rows": int(train_values.size),
+                    "n_total_rows": int(len(features)),
+                    "note": "constant on train - not scaled",
+                }
+            )
+            continue
+
+        normalized[column] = (values - center) / scale
+
+        param_rows.append(
+            {
+                "dataset": dataset_name,
+                "column": column,
+                "method": method,
+                "center": center,
+                "scale": scale,
+                "n_train_rows": int(train_values.size),
+                "n_total_rows": int(len(features)),
+                "note": fitted_on,
+            }
+        )
+
+    return normalized, pd.DataFrame(param_rows), notes
+
+
+def moving_average_along_time(
+    matrix: np.ndarray,
+    filter_frames: int,
+) -> np.ndarray:
+    """
+    Centered moving average along the frame axis.
+
+    Offline smoothing only: the centered window uses future frames, so
+    the filtered series must NOT be used for a real-time detector
+    without changing it to a causal (trailing) window.
+    """
+
+    if filter_frames < 2:
+        return matrix.copy()
+
+    frame = pd.DataFrame(matrix)
+
+    filtered = (
+        frame.rolling(
+            window=filter_frames,
+            center=True,
+            min_periods=1,
+        )
+        .mean()
+    )
+
+    return filtered.to_numpy(dtype=float)
+
+
+def evaluate_filter(
+    data: pd.DataFrame,
+    expected_samples: int,
+    filter_frames: int,
+    window_seconds: float,
+) -> pd.DataFrame:
+    """
+    Before/after evaluation of the moving-average filter.
+
+    Checks both sides of the trade-off:
+      - noise reduction: high-frequency jitter, measured as the mean
+        over sample points of std(diff(amplitude)) along time
+      - motion retention: trend correlation between raw and filtered
+        session-mean series, and the temporal variability that remains
+    """
+
+    rows = []
+
+    for session_id, session_df in data.groupby(
+        "session_id",
+        sort=False,
+    ):
+        complete = session_df.loc[session_df["frame_complete"]]
+
+        if complete.empty:
+            continue
+
+        matrix_df = build_amplitude_matrix(
+            complete,
+            expected_samples,
+        )
+
+        if len(matrix_df) < 3:
+            continue
+
+        timestamps = (
+            complete.groupby("frame_id")["timestamp_ms"]
+            .first()
+            .reindex(matrix_df.index)
+        )
+
+        median_delta, fps = estimate_sampling_interval_ms(
+            timestamps
+        )
+
+        if np.isfinite(fps) and fps > 0:
+            window_frames = int(round(window_seconds * fps))
+        else:
+            window_frames = 2
+
+        window_frames = max(
+            2,
+            min(window_frames, len(matrix_df)),
+        )
+
+        raw = matrix_df.to_numpy(dtype=float)
+
+        filtered = moving_average_along_time(
+            raw,
+            filter_frames,
+        )
+
+        def high_frequency_jitter(matrix: np.ndarray) -> float:
+            with np.errstate(invalid="ignore"):
+                diffs = np.diff(matrix, axis=0)
+                value = np.nanmean(np.nanstd(diffs, axis=0))
+            return float(value)
+
+        jitter_raw = high_frequency_jitter(raw)
+        jitter_filtered = high_frequency_jitter(filtered)
+
+        noise_reduction_pct = (
+            100.0 * (1.0 - jitter_filtered / jitter_raw)
+            if jitter_raw > 0
+            else np.nan
+        )
+
+        raw_trend = np.nanmean(raw, axis=1)
+        filtered_trend = np.nanmean(filtered, axis=1)
+
+        if np.std(raw_trend) > 0 and np.std(filtered_trend) > 0:
+            trend_correlation = float(
+                np.corrcoef(raw_trend, filtered_trend)[0, 1]
+            )
+        else:
+            trend_correlation = np.nan
+
+        # Correlation of the SLOW content only (about 2 s of
+        # smoothing applied to both series). This is the part a
+        # motion detector relies on, so it must stay close to 1.
+        slow_window = max(
+            3,
+            int(round(2.0 * fps)) if np.isfinite(fps) else 20,
+        )
+        slow_window = min(slow_window, len(raw_trend))
+
+        raw_slow = (
+            pd.Series(raw_trend)
+            .rolling(
+                slow_window,
+                center=True,
+                min_periods=1,
+            )
+            .mean()
+        )
+        filtered_slow = (
+            pd.Series(filtered_trend)
+            .rolling(
+                slow_window,
+                center=True,
+                min_periods=1,
+            )
+            .mean()
+        )
+
+        if (
+            float(np.std(raw_slow)) > 0
+            and float(np.std(filtered_slow)) > 0
+        ):
+            low_frequency_correlation = float(
+                np.corrcoef(raw_slow, filtered_slow)[0, 1]
+            )
+        else:
+            low_frequency_correlation = np.nan
+
+        retained_variance_pct = (
+            100.0
+            * float(np.var(filtered_trend))
+            / float(np.var(raw_trend))
+            if np.var(raw_trend) > 0
+            else np.nan
+        )
+
+        temporal_raw, _ = rolling_temporal_std(
+            raw,
+            window_frames,
+        )
+        temporal_filtered, _ = rolling_temporal_std(
+            filtered,
+            window_frames,
+        )
+
+        temporal_raw_mean = float(
+            np.nanmean(temporal_raw)
+        )
+        temporal_filtered_mean = float(
+            np.nanmean(temporal_filtered)
+        )
+
+        temporal_retained_pct = (
+            100.0 * temporal_filtered_mean / temporal_raw_mean
+            if temporal_raw_mean > 0
+            else np.nan
+        )
+
+        rows.append(
+            {
+                "session_id": session_id,
+                "scenario_label": session_df[
+                    "scenario_label"
+                ].iloc[0],
+                "frames": int(len(matrix_df)),
+                "sampling_interval_ms": median_delta,
+                "sampling_fps": fps,
+                "filter_frames": filter_frames,
+                "hf_jitter_raw": jitter_raw,
+                "hf_jitter_filtered": jitter_filtered,
+                "noise_reduction_pct": noise_reduction_pct,
+                "trend_correlation": trend_correlation,
+                "low_frequency_correlation": (
+                    low_frequency_correlation
+                ),
+                "retained_variance_pct": retained_variance_pct,
+                "temporal_std_raw": temporal_raw_mean,
+                "temporal_std_filtered": temporal_filtered_mean,
+                "temporal_std_retained_pct": (
+                    temporal_retained_pct
+                ),
+            }
+        )
+
+    if not rows:
+        print(
+            "[FILTER] No session had enough complete frames."
+        )
+        return pd.DataFrame()
+
+    return pd.DataFrame(rows)
+
+
+# ============================================================
 # 10. PLOTS
 # ============================================================
 
@@ -901,6 +1530,200 @@ def save_motion_score_plot(
     output_path = os.path.join(
         results_dir,
         "preliminary_motion_score.png",
+    )
+
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+
+    print(f"[PLOT] Saved: {output_path}")
+
+
+def save_temporal_variability_plot(
+    temporal_features: pd.DataFrame,
+    results_dir: str,
+):
+    """
+    Box plot of cross-frame temporal variability by scenario label.
+    """
+
+    if temporal_features.empty:
+        return
+
+    plot_df = temporal_features.dropna(
+        subset=["temporal_std_amplitude"]
+    )
+
+    if plot_df.empty:
+        return
+
+    labels = list(
+        dict.fromkeys(plot_df["scenario_label"])
+    )
+
+    series = [
+        plot_df.loc[
+            plot_df["scenario_label"] == label,
+            "temporal_std_amplitude",
+        ].to_numpy()
+        for label in labels
+    ]
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+
+    ax.boxplot(series, showfliers=False)
+
+    ax.set_xticks(
+        range(1, len(labels) + 1)
+    )
+    ax.set_xticklabels(labels)
+
+    ax.set_title(
+        "Temporal variability of CSI points across frames "
+        "(trailing window)"
+    )
+    ax.set_xlabel("Scenario label")
+    ax.set_ylabel("Mean cross-frame std of amplitude")
+    ax.grid(True, alpha=0.3, axis="y")
+
+    fig.tight_layout()
+
+    output_path = os.path.join(
+        results_dir,
+        "temporal_variability_by_class.png",
+    )
+
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+
+    print(f"[PLOT] Saved: {output_path}")
+
+
+def save_filter_comparison_plot(
+    data: pd.DataFrame,
+    expected_samples: int,
+    filter_frames: int,
+    results_dir: str,
+):
+    """
+    Before/after panel: session-mean amplitude per scenario label.
+
+    One representative session per class so the panels stay readable.
+    """
+
+    if filter_frames < 2:
+        return
+
+    selected = []
+
+    for session_id, session_df in data.groupby(
+        "session_id",
+        sort=False,
+    ):
+        label = session_df["scenario_label"].iloc[0]
+
+        if any(item[0] == label for item in selected):
+            continue
+
+        complete = session_df.loc[session_df["frame_complete"]]
+
+        if len(complete) < 3:
+            continue
+
+        selected.append((label, session_id, complete))
+
+    if not selected:
+        return
+
+    fig, axes = plt.subplots(
+        len(selected),
+        1,
+        figsize=(12, 3.2 * len(selected)),
+        sharex=False,
+    )
+
+    if len(selected) == 1:
+        axes = [axes]
+
+    for ax, (label, session_id, complete) in zip(
+        axes,
+        selected,
+    ):
+        matrix_df = build_amplitude_matrix(
+            complete,
+            expected_samples,
+        )
+
+        raw = matrix_df.to_numpy(dtype=float)
+
+        filtered = moving_average_along_time(
+            raw,
+            filter_frames,
+        )
+
+        timestamps = (
+            complete.groupby("frame_id")["timestamp_ms"]
+            .first()
+            .reindex(matrix_df.index)
+        )
+
+        median_delta, _ = estimate_sampling_interval_ms(
+            timestamps
+        )
+
+        if np.isfinite(median_delta) and median_delta > 0:
+            elapsed_seconds = (
+                np.arange(len(raw)) * median_delta / 1000.0
+            )
+        else:
+            elapsed_seconds = np.arange(len(raw), dtype=float)
+
+        raw_trend = np.nanmean(raw, axis=1)
+        filtered_trend = np.nanmean(filtered, axis=1)
+
+        with np.errstate(invalid="ignore"):
+            jitter_raw = float(
+                np.nanmean(np.nanstd(np.diff(raw, axis=0), axis=0))
+            )
+            jitter_filtered = float(
+                np.nanmean(
+                    np.nanstd(np.diff(filtered, axis=0), axis=0)
+                )
+            )
+
+        reduction = (
+            100.0 * (1.0 - jitter_filtered / jitter_raw)
+            if jitter_raw > 0
+            else np.nan
+        )
+
+        ax.plot(
+            elapsed_seconds,
+            raw_trend,
+            linewidth=0.8,
+            alpha=0.7,
+            label="Raw",
+        )
+        ax.plot(
+            elapsed_seconds,
+            filtered_trend,
+            linewidth=1.4,
+            label=f"Moving average ({filter_frames} frames)",
+        )
+
+        ax.set_title(
+            f"{session_id} ({label}) - "
+            f"HF jitter reduced {reduction:.1f}%"
+        )
+        ax.set_xlabel("Elapsed time (s)")
+        ax.set_ylabel("Mean amplitude")
+        ax.legend(loc="best")
+        ax.grid(True, alpha=0.3)
+
+    fig.tight_layout()
+
+    output_path = os.path.join(
+        results_dir,
+        "filter_before_after.png",
     )
 
     fig.savefig(output_path, dpi=150)
@@ -1098,7 +1921,185 @@ def main():
     print(f"[SAVE] {summary_path}")
 
     # --------------------------------------------------------
-    # Step 10: Generate plots.
+    # Step 10: Cross-frame (temporal) variability features.
+    # --------------------------------------------------------
+    # std_amplitude varies between samples inside one frame.
+    # These features vary between frames for the SAME sample index,
+    # which is the part that reacts to human motion.
+
+    temporal_features = calculate_temporal_features(
+        data=data,
+        expected_samples=args.expected_samples,
+        window_seconds=args.window_seconds,
+    )
+
+    temporal_path = (
+        processed_dir / "temporal_features.csv"
+    )
+
+    temporal_features.to_csv(
+        temporal_path,
+        index=False,
+    )
+
+    print(f"[SAVE] {temporal_path}")
+
+    if not temporal_features.empty:
+        sampling = (
+            temporal_features.groupby("session_id")
+            [["sampling_interval_ms", "sampling_fps"]]
+            .first()
+        )
+
+        print()
+        print("[SAMPLING RATE CHECK]")
+        print(sampling.round(2).to_string())
+
+        window_values = temporal_features.groupby(
+            "session_id"
+        )["window_frames"].first()
+
+        print(
+            f"Window requested: {args.window_seconds} s -> "
+            f"{sorted(set(window_values))} frames"
+        )
+
+        print()
+        print("[TEMPORAL VARIABILITY BY CLASS]")
+        print(
+            temporal_features.groupby("scenario_label")[
+                "temporal_std_amplitude"
+            ]
+            .describe()[
+                ["count", "mean", "std", "min", "50%", "max"]
+            ]
+            .round(3)
+            .to_string()
+        )
+
+    # --------------------------------------------------------
+    # Step 10b: Optional normalization (statistics from train only).
+    # --------------------------------------------------------
+    # Off by default. Only the exported feature tables are scaled;
+    # the raw sample rows (i, q, amplitude) are never rescaled.
+
+    if args.normalization == "none":
+        print()
+        print("[NORMALIZATION] skipped (method=none).")
+    else:
+        print()
+        print(
+            f"[NORMALIZATION] method={args.normalization}, "
+            f"train sessions={len(args.train_sessions) or 'ALL'}"
+        )
+
+        if not args.train_sessions:
+            print(
+                "[NORMALIZATION][WARNING] --train-sessions not set: "
+                "statistics are fitted on every row, so any test split "
+                "built from this output leaks. Set the split agreed "
+                "with the ML owner before training."
+            )
+
+        param_tables = []
+
+        for name, table in (
+            ("preliminary_frame_features", features),
+            ("temporal_features", temporal_features),
+        ):
+            if table.empty:
+                print(f"[NORMALIZATION] {name}: empty, skipped.")
+                continue
+
+            scaled, params, notes = normalize_features(
+                features=table,
+                method=args.normalization,
+                train_sessions=args.train_sessions,
+                dataset_name=name,
+            )
+
+            scaled_path = processed_dir / f"{name}_normalized.csv"
+            scaled.to_csv(scaled_path, index=False)
+            print(f"[SAVE] {scaled_path}")
+
+            if not params.empty:
+                param_tables.append(params)
+
+            for note in notes:
+                print(f"[NORMALIZATION][NOTE] {note}")
+
+        if param_tables:
+            all_params = pd.concat(param_tables, ignore_index=True)
+            params_path = processed_dir / "normalization_params.csv"
+            all_params.to_csv(params_path, index=False)
+            print(f"[SAVE] {params_path}")
+            print()
+            print("[NORMALIZATION PARAMETERS]")
+            print(all_params.round(4).to_string(index=False))
+
+    # --------------------------------------------------------
+    # Step 11: Noise-filter experiment (before/after).
+    # --------------------------------------------------------
+    # The filtered series is written only to a separate evaluation
+    # report. The exported dataset is never overwritten by it.
+
+    filter_report = evaluate_filter(
+        data=data,
+        expected_samples=args.expected_samples,
+        filter_frames=args.filter_frames,
+        window_seconds=args.window_seconds,
+    )
+
+    filter_path = (
+        processed_dir / "filter_evaluation.csv"
+    )
+
+    filter_report.to_csv(
+        filter_path,
+        index=False,
+    )
+
+    print(f"[SAVE] {filter_path}")
+
+    if not filter_report.empty:
+        print()
+        print("[FILTER EVALUATION]")
+        print(
+            filter_report[
+                [
+                    "session_id",
+                    "scenario_label",
+                    "hf_jitter_raw",
+                    "hf_jitter_filtered",
+                    "noise_reduction_pct",
+                    "low_frequency_correlation",
+                    "retained_variance_pct",
+                    "temporal_std_retained_pct",
+                ]
+            ]
+            .round(3)
+            .to_string(index=False)
+        )
+
+        print()
+        print("[FILTER EVALUATION BY CLASS]")
+        print(
+            filter_report.groupby("scenario_label")
+            [
+                [
+                    "noise_reduction_pct",
+                    "low_frequency_correlation",
+                    "retained_variance_pct",
+                    "temporal_std_retained_pct",
+                ]
+            ]
+            .mean()
+            .round(3)
+            .to_string()
+        )
+
+    # --------------------------------------------------------
+    # Step 12: Generate plots.
     # --------------------------------------------------------
 
     save_session_heatmaps(
@@ -1117,8 +2118,20 @@ def main():
         results_dir=str(results_dir),
     )
 
+    save_temporal_variability_plot(
+        temporal_features=temporal_features,
+        results_dir=str(results_dir),
+    )
+
+    save_filter_comparison_plot(
+        data=data,
+        expected_samples=args.expected_samples,
+        filter_frames=args.filter_frames,
+        results_dir=str(results_dir),
+    )
+
     # --------------------------------------------------------
-    # Step 11: Print final summary.
+    # Step 13: Print final summary.
     # --------------------------------------------------------
 
     total_frames = int(len(quality_report))

@@ -3,3 +3,15 @@ __pycache__/
 .pytest_cache/
 *.py[cod]
 .DS_Store
+
+# Video của các phiên thu — giữ tại máy, không commit (mỗi file ~100 MB)
+*.mov
+*.mp4
+*.mkv
+*.avi
+
+# Model MediaPipe (tải lại bằng: xem README mục gói tư thế)
+models/*.task
+
+# Log tạm của gói tư thế
+data/pose/*.log

@@ -1,0 +1,15 @@
+* for pci_ids(0000:00:14.3)(0000:00:14.3) 10000 NOHT 
+* rnf 0x4100
+* for /sys/kernel/debug/iwlwifi/0000:00:14.3/iwlmvm/
+Output: /home/toan/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE
+Starting in 30 seconds.
+RECORDING: test / trial 2026110302522810528 / 60 seconds
+
+--- 192.168.0.1 ping statistics ---
+596 packets transmitted, 596 received, 0% packet loss, time 59956ms
+rtt min/avg/max/mdev = 0.945/1.786/15.967/1.132 ms
+FINISHED: Non-empty recording saved.
+-rw-r--r-- 1 toan toan 905K Nov  3 02:54 /home/toan/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE/raw.csi
+CSI messages in the log:
+1087
+Output: /home/toan/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE

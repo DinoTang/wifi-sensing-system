@@ -9,6 +9,8 @@ Input  : hardware/csi_extracted/labeled/<session>/
 Output : signal-processing/data/intel_raw/
            - <scenario>_<trial>.csv     9 columns required by csi_preprocessing_pipeline
            - _sessions_metadata.csv     one row per session (metadata deliverable)
+           - _rejected_records.csv      every dropped record + reason (rate group,
+                                        shape mismatch); integrity errors still raise
 
 Binary record layout (verified against recorder.log on every session):
     [uint32 big-endian: 276 + csi_len] [276 byte header] [4 byte] [csi_len byte payload]
@@ -199,11 +201,24 @@ def decode_points(payload: bytes) -> list[tuple[int, int]]:
     return list(zip(values[0::2], values[1::2]))
 
 
-def convert_session(session_dir: Path, group: str, include_test: bool):
+def convert_session(
+    session_dir: Path,
+    group: str,
+    include_test: bool,
+    label_override: str | None = None,
+    trial_override: str | None = None,
+):
+    """Convert one session folder.
+
+    ``label_override`` exists because the CSI recorder always writes
+    ``label=test`` during a video session; the real activity is only in
+    ``video-session-notes.txt`` next to the CSI files.
+    """
+
     spec = GROUPS[group]
     meta_info = read_key_values(session_dir / "metadata.txt")
-    label = meta_info.get("label", "")
-    trial = meta_info.get("trial", "")
+    label = label_override or meta_info.get("label", "")
+    trial = trial_override or meta_info.get("trial", "")
     if not label or not trial:
         raise ValueError(f"{session_dir.name}: metadata.txt missing label/trial")
     if label == "test" and not include_test:
@@ -219,25 +234,45 @@ def convert_session(session_dir: Path, group: str, include_test: bool):
 
     timestamp_backwards = 0
     kept = []
+    rejects: list[dict] = []
+    expected_shape = (spec["nrx"], spec["ntx"], spec["ntone"])
     for record_index, (payload, frame) in enumerate(
         zip(payload_records, frames), start=1
     ):
         if len(payload) != frame["csi_len"]:
+            # Integrity error, not a configuration difference: the record
+            # contradicts its own header, so stop instead of guessing.
             raise ValueError(
                 f"{session_dir.name}: record {record_index} payload "
                 f"{len(payload)} != csi_len {frame['csi_len']}"
             )
         if not frame["rate"].startswith(spec["rate_prefix"]):
-            continue
-        if (
-            frame["nrx"],
-            frame["ntx"],
-            frame["ntone"],
-        ) != (spec["nrx"], spec["ntx"], spec["ntone"]):
-            raise ValueError(
-                f"{session_dir.name}: record {record_index} unexpected shape "
-                f"{(frame['nrx'], frame['ntx'], frame['ntone'])}"
+            rejects.append(
+                {
+                    "session_dir": session_dir.name,
+                    "record_index": record_index,
+                    "reason": "rate_group",
+                    "detail": f"rate={frame['rate']}; kept group={spec['rate_prefix']}",
+                }
             )
+            continue
+
+        shape = (frame["nrx"], frame["ntx"], frame["ntone"])
+        if shape != expected_shape:
+            # A different CSI configuration (antenna/subcarrier layout).
+            # It must not be glued into the same series, so record and skip.
+            rejects.append(
+                {
+                    "session_dir": session_dir.name,
+                    "record_index": record_index,
+                    "reason": "shape_mismatch",
+                    "detail": "{}x{}x{} != {}x{}x{}".format(
+                        *shape, *expected_shape
+                    ),
+                }
+            )
+            continue
+
         kept.append((record_index, frame, decode_points(payload)))
 
     for (_, frame_a, _), (_, frame_b, _) in zip(kept, kept[1:]):
@@ -256,6 +291,7 @@ def convert_session(session_dir: Path, group: str, include_test: bool):
         "session_dir": session_dir.name,
         "meta_info": meta_info,
         "kept": kept,
+        "rejects": rejects,
         "frames_total": len(frames),
         "frames_kept": len(kept),
         "points_per_frame": points_per_frame,
@@ -344,6 +380,7 @@ def main() -> None:
 
     metadata_rows = []
     skipped = []
+    rejects: list[dict] = []
     for session_dir in sorted(p for p in input_dir.iterdir() if p.is_dir()):
         session, skip = convert_session(session_dir, args.group, args.include_test)
         if skip is not None:
@@ -351,6 +388,7 @@ def main() -> None:
             print(f"[SKIP] {skip['session']}: {skip['reason']}")
             continue
 
+        rejects.extend(session["rejects"])
         session["rows_written"] = write_session_csv(output_dir, session)
         duration_ms = 0
         if session["kept"]:
@@ -445,11 +483,26 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(metadata_rows)
 
+    # Deliverable of the "rejected records with a reason" check: every record
+    # that was not written to CSV is listed here, so nothing disappears
+    # silently between raw.csi and the dataset handed to Người 3.
+    rejects_path = output_dir / "_rejected_records.csv"
+    with rejects_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=["session_dir", "record_index", "reason", "detail"]
+        )
+        writer.writeheader()
+        writer.writerows(rejects)
+
     total_rows = sum(row["rows_written"] for row in metadata_rows)
     print()
     print(f"sessions : {len(metadata_rows)}")
     print(f"rows     : {total_rows:,}")
     print(f"metadata : {meta_path}")
+    print(f"rejected : {len(rejects)} record(s) -> {rejects_path.name}")
+    for reason in sorted({item["reason"] for item in rejects}):
+        count = sum(1 for item in rejects if item["reason"] == reason)
+        print(f"           {reason:<14} {count}")
     print(f"skipped  : {len(skipped)}")
     print()
     remaining = sum(

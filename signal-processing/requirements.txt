@@ -2,3 +2,6 @@ pandas>=2.0
 numpy>=1.24
 matplotlib>=3.7
 pytest>=7.0
+# Chỉ cần cho gói việc video + tư thế (đọc frame, kiểm tra video, trích tư thế)
+opencv-python-headless>=4.9
+mediapipe>=0.10

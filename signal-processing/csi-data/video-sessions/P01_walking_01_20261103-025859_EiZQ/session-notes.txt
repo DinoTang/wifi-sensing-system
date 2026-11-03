@@ -1,0 +1,7 @@
+session_id=P01_walking_01_20261103-025859_EiZQ
+participant_id=P01
+activity=walking
+repeat=01
+trial=202611030258593111
+duration_seconds=60
+synchronization_status=not_yet_verified

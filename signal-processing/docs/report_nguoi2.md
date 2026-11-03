@@ -223,3 +223,100 @@ Yêu cầu sử dụng:
 3. Nếu chuẩn hóa, dùng `--normalization zscore|minmax --train-sessions <id>` của pipeline (hoặc scaler riêng của Người 3) — **fit chỉ trên tập train**; tham số đã fit nằm ở `normalization_params.csv` để tái dùng cho dữ liệu mới.
 4. `temporal_std_amplitude` hiện là đặc trưng mạnh nhất cho lớp `person_moving`; `person_static` vs `room_empty` cần đặc trưng khác hoặc mô hình học máy.
 5. Muốn thêm lớp `multiple_people` thì phải thu — hiện chưa có dữ liệu.
+
+## 10. Gói việc tư thế từ video — kiểm tra tính sẵn sàng (2026-11-03)
+
+Gói việc mới yêu cầu 6 hoạt động (`empty`, `standing`, `left_arm`, `right_arm`, `walking`, `mixed`), mỗi phiên có CSI **và** video, nhãn tư thế lấy từ video. Đã thêm `check_dataset_readiness.py` để kiểm tra đầu vào thay vì đoán.
+
+Kết quả trên 10 phiên hiện có:
+
+| Kiểm tra | Kết quả |
+|---|---|
+| `raw.csi` vs `recorder.log` | khớp số bản ghi ở **10/10 phiên** |
+| Cấu hình CSI trong cùng nhóm VHT | **1/phiên**, không có phiên nào trộn 2×2×56 với cấu hình khác → an toàn để ghép chuỗi |
+| Timestamp lùi | **0** ở cả 10 phiên |
+| Nhịp lấy mẫu VHT thực tế | trung vị **100,7 ms ≈ 9,93 frame/s**, ổn định giữa các phiên |
+| Bản ghi bị loại khi parse | **4.678**, toàn bộ là `rate_group` (nhóm NOHT), 0 `shape_mismatch` |
+| Khoảng thiếu dữ liệu | **8–11 khoảng/phiên, dài 700–810 ms** (≈ 7 frame VHT) |
+| Video | **0/10 phiên** |
+| `screen-clock.csv` | **0/10 phiên** |
+| Hoạt động có dữ liệu | **2/6**: `empty` (3 phiên, 1.698 frame), `walking` (3 phiên, 1.671 frame) |
+
+Phát hiện mới đáng ghi: **mỗi phiên có ~10 khoảng trống 0,7–0,8 s**. Với cửa sổ 2 s thì vẫn còn đủ dữ liệu, nhưng khi chia cửa sổ phải loại các cửa sổ cắt qua khoảng trống — nếu không, mẫu sẽ chứa hai đoạn thời gian không liền nhau. Đây là lý do phải lưu khoảng trống chứ không chỉ lưu frame.
+
+Ba việc còn lại của gói việc này **không thể làm bằng code**: cần video + `screen-clock.csv` cho từng phiên, và cần thu thêm 4 hoạt động (`standing`, `left_arm`, `right_arm`, `mixed`). Lưu ý `seated` của bộ 3 lớp **không thay thế** `standing` (ngồi và đứng là hai tư thế khác nhau). Thông số cần chốt với Người 3 trước khi chạy hàng loạt: [video_pose_spec.md](video_pose_spec.md).
+
+## 11. Gói việc tư thế từ video — kết quả chạy đầy đủ (2026-11-03)
+
+Đã nhận đủ CSI + video cho **6/6 hoạt động**, mỗi hoạt động 1 lần lặp (`P01`, mỗi phiên 60 s). Đã dựng và chạy trọn quy trình; bộ mẫu đã tạo nhưng **chưa dùng để huấn luyện được** vì lý do ở mục 11.3.
+
+### 11.1 Dữ liệu và kiểm tra CSI
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Phiên | 6 (empty, standing, left_arm, right_arm, walking, mixed), mỗi hoạt động 1 lần lặp |
+| Frame VHT | 3.489 (569–601/phiên), 781.536 dòng CSV |
+| Frame thiếu mẫu | **0** |
+| Timestamp lùi | **0** |
+| Nhịp lấy mẫu | 101 ms ≈ 9,9 frame/s |
+| Khoảng trống | 8–11 khoảng/phiên, 700–810 ms (làm mất ~84 cửa sổ/phiên) |
+| Nhãn | CSI ghi `label=test`; hoạt động thật lấy từ `video-session-notes.txt` |
+
+### 11.2 Tư thế từ video
+
+MediaPipe PoseLandmarker (33 điểm), suy luận mỗi 3 frame (10 Hz), toạ độ pixel trên khung 1920×1080.
+
+| Phiên | Frame suy luận | Có người | ≥5/6 khớp tay–vai |
+|---|---:|---:|---:|
+| empty_01 | 591 | 89,7% *(nhận nhầm)* | — |
+| standing_01 | 591 | 100% | 100% |
+| left_arm_01 | 591 | 100% | 100% |
+| right_arm_01 | 591 | 100% | 100% |
+| walking_01 | 591 | 100% | 57,4% |
+| mixed_01 | 600 | 100% | 85,2% |
+
+Kiểm chứng nhãn: ở `left_arm_01`, cổ tay **trái** cao hơn vai trái ở **57,7%** cửa sổ, cổ tay **phải** cao hơn vai phải ở **0%** → video đúng là hoạt động giơ tay trái.
+
+`empty_01` là phòng trống nhưng detector báo có người ở 89,7% frame. Đây là **false positive của detector**, không phải có người: ảnh kiểm tra cho thấy phòng trống. Nhãn phiên được dùng, còn giá trị detector lưu riêng để thấy bất đồng.
+
+### 11.3 Đồng bộ thời gian — không kiểm chứng được
+
+Video **không quay được đồng hồ**, nên không có cách đọc giờ trên hình như tài liệu yêu cầu. Đã thử suy offset từ tương quan giữa chuyển động trong video và `motion` của CSI (quét −40…+5 s):
+
+| Phiên | Offset tốt nhất | r | r của đỉnh phụ | Kết luận |
+|---|---:|---:|---:|---|
+| empty_01 | −38,10 s | 0,271 | 0,203 | yếu |
+| standing_01 | −36,90 s | 0,114 | 0,095 | không dùng được |
+| left_arm_01 | −17,50 s | 0,244 | 0,225 | không dùng được |
+| right_arm_01 | −35,60 s | 0,282 | 0,216 | yếu |
+| walking_01 | +1,50 s | 0,282 | 0,256 | yếu |
+| mixed_01 | −15,90 s | 0,247 | 0,221 | không dùng được |
+
+Ba dấu hiệu cho thấy **không thể chốt** offset từ dữ liệu này:
+
+1. Đỉnh phụ gần bằng đỉnh chính (tỉ lệ 1,09–1,33) → không có đỉnh rõ ràng.
+2. Các phiên cho offset **mâu thuẫn nhau** (−38 s đến +1,5 s), dù quay cùng một buổi theo cùng quy trình.
+3. Kiểm tra độc lập: ở `left_arm_01`, nếu ghép đúng thì CSI phải biến động **mạnh hơn** khi giơ tay. Với giả định offset = 0, kết quả **ngược lại** (7,99 khi giơ tay so với 8,60 khi không) → giả định không đúng.
+
+Kết luận: bộ mẫu được tạo với `sync_ok = 0` và offset giả định 0. **Không dùng để huấn luyện/đánh giá** cho tới khi có một trong hai: (a) quay lại với đồng hồ trong khung hình, hoặc (b) một mốc chung khác (clap/flash) để hiệu chỉnh.
+
+### 11.4 Bộ mẫu đã tạo
+
+| Phiên | Cửa sổ | Ghi chú |
+|---|---:|---|
+| empty_01 | 190 | |
+| standing_01 | 194 | |
+| left_arm_01 | 201 | |
+| right_arm_01 | 185 | |
+| walking_01 | 131 | +80 cửa sổ thiếu khớp tay–vai |
+| mixed_01 | 153 | +37 cửa sổ thiếu khớp |
+| **Tổng** | **1.054** | mọi mẫu `sync_ok=0` |
+
+Mỗi mẫu: `csi [20,224]` (2 s, 9,9 Hz), `keypoints [33,2]` pixel, `visibility [33]`, `mask [33]`, kèm `timestamp_ms`, `session_id`, `activity`.
+
+### 11.5 Giới hạn
+
+- **Không chia được train/validation/test**: 1 lần lặp/hoạt động; chia ngẫu nhiên trong cùng phiên là rò rỉ dữ liệu.
+- `empty`: nhãn phiên thắng detector; nếu dùng `person_present` của MediaPipe làm đặc trưng thì phải huấn luyện lại trên dữ liệu có nhãn đúng.
+- Chất lượng khớp thấp ở `walking` (57,4%) do người di chuyển, tay bị che/ra khỏi khung.
+- 1.054 mẫu là đủ để chạy thử quy trình, **không** đủ để kết luận mô hình dựng đúng tư thế người thật.

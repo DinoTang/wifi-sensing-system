@@ -84,4 +84,34 @@ Nếu **thiết bị vẫn còn nguyên vị trí như ngày đó**: có thể *
 - `environment`: ghi kích thước phòng + vật liệu.
 - `notes`: thêm hậu tố `(đo bù ngày __/__, chưa xác nhận có giữ nguyên vị trí từ 25/10 hay không)`.
 
+---
+
+## E. Phiên có video (gói tư thế, từ 2026-11)
+
+Mỗi phiên là **một thư mục** chứa đủ các file sau:
+
+| File | Bắt buộc | Ghi chú |
+|---|---|---|
+| `raw.csi`, `recorder.log`, `wifi.txt`, `metadata.txt`, `start-time.txt`, `end-time.txt` | **có** | lấy từ máy thu CSI — phải **copy về cùng thư mục**, không để đường dẫn trỏ sang máy khác |
+| video (`.mov` / `.mp4`) | **có** | máy cố định, đủ 60 s, không cắt, không quay dọc |
+| `screen-clock.csv` | **có** | log đồng hồ của máy thu CSI (chạy trước khi bắt đầu ~30 s) |
+| `session-notes.txt` | **có** | `session_id`, `participant_id`, `activity`, `repeat`, `duration_seconds`, `synchronization_status` |
+| `csi-folder.txt` | **có** | đường dẫn máy thu CSI — dùng để đối chiếu, nhưng thư mục CSI vẫn phải copy về |
+
+### Bắt buộc: đồng hồ phải NHÌN THẤY trong video
+
+Đây là điều kiện của bước đồng bộ. Không có nó thì không ghép được CSI với tư thế.
+
+- Mở đồng hồ hiển thị giờ của máy thu CSI (hoặc app đồng hồ trên điện thoại đã chỉnh cùng giờ) và **để trong khung hình** suốt phiên, hoặc ít nhất **10 s đầu và 10 s cuối**.
+- Phiên `P01_left_arm_01_20261103-025544_ttVs` quay cảnh phòng, **không có đồng hồ nào trong hình** → không đồng bộ được, dù `screen-clock.csv` rất sạch.
+- Không dùng thời điểm tạo file / mtime để thay thế: ở phiên mẫu, thời gian tạo file lệch **4 giờ 47 phút** so với giờ thu thật.
+- Đầu phiên nên **vẫy tay/clap 1 lần** làm mốc, ghi vào `session-notes.txt` là ở giây thứ mấy — dùng để kiểm tra chéo kết quả đồng bộ.
+- Chỉ ghi `synchronization_status=verified` sau khi đã tính được lệch **≤ 100 ms**.
+
+### Nhãn của phiên có video
+
+- `metadata.txt` của máy CSI thường chỉ ghi `label=test`; **hoạt động thật lấy từ `session-notes.txt`** (`activity=left_arm`).
+- Một phiên `left_arm` 60 s thường có lúc giơ tay, lúc buông tay (phiên mẫu: giơ ở ~2 s, 25 s, 40 s; buông ở 12 s, 55 s) → **nhãn đoạn không phải nhãn từng frame**; tư thế phải lấy từ video.
+- 3 lần lặp cho mỗi hoạt động, **trộn thứ tự** giữa 6 hoạt động, không thu dồn từng hoạt động.
+
 Nếu **đã đổi chỗ hoặc không nhớ**: giữ nguyên `chưa ghi nhận` trong CSV — báo cáo đã ghi rõ đây là giới hạn của bộ dữ liệu, và cách sửa duy nhất là **thu lại có phiếu ghi**. Không được điền phỏng đoán: số sai trong metadata sẽ làm hỏng cả phần kết luận về ảnh hưởng của khoảng cách/vị trí.

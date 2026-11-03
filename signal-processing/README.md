@@ -54,24 +54,38 @@ signal-processing/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+├── csi-data/                 # dữ liệu gốc gói tư thế (6 phiên)
+│   ├── labeled/<trial>/      # raw.csi, recorder.log, wifi.txt, ping.log, notes...
+│   └── video-sessions/<session>/  # video, session-notes.txt, screen-clock.csv
+├── models/                   # pose_landmarker_lite.task (tải về, không commit)
 ├── data/
 │   ├── raw/                  # CSV gốc của bộ ESP32 — giữ nguyên
 │   ├── processed/            # đầu ra pipeline bộ ESP32
 │   ├── intel_raw/            # CSV sinh từ raw.csi (bộ Intel)
 │   │   └── _sessions_metadata.csv   # metadata từng phiên (bắt đầu bằng "_" = không phải phiên thu)
-│   └── intel/
-│       ├── data/processed/   # đầu ra pipeline bộ Intel
-│       └── results/          # PNG biểu đồ bộ Intel
+│   ├── intel/
+│   │   ├── data/processed/   # đầu ra pipeline bộ Intel
+│   │   └── results/          # PNG biểu đồ bộ Intel
+│   └── pose/                 # đầu ra gói tư thế (index, csv, landmarks, windows, npz)
 ├── src/
+│   ├── check_dataset_readiness.py    # audit file thiếu + tách cấu hình CSI + phủ 6 hoạt động
+│   ├── check_pose_sessions.py        # audit gói video+CSI của gói tư thế
+│   ├── build_pose_index.py           # ghép CSI ↔ video theo trial id
+│   ├── parse_pose_sessions.py        # raw.csi -> CSV theo nhãn hoạt động
 │   ├── parse_intel_csi.py            # raw.csi + recorder.log -> CSV
-│   └── csi_preprocessing_pipeline.py # CSV -> dataset + QC + đặc trưng + biểu đồ
+│   ├── csi_preprocessing_pipeline.py # CSV -> dataset + QC + đặc trưng + biểu đồ
+│   ├── estimate_sync.py              # offset CSI ↔ video bằng tương quan chuyển động
+│   ├── extract_pose.py               # MediaPipe -> landmarks 33 điểm
+│   └── build_pose_windows.py         # ghép cửa sổ CSI + tư thế -> .npz
 ├── analyze_ping_artifact.py          # kiểm chứng nghi vấn cú nhọn do ping
 ├── analyze_session_drift.py          # kiểm chứng nghi vấn trôi nền theo thứ tự thu
 ├── tests/
 │   └── test_pipeline_smoke.py
 ├── results/                  # PNG biểu đồ bộ ESP32
 └── docs/
-    └── report_nguoi2.md
+    ├── report_nguoi2.md         # báo cáo kết quả phân tích
+    ├── capture_checklist.md     # phiếu ghi điều kiện thu
+    └── video_pose_spec.md      # chốt thông số bước 3/5/6 (video + tư thế)
 ```
 
 ## Cài đặt
@@ -92,6 +106,15 @@ Nếu PowerShell không cho phép activate môi trường, có thể dùng `.ven
 
 Từ thư mục `signal-processing/`:
 
+**Bước 0 — kiểm tra dữ liệu thô trước khi xử lý** (không sửa gì, chỉ đọc):
+
+```bash
+python src/check_dataset_readiness.py
+python src/check_dataset_readiness.py --strict   # thoát mã 1 nếu thiếu file/hoạt động
+```
+
+> Xuất `data/intel_raw/_session_manifest.csv`: mỗi phiên một dòng — số bản ghi `raw.csi` so với `recorder.log`, nhịp lấy mẫu thực tế, số khoảng thiếu dữ liệu, cấu hình CSI trong phiên, file nào còn thiếu. In ra bảng phủ **6 hoạt động** của gói việc mới (`empty, standing, left_arm, right_arm, walking, mixed`) và tình trạng `screen-clock.csv` / video.
+
 **Bước 1 — chuyển `raw.csi` thành CSV** (chỉ cần làm lại khi có phiên thu mới):
 
 ```bash
@@ -99,6 +122,8 @@ python src/parse_intel_csi.py                  # mặc định: nhóm VHT -> dat
 python src/parse_intel_csi.py --group noht     # nếu muốn nhóm NOHT (52 mẫu)
 python src/parse_intel_csi.py --include-test   # thêm phiên test_01
 ```
+
+> Parser cũng xuất `data/intel_raw/_rejected_records.csv`: **mọi bản ghi không được ghi vào CSV đều có mặt ở đây kèm lý do** (`rate_group` = thuộc nhóm PHY khác, `shape_mismatch` = cấu hình anten/subcarrier khác). Không bản ghi nào biến mất âm thầm.
 
 > Chạy lại parser **không xoá** 4 cột metadata điền tay (`distance_m`, `position`, `environment`, `notes`): parser đọc file `_sessions_metadata.csv` cũ và giữ lại các giá trị khác `chưa ghi nhận`, chỉ sinh `chưa ghi nhận` cho phiên hoàn toàn mới.
 
@@ -148,6 +173,12 @@ Bộ Intel (`--output-dir data/intel`):
 - `data/intel/data/processed/*_normalized.csv` + `normalization_params.csv` — chỉ có khi chạy với `--normalization zscore|minmax`.
 - `data/intel/results/*.png` — heatmap từng phiên + `mean_amplitude_by_session.png` + `preliminary_motion_score.png` + `temporal_variability_by_class.png` + `filter_before_after.png`.
 - `data/intel/results/ping_periodicity_check.{csv,png}` và `session_drift_check.{csv,png}` — đầu ra của 2 script kiểm chứng (chạy riêng).
+
+Bộ Intel — đầu ra phía dữ liệu thô (`data/intel_raw/`):
+
+- `_sessions_metadata.csv` — metadata từng phiên (có 4 cột điền tay).
+- `_rejected_records.csv` — bản ghi bị loại khi parse, kèm lý do.
+- `_session_manifest.csv` — audit đầu vào từ `check_dataset_readiness.py`.
 
 Bộ ESP32: cùng danh sách file nhưng ở `data/processed/` và `results/`.
 
@@ -214,6 +245,68 @@ python -m pytest -q
 3. Vì sao một số `sample_index` luôn bằng 0 (16 chỉ số = 16 tone null của OFDM) và xác nhận chúng với Người 1.
 4. Ý nghĩa và đơn vị của `timestamp_ms`, cách xử lý timestamp trùng.
 5. Cách chia train/test theo phiên để tránh rò rỉ giữa các frame cùng một phiên.
+
+## Gói việc tư thế từ video (docx)
+
+6 hoạt động (`empty`, `standing`, `left_arm`, `right_arm`, `walking`, `mixed`), mỗi phiên có **CSI + video**, nhãn tư thế lấy từ video, ghép cửa sổ CSI với bộ xương rồi bàn giao cho Người 3. Dữ liệu nằm ở `csi-data/` (6 phiên, mỗi hoạt động 1 lần lặp).
+
+### Chạy lại toàn bộ (đúng thứ tự)
+
+```bash
+python src/build_pose_index.py          # ghép CSI ↔ video theo trial id -> data/pose/index.csv
+python src/parse_pose_sessions.py       # raw.csi -> data/pose/raw_csv/<activity>_<repeat>.csv
+python src/csi_preprocessing_pipeline.py \
+    --input-dir data/pose/raw_csv --output-dir data/pose --expected-samples 224
+python src/estimate_sync.py --plot      # offset CSI ↔ video (tương quan chuyển động)
+python src/extract_pose.py              # MediaPipe -> data/pose/landmarks/*.csv
+python src/build_pose_windows.py        # -> data/pose/windows/*.npz + windows_index.csv
+```
+
+### Trạng thái 7 bước
+
+| Bước | Nội dung | Trạng thái |
+|---|---|---|
+| 1 | Nhận & sắp xếp dữ liệu | **xong** — `build_pose_index.py` ghép 6/6 phiên, manifest `data/pose/index.csv` |
+| 2 | Đọc & kiểm tra CSI | **xong** — 3.489 frame VHT, 781.536 dòng, **0 frame thiếu mẫu**, 0 timestamp lùi |
+| 3 | Đồng bộ CSI ↔ video | **làm được nhưng KHÔNG kiểm chứng được** — xem bên dưới |
+| 4 | Xử lý tín hiệu | **xong** — amplitude, temporal std, lọc before/after, `filter_evaluation.csv` |
+| 5 | Trích xuất tư thế | **xong** — MediaPipe 33 điểm, 10 Hz, 591–600 frame/phiên |
+| 6 | Ghép mẫu CSI + tư thế | **xong về máy móc** — 1.054 cửa sổ, nhưng `sync_ok=0` |
+| 7 | Bàn giao Người 3 | **có bộ mẫu**, chưa dùng để huấn luyện được (xem giới hạn) |
+
+### Kết quả
+
+| Phiên | Frame CSI | Frame pose | Cửa sổ | Cửa sổ bị loại (khoảng trống) |
+|---|---:|---:|---:|---:|
+| `empty_01` | 569 | 591 | 190 | 84 |
+| `standing_01` | 581 | 591 | 194 | 84 |
+| `left_arm_01` | 596 | 591 | 201 | 84 |
+| `right_arm_01` | 572 | 591 | 185 | 88 |
+| `walking_01` | 601 | 591 | 131 | 77 (+80 cửa sổ thiếu khớp) |
+| `mixed_01` | 570 | 600 | 153 | 86 (+37 cửa sổ thiếu khớp) |
+| **Tổng** | **3.489** | **3.555** | **1.054** | — |
+
+Kiểm tra tính đúng của tư thế trên `left_arm_01`: cổ tay **trái** cao hơn vai trái ở **57,7%** cửa sổ, cổ tay **phải** cao hơn vai phải ở **0%** — khớp với nhãn `left_arm`.
+
+### Giới hạn phải ghi trong báo cáo
+
+1. **Đồng bộ chưa kiểm chứng.** Video không quay được đồng hồ, nên `estimate_sync.py` phải suy offset từ tương quan chuyển động: 6/6 phiên cho kết quả **`weak`/`unreliable`** (r 0,11–0,28; đỉnh phụ gần bằng đỉnh chính; các phiên cho offset mâu thuẫn nhau −38 s … +1,5 s). Vì vậy bộ mẫu dùng **giả định offset = 0** và mọi mẫu bị đánh dấu `sync_ok=0`.
+   Bằng chứng gián tiếp cho thấy giả định này *không* đúng: ở `left_arm_01`, motion của CSI khi **giơ tay** (7,99) lại **thấp hơn** khi không giơ (8,60) — ngược với kỳ vọng.
+2. **`empty` bị detector nhận nhầm người.** MediaPipe báo có người ở **89,7%** frame của phiên phòng trống. Script dùng nhãn phiên (không có người) và lưu giá trị detector vào cột `detector_person_present` để thấy rõ bất đồng.
+3. **Mỗi hoạt động mới 1 lần lặp** → chưa chia được train/validation/test theo phiên (cần 3 lần/hoạt động).
+4. **Khớp bị che:** `walking_01` chỉ 57,4% frame có ≥5/6 khớp tay–vai, `mixed_01` 85,2%.
+5. **Khoảng trống CSI:** mỗi phiên có 8–11 khoảng 700–810 ms, làm mất ~84 cửa sổ/phiên.
+
+### Đầu ra
+
+- `data/pose/index.csv` — ghép CSI ↔ video, thời lượng, số frame, log đồng hồ.
+- `data/pose/raw_csv/*.csv` + `_pose_metadata.csv` — CSI đã parse, 9 cột.
+- `data/pose/data/processed/*` + `data/pose/results/*` — QC, đặc trưng, heatmap, lọc before/after.
+- `data/pose/sync_report.csv` + `results/sync_correlation.png` — kết quả đồng bộ.
+- `data/pose/landmarks/*.csv` + `landmarks_summary.csv` — 33 điểm MediaPipe, toạ độ pixel.
+- `data/pose/windows/*.npz` + `windows_index.csv` + `windows_summary.csv` — bộ mẫu bàn giao (CSI `[N,20,224]`, keypoints `[N,33,2]`, visibility, mask).
+
+Thông số và các quyết định cần chốt với Người 3: [docs/video_pose_spec.md](docs/video_pose_spec.md).
 
 ## Bàn giao cho Người 3
 

@@ -1,0 +1,7 @@
+session_id=P01_mixed_01_20261103-030037_i7Q7
+participant_id=P01
+activity=mixed
+repeat=01
+trial=2026110303003721028
+duration_seconds=60
+synchronization_status=not_yet_verified

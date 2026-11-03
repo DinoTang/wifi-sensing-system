@@ -62,6 +62,13 @@ SCENARIO_LABELS = {
     "person_static": "person_static",
     "person_moving": "person_moving",
     "multiple_people": "multiple_people",
+    # Pose package (video + CSI): one CSV per activity, e.g. left_arm_01.csv
+    "empty": "empty",
+    "standing": "standing",
+    "left_arm": "left_arm",
+    "right_arm": "right_arm",
+    "walking": "walking",
+    "mixed": "mixed",
 }
 
 

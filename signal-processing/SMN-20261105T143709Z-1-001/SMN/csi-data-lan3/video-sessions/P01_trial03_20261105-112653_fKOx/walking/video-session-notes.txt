@@ -1,0 +1,5 @@
+participant=P01
+activity=walking
+trial=03
+capture_id=202611051135224277
+synchronization_status=not_yet_verified

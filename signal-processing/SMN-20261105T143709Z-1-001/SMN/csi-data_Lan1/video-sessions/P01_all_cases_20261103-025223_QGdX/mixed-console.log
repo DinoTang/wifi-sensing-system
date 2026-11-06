@@ -1,0 +1,27 @@
+
+Activity: mixed
+START recording video on your phone now.
+Include your WHOLE BODY and the LAPTOP SCREEN.
+* for pci_ids(0000:00:14.3)(0000:00:14.3) 10000 NOHT 
+* rnf 0x4100
+* for /sys/kernel/debug/iwlwifi/0000:00:14.3/iwlmvm/
+Output: /home/toan/csi-data/labeled/test_2026110303003721028_20261103-030041_G9GZ
+Starting in 30 seconds.
+RECORDING: test / trial 2026110303003721028 / 60 seconds
+
+--- 192.168.0.1 ping statistics ---
+596 packets transmitted, 596 received, 0% packet loss, time 59962ms
+rtt min/avg/max/mdev = 0.899/2.227/18.546/1.893 ms
+FINISHED: Non-empty recording saved.
+-rw-r--r-- 1 toan toan 909K Nov  3 03:02 /home/toan/csi-data/labeled/test_2026110303003721028_20261103-030041_G9GZ/raw.csi
+CSI messages in the log:
+1094
+Output: /home/toan/csi-data/labeled/test_2026110303003721028_20261103-030041_G9GZ
+
+STOP recording video on your phone now.
+Video session folder: /home/toan/csi-data/video-sessions/P01_mixed_01_20261103-030037_i7Q7
+CSI folder: /home/toan/csi-data/labeled/test_2026110303003721028_20261103-030041_G9GZ
+
+CAPTURE SAVED — synchronization still needs checking.
+Copy your original phone video to:
+/home/toan/csi-data/video-sessions/P01_mixed_01_20261103-030037_i7Q7/video-original.mp4

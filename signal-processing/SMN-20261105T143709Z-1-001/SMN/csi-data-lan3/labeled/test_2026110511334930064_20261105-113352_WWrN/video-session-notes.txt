@@ -1,0 +1,5 @@
+participant=P01
+activity=right_arm
+trial=03
+capture_id=2026110511334930064
+synchronization_status=not_yet_verified

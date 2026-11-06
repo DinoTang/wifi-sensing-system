@@ -1,0 +1,4 @@
+label=test
+trial=2026110511291216737
+duration_seconds=60
+recorder_exit_code=124

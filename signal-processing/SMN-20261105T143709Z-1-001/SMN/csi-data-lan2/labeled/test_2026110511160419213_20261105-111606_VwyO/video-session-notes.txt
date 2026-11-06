@@ -1,0 +1,5 @@
+participant=P01
+activity=mixed
+trial=02
+capture_id=2026110511160419213
+synchronization_status=not_yet_verified

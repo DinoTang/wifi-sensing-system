@@ -1,5 +1,7 @@
 # Wi-Fi Sensing System
 
+**Người 4 — backend CSI:** xem [hướng dẫn cài đặt, phát lại, thu trực tiếp và API](backend/README.md).
+
 A Wi-Fi sensing system that uses **Channel State Information (CSI)** to detect human presence in an indoor environment.
 
 The system collects CSI data from Wi-Fi signals, processes and extracts meaningful signal features, applies a detection algorithm, and visualizes the results through an application interface.

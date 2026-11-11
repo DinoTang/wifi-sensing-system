@@ -1,0 +1,5 @@
+numpy>=1.24,<3
+torch>=2.6,<3
+fastapi>=0.115,<1
+uvicorn>=0.34,<1
+websockets>=14,<17

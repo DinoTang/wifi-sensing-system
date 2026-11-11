@@ -45,7 +45,16 @@ CSI_FILES = [
     "end-time.txt",
     "wifi.txt",
     "ping.log",
-    "screen-clock.csv",
+    "video-session-notes.txt",
+]
+ACTIVITY_CSI_FILES = [
+    "raw.csi",
+    "recorder.log",
+    "metadata.txt",
+    "start-time.txt",
+    "end-time.txt",
+    "wifi.txt",
+    "ping.log",
     "video-session-notes.txt",
 ]
 
@@ -59,6 +68,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--group", choices=sorted(GROUPS), default="vht")
     parser.add_argument(
         "--skip-video", action="store_true", help="Đừng giải mã video (nhanh hơn)"
+    )
+    parser.add_argument(
+        "--activity-only",
+        action="store_true",
+        help=(
+            "Build an activity-classification index without requiring video or "
+            "screen-clock files. This cannot produce pose-training labels."
+        ),
     )
     return parser.parse_args()
 
@@ -117,6 +134,20 @@ def find_video(folder: Path) -> Path | None:
     return None
 
 
+def capture_session_fields(csi_meta: dict, notes: dict) -> tuple[str, str, str]:
+    capture_id = csi_meta.get("trial", "")
+    trial = notes.get("trial", "") or capture_id
+    repeat = notes.get("repeat", "") or trial
+    return capture_id, trial, repeat
+
+
+def capture_session_id(notes: dict, capture_id: str, trial: str, activity: str) -> str:
+    if notes.get("session_id"):
+        return notes["session_id"]
+    participant = notes.get("participant") or notes.get("participant_id") or "unknown"
+    return f"{participant}_trial{trial}_{activity}_{capture_id or 'unknown'}"
+
+
 def main() -> None:
     args = parse_args()
     csi_data = Path(args.csi_data)
@@ -130,7 +161,9 @@ def main() -> None:
     for folder in sorted(p for p in videos_root.iterdir() if p.is_dir()):
         notes = read_key_values(folder / "session-notes.txt")
         trial = notes.get("trial", "")
-        if not trial or find_video(folder) is None:
+        if not trial or (
+            not args.activity_only and find_video(folder) is None
+        ):
             continue  # aggregate export folder, not a session
         video_sessions[trial] = folder
 
@@ -140,12 +173,17 @@ def main() -> None:
 
     for csi_dir in sorted(p for p in labeled.iterdir() if p.is_dir()):
         csi_meta = read_key_values(csi_dir / "metadata.txt")
-        trial = csi_meta.get("trial", "")
         notes = read_key_values(csi_dir / "video-session-notes.txt")
+        capture_id, trial, repeat = capture_session_fields(csi_meta, notes)
         activity = notes.get("activity", "")
-        repeat = notes.get("repeat", "")
+        participant = notes.get("participant") or notes.get("participant_id", "")
 
-        missing_csi = [name for name in CSI_FILES if not (csi_dir / name).exists()]
+        required_csi_files = (
+            ACTIVITY_CSI_FILES if args.activity_only else CSI_FILES
+        )
+        missing_csi = [
+            name for name in required_csi_files if not (csi_dir / name).exists()
+        ]
         video_folder = video_sessions.get(trial)
         video = find_video(video_folder) if video_folder else None
 
@@ -170,14 +208,16 @@ def main() -> None:
             csi_end = (csi_dir / "end-time.txt").read_text().strip()
 
         row = {
-            "session_id": video_folder.name if video_folder else "",
+            "session_id": capture_session_id(notes, capture_id, trial, activity),
+            "recording_session_id": video_folder.name if video_folder else "",
             "activity": activity,
-            "participant": notes.get("participant_id", ""),
+            "participant": participant,
             "repeat": repeat,
             "trial": trial,
+            "capture_id": capture_id,
             "sync_status": notes.get("synchronization_status", ""),
-            "csi_dir": csi_dir.relative_to(csi_data.parent).as_posix(),
-            "video_file": video.relative_to(csi_data.parent).as_posix() if video else "",
+            "csi_dir": str(csi_dir.resolve()),
+            "video_file": str(video.resolve()) if video else "",
             "csi_start": csi_start,
             "csi_end": csi_end,
             "csi_frames_vht": frames_in_group,
@@ -193,7 +233,7 @@ def main() -> None:
         reasons = []
         if missing_csi:
             reasons.append(f"thiếu {', '.join(missing_csi)}")
-        if video is None:
+        if video is None and not args.activity_only:
             reasons.append("không có video/không khớp trial")
         if activity not in SIX_ACTIVITIES:
             reasons.append(f"activity='{activity}' ngoài 6 hoạt động")
@@ -208,7 +248,11 @@ def main() -> None:
         raise SystemExit("Không tìm thấy phiên nào.")
 
     print("=" * 96)
-    print("GHÉP PHIÊN CSI ↔ VIDEO")
+    print(
+        "LẬP DANH SÁCH PHIÊN HOẠT ĐỘNG"
+        if args.activity_only
+        else "GHÉP PHIÊN CSI ↔ VIDEO"
+    )
     print("=" * 96)
     header = (
         f"{'activity':<11}{'rep':<4}{'CSI':>6}{'video':>7}{'fps':>6}"
@@ -246,7 +290,13 @@ def main() -> None:
         for name, reasons in problems:
             print(f"  - {name}: {'; '.join(reasons)}")
         raise SystemExit(1)
-    print("OK: mọi phiên đủ file CSI, có video giải mã được, nhãn thuộc 6 hoạt động.")
+    if args.activity_only:
+        print(
+            "OK: các phiên CSI có metadata hoạt động hợp lệ. "
+            "Video/nhãn khớp không được kiểm tra ở chế độ này."
+        )
+    else:
+        print("OK: mọi phiên đủ file CSI, có video giải mã được, nhãn thuộc 6 hoạt động.")
 
 
 if __name__ == "__main__":

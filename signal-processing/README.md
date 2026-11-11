@@ -164,7 +164,7 @@ python -m pytest -q
 Bộ Intel (`--output-dir data/intel`):
 
 - `data/intel/data/processed/csi_dataset_with_session_labels.csv` — toàn bộ 1.131.872 dòng, có cờ QC.
-- `data/intel/data/processed/csi_dataset_complete_frames.csv` — **file chính bàn giao cho Người 3** (chỉ frame đủ mẫu).
+- `data/intel/data/processed/csi_dataset_complete_frames.csv` — dữ liệu CSI theo mẫu, chỉ gồm frame đủ mẫu.
 - `data/intel/data/processed/frame_quality_report.csv` — QC theo frame.
 - `data/intel/data/processed/session_quality_summary.csv` — QC theo phiên.
 - `data/intel/data/processed/preliminary_frame_features.csv` — đặc trưng theo frame (mean/std/max amplitude, rssi, motion_score).
@@ -179,6 +179,8 @@ Bộ Intel — đầu ra phía dữ liệu thô (`data/intel_raw/`):
 - `_sessions_metadata.csv` — metadata từng phiên (có 4 cột điền tay).
 - `_rejected_records.csv` — bản ghi bị loại khi parse, kèm lý do.
 - `_session_manifest.csv` — audit đầu vào từ `check_dataset_readiness.py`.
+
+**Đầu vào baseline machine-learning:** dùng `preliminary_frame_features.csv` ghép với `temporal_features.csv` theo `session_id` và `frame_id`. Không dùng file CSV đã chuẩn hóa toàn cục; baseline tự fit bộ điền giá trị thiếu/chuẩn hóa bên trong từng fold, chỉ từ các phiên train. Hướng dẫn chạy nằm trong [`../machine-learning/README.md`](../machine-learning/README.md).
 
 Bộ ESP32: cùng danh sách file nhưng ở `data/processed/` và `results/`.
 
@@ -259,6 +261,8 @@ python src/csi_preprocessing_pipeline.py \
     --input-dir data/pose/raw_csv --output-dir data/pose --expected-samples 224
 python src/estimate_sync.py --plot      # offset CSI ↔ video (tương quan chuyển động)
 python src/extract_pose.py              # MediaPipe -> data/pose/landmarks/*.csv
+# Có thể giới hạn trích xuất vào một đoạn video (thời gian vẫn là giây từ đầu video):
+python src/extract_pose.py --sessions walking_02 --start-seconds 430 --end-seconds 503
 python src/build_pose_windows.py        # -> data/pose/windows/*.npz + windows_index.csv
 ```
 
@@ -304,7 +308,13 @@ Kiểm tra tính đúng của tư thế trên `left_arm_01`: cổ tay **trái** 
 - `data/pose/data/processed/*` + `data/pose/results/*` — QC, đặc trưng, heatmap, lọc before/after.
 - `data/pose/sync_report.csv` + `results/sync_correlation.png` — kết quả đồng bộ.
 - `data/pose/landmarks/*.csv` + `landmarks_summary.csv` — 33 điểm MediaPipe, toạ độ pixel.
-- `data/pose/windows/*.npz` + `windows_index.csv` + `windows_summary.csv` — bộ mẫu bàn giao (CSI `[N,20,224]`, keypoints `[N,33,2]`, visibility, mask).
+- `data/pose/windows/*.npz` + `windows_index.csv` + `windows_summary.csv` — bộ mẫu ghép (CSI `[N,20,224]`, keypoints pixel và `keypoints_normalized` `[N,33,2]`, visibility, mask, `person_present`, kích thước ảnh và `sync_ok`).
+
+`extract_pose.py` lưu kích thước ảnh cùng từng frame. `build_pose_windows.py`
+giữ nguyên tọa độ pixel và bổ sung tọa độ chuẩn hóa `[0,1]`; các mẫu không có
+người có `person_present=0` và mask khớp bằng 0. Bộ trích xuất hiện lưu 33
+landmark MediaPipe; mô hình Người 3 chọn COCO-17 theo tên khớp. Chỉ cửa sổ
+`sync_ok=1` được phép dùng để huấn luyện.
 
 Thông số và các quyết định cần chốt với Người 3: [docs/video_pose_spec.md](docs/video_pose_spec.md).
 

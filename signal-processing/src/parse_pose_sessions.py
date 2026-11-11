@@ -36,6 +36,11 @@ DEFAULT_INDEX = PROJECT / "data" / "pose" / "index.csv"
 DEFAULT_OUTPUT = PROJECT / "data" / "pose"
 
 
+def resolve_indexed_path(value: str | Path) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else PROJECT / path
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Parse pose-package CSI sessions")
     parser.add_argument("--index", type=Path, default=DEFAULT_INDEX)
@@ -64,8 +69,9 @@ def main() -> None:
     print("=" * 78)
 
     metadata = []
+    skipped_sessions = []
     for row in index_rows:
-        csi_dir = PROJECT / row["csi_dir"]
+        csi_dir = resolve_indexed_path(row["csi_dir"])
         activity = row["activity"]
         repeat = row["repeat"]
 
@@ -78,6 +84,9 @@ def main() -> None:
         )
         if skip is not None:
             print(f"[SKIP] {skip['session']}: {skip['reason']}")
+            skipped_sessions.append(
+                f"{skip['session']}: {skip['reason']}"
+            )
             continue
 
         session["file_name"] = f"{activity}_{repeat}.csv"
@@ -125,6 +134,13 @@ def main() -> None:
             f"ts_backwards={session['timestamp_backwards']}"
         )
 
+    if skipped_sessions:
+        details = "\n  - ".join(skipped_sessions)
+        raise SystemExit(
+            "Không hoàn tất parse: có phiên CSI bị bỏ qua. "
+            "Dừng để tránh huấn luyện trên feature cũ hoặc thiếu phiên:\n"
+            f"  - {details}"
+        )
     if not metadata:
         raise SystemExit("Không parse được phiên nào.")
 

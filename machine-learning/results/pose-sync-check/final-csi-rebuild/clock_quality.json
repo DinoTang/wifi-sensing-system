@@ -1,0 +1,21 @@
+{
+  "Lan1": {
+    "screen_clock_rows": 5807,
+    "host_display_abs_diff_p99_ms": 0.99012704,
+    "host_display_max_abs_diff_ms": 0.999983
+  },
+  "Lan2": {
+    "session_clock_rows": 12815,
+    "host_to_display_slope": 0.9999997119276269,
+    "host_to_display_drift_ms": -0.1869910000207948,
+    "host_display_abs_diff_p99_ms": 0.9891304399999999,
+    "host_display_max_abs_diff_ms": 0.999424
+  },
+  "Lan3": {
+    "session_clock_rows": 13926,
+    "host_to_display_slope": 0.9999997093653211,
+    "host_to_display_drift_ms": -0.20595599996806402,
+    "host_display_abs_diff_p99_ms": 0.98885775,
+    "host_display_max_abs_diff_ms": 0.999459
+  }
+}

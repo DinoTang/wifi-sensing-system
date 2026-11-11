@@ -87,6 +87,29 @@ def read_sync(path: Path) -> dict[str, dict]:
         }
 
 
+def sync_alignment(
+    sync_row: dict[str, str], assumed_offset: float
+) -> tuple[float, int, str]:
+    verdict = sync_row.get("verdict", "")
+    offset_value = sync_row.get("best_offset_s", "")
+    if offset_value:
+        offset_s = float(offset_value)
+        if not np.isfinite(offset_s):
+            raise ValueError("Sync offset must be finite.")
+        sync_ok = int(sync_row.get("sync_ok") or (1 if verdict == "usable" else 0))
+        if sync_ok not in (0, 1):
+            raise ValueError("Sync report sync_ok must be 0 or 1.")
+        source = (
+            sync_row.get("sync_source")
+            or sync_row.get("method")
+            or ("verified_sync_report" if sync_ok else "estimated_unverified")
+        )
+        return offset_s, sync_ok, source
+    if verdict == "usable":
+        raise ValueError("A usable sync report row must include best_offset_s.")
+    return assumed_offset, 0, "assumed"
+
+
 def load_csi(csv_path: Path):
     """Return (amplitudes [frames, tones], frame_ids, timestamps ms)."""
     frame = pd.read_csv(csv_path, usecols=["frame_id", "timestamp_ms", "sample_index", "amplitude"])
@@ -108,7 +131,18 @@ def load_pose(path: Path):
     ys = np.column_stack([frame[f"{name}_y"].to_numpy() for name in LANDMARKS])
     vis = np.column_stack([frame[f"{name}_vis"].to_numpy() for name in LANDMARKS])
     present = frame["person_present"].to_numpy(dtype=np.int8)
-    return times, xs, ys, vis, present
+    for column in ("frame_width", "frame_height"):
+        if column not in frame:
+            raise ValueError(
+                f"{path.name} is missing {column}; rerun extract_pose.py."
+            )
+        if frame[column].nunique(dropna=False) != 1:
+            raise ValueError(f"{path.name} has inconsistent {column} values.")
+    width = int(frame["frame_width"].iloc[0])
+    height = int(frame["frame_height"].iloc[0])
+    if width <= 0 or height <= 0:
+        raise ValueError(f"{path.name} has invalid image dimensions.")
+    return times, xs, ys, vis, present, width, height
 
 
 def pose_at(times, xs, ys, vis, present, target_s):
@@ -153,17 +187,14 @@ def main() -> None:
             continue
 
         sync_row = sync.get(key, {})
-        if sync_row.get("verdict") == "usable":
-            offset_s = float(sync_row["best_offset_s"])
-            sync_ok = 1
-            sync_source = "motion_correlation"
-        else:
-            offset_s = args.assume_offset
-            sync_ok = 0
-            sync_source = "assumed"
+        offset_s, sync_ok, sync_source = sync_alignment(
+            sync_row, args.assume_offset
+        )
 
         amps, frame_ids, ts_ms = load_csi(csi_path)
-        times, xs, ys, vis, present = load_pose(pose_path)
+        times, xs, ys, vis, present, image_width, image_height = load_pose(
+            pose_path
+        )
 
         dt = float(np.median(np.diff(ts_ms))) / 1000.0
         window = max(2, int(round(args.window / dt)))
@@ -173,6 +204,7 @@ def main() -> None:
         keypoints = []
         visibility = []
         masks = []
+        person_presence = []
         window_meta = []
         rejected = {"gap": 0, "no_pose": 0, "person_mismatch": 0, "few_joints": 0}
 
@@ -225,6 +257,7 @@ def main() -> None:
             keypoints.append(kp)
             visibility.append(vis[index].astype(np.float32))
             masks.append(visible.astype(np.uint8))
+            person_presence.append(person)
             window_meta.append(
                 {
                     "session": row["session_id"],
@@ -253,13 +286,18 @@ def main() -> None:
             out_path,
             csi=np.stack(csi_windows),
             keypoints=np.stack(keypoints),
+            keypoints_normalized=np.stack(keypoints)
+            / np.array([image_width, image_height], dtype=np.float32),
             visibility=np.stack(visibility),
             mask=np.stack(masks),
+            person_present=np.asarray(person_presence, dtype=np.uint8),
             activity=activity,
             session=row["session_id"],
             window_seconds=args.window,
             step_seconds=args.step,
             sampling_interval_ms=dt * 1000,
+            image_width=image_width,
+            image_height=image_height,
             offset_s=offset_s,
             sync_ok=sync_ok,
             landmarks=np.array(LANDMARKS),

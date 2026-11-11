@@ -103,7 +103,7 @@ Mỗi phiên là **một thư mục** chứa đủ các file sau:
 Đây là điều kiện của bước đồng bộ. Không có nó thì không ghép được CSI với tư thế.
 
 - Mở đồng hồ hiển thị giờ của máy thu CSI (hoặc app đồng hồ trên điện thoại đã chỉnh cùng giờ) và **để trong khung hình** suốt phiên, hoặc ít nhất **10 s đầu và 10 s cuối**.
-- Phiên `P01_left_arm_01_20261103-025544_ttVs` quay cảnh phòng, **không có đồng hồ nào trong hình** → không đồng bộ được, dù `screen-clock.csv` rất sạch.
+- Trong các mẫu hình thưa đã kiểm tra của `P01_left_arm_01_20261103-025544_ttVs` có một đồng hồ treo tường ở hậu cảnh, nhưng mặt/kim bị che và không xác nhận được đó là giờ đồng bộ với máy CSI. Vì vậy hiện vẫn **không có mốc giờ đọc được và kiểm chứng độc lập**; `screen-clock.csv` sạch tự nó chưa xác định được video bắt đầu lúc nào.
 - Không dùng thời điểm tạo file / mtime để thay thế: ở phiên mẫu, thời gian tạo file lệch **4 giờ 47 phút** so với giờ thu thật.
 - Đầu phiên nên **vẫy tay/clap 1 lần** làm mốc, ghi vào `session-notes.txt` là ở giây thứ mấy — dùng để kiểm tra chéo kết quả đồng bộ.
 - Chỉ ghi `synchronization_status=verified` sau khi đã tính được lệch **≤ 100 ms**.

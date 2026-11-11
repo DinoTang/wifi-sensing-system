@@ -1,0 +1,49 @@
+{
+  "model_version": "20261110-020608-922645",
+  "target": "single-person 2D pose and person presence",
+  "session_count": 12,
+  "sample_count": 1974,
+  "window_shape": [20, 224],
+  "image_size": {
+    "width": 1920,
+    "height": 1080
+  },
+  "feature_count": 4480,
+  "activities": [
+    "empty",
+    "left_arm",
+    "mixed",
+    "right_arm",
+    "standing",
+    "walking"
+  ],
+  "landmarks": [
+    "nose",
+    "left_eye",
+    "right_eye",
+    "left_ear",
+    "right_ear",
+    "left_shoulder",
+    "right_shoulder",
+    "left_elbow",
+    "right_elbow",
+    "left_wrist",
+    "right_wrist",
+    "left_hip",
+    "right_hip",
+    "left_knee",
+    "right_knee",
+    "left_ankle",
+    "right_ankle"
+  ],
+  "coordinate_system": "normalized_image_xy_[0,1]",
+  "selected_coordinate_model": "training_mean",
+  "evaluation": "leave_one_session_out_cross_validation",
+  "sync_policy": "Only samples from sessions marked sync_ok=1 were used.",
+  "limitations": [
+    "Leave-one-session-out cross-validation is not a separate final test set.",
+    "Results apply only to the recorded participant and fixed capture setup.",
+    "Pose coordinates are pseudo-labels from the video pose detector.",
+    "The selected training_mean coordinates do not use CSI to generate moving joints."
+  ]
+}

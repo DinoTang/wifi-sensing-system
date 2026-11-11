@@ -1,0 +1,3 @@
+train_round,test_round,coordinate_model,selected_by_train_cv,train_cv_mean_error,samples,valid_joint_count,mean_error_image_diagonal,pck_at_005_image_diagonal,presence_accuracy,presence_balanced_accuracy,presence_f1
+Lan2,Lan3,training_mean,1,0.04094693833885922,983,13493,0.046230633633498816,0.7197806269917735,0.866734486266531,0.9178168130489335,0.9104579630895421
+Lan2,Lan3,ridge,0,0.055678534062755934,983,13493,0.1143145254928096,0.20825613280960498,0.866734486266531,0.9178168130489335,0.9104579630895421

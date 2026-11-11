@@ -1,8 +1,8 @@
-"""Estimate the CSI ↔ video time offset when no clock is visible in the video.
+"""Estimate the CSI ↔ video time offset when visual clock anchors are unavailable.
 
-The task sheet asks to read a clock shown in the video. In this capture round
-the clock was never in frame, so the offset has to be estimated from something
-both sensors see: **motion**.
+The preferred method is to fit visible clock readings from the video. This
+motion-correlation estimator is a fallback and reports weak or ambiguous peaks
+instead of treating them as verified synchronization.
 
 Method
 ------
@@ -10,11 +10,10 @@ Method
    (the same idea as ``motion_score`` in the preprocessing pipeline).
 2. Video side: mean absolute difference between consecutive grayscale frames.
 3. Both series are resampled to 10 Hz and z-scored.
-4. For every candidate offset in a plausible window the Pearson correlation of
+4. For every candidate lag in the shared-data range the Pearson correlation of
    the overlapping part is computed.
 
-The plausible window is bounded by the capture logs: the clock logger started
-~34 s before the CSI recording, and the recording itself lasts 60 s.
+The search covers every lag with at least ``MIN_OVERLAP_S`` of shared data.
 
 Output per session: best offset, correlation at that offset, the runner-up
 offset and the peak ratio. A weak peak means "cannot be established", and the
@@ -41,11 +40,6 @@ DEFAULT_INDEX = PROJECT / "data" / "pose" / "index.csv"
 DEFAULT_OUTPUT = PROJECT / "data" / "pose" / "sync_report.csv"
 
 GRID_HZ = 10.0
-# Search window relative to the first CSI frame: video may have started up to
-# 40 s before the CSI recording (the capture tool waits 30 s) and at most a few
-# seconds after it.
-LAG_MIN_S = -40.0
-LAG_MAX_S = 5.0
 LAG_STEP_S = 0.05
 MIN_OVERLAP_S = 20.0
 
@@ -68,6 +62,19 @@ def parse_args() -> argparse.Namespace:
         help="Làm mượt cả hai chuỗi trước khi tương quan (giây)",
     )
     return parser.parse_args()
+
+
+def lag_bounds(csi_duration_s: float, video_duration_s: float) -> tuple[float, float]:
+    """Return all lags that leave enough overlap for correlation."""
+    return (
+        -(csi_duration_s - MIN_OVERLAP_S),
+        video_duration_s - MIN_OVERLAP_S,
+    )
+
+
+def lag_to_offset_s(lag_s: float) -> float:
+    """Convert video-time-at-first-CSI lag to the offset used by windowing."""
+    return -lag_s
 
 
 def csi_motion(csv_path: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -132,7 +139,7 @@ def smooth(values: np.ndarray, seconds: float) -> np.ndarray:
 
 
 def correlate(csi: np.ndarray, video: np.ndarray, lags_s: np.ndarray) -> np.ndarray:
-    """Pearson r for each lag. lag > 0 means the video starts after CSI t=0."""
+    """Pearson r for each lag; positive lag maps CSI t=0 to later video time."""
     shift = np.round(lags_s * GRID_HZ).astype(int)
     scores = np.full(len(lags_s), np.nan)
     for index, offset in enumerate(shift):
@@ -165,7 +172,6 @@ def main() -> None:
     with index_path.open(newline="", encoding="utf-8") as handle:
         index_rows = list(csv.DictReader(handle))
 
-    lags = np.arange(LAG_MIN_S, LAG_MAX_S + 1e-9, LAG_STEP_S)
     rows = []
     curves = {}
 
@@ -192,6 +198,11 @@ def main() -> None:
         smooth_s = args.smooth
         csi_series = smooth(zscore(csi_grid), smooth_s)
         video_series = smooth(zscore(video_grid), smooth_s)
+        lag_min, lag_max = lag_bounds(csi_t[-1], video_duration)
+        if lag_min > lag_max:
+            print(f"[WARN] {activity}_{repeat}: CSI/video overlap is under 20 seconds")
+            continue
+        lags = np.arange(lag_min, lag_max + LAG_STEP_S / 2, LAG_STEP_S)
         scores = correlate(csi_series, video_series, lags)
         curves[(activity, repeat)] = (lags.copy(), scores.copy())
 
@@ -206,8 +217,11 @@ def main() -> None:
 
         # Runner-up: best correlation at least 1 s away from the main peak.
         far = np.abs(lags - best_lag) > 1.0
-        runner = float(np.nanmax(scores[far])) if far.any() else float("nan")
+        runner_idx = int(np.nanargmax(scores[far])) if far.any() else -1
+        runner = float(scores[far][runner_idx]) if runner_idx >= 0 else float("nan")
         ratio = best_r / abs(runner) if runner and not np.isnan(runner) else float("nan")
+        best_offset = lag_to_offset_s(best_lag)
+        runner_lag = float(lags[far][runner_idx]) if runner_idx >= 0 else float("nan")
 
         if best_r >= R_STRONG and ratio >= RATIO_STRONG:
             verdict = "usable"
@@ -221,10 +235,11 @@ def main() -> None:
                 "session": row["session_id"],
                 "activity": activity,
                 "repeat": repeat,
-                "best_offset_s": round(best_lag, 2),
+                "best_lag_s": round(best_lag, 2),
+                "best_offset_s": round(best_offset, 2),
                 "correlation_r": round(best_r, 3),
-                "runner_up_offset_s": round(float(lags[far][int(np.nanargmax(scores[far]))]), 2)
-                if far.any()
+                "runner_up_offset_s": round(lag_to_offset_s(runner_lag), 2)
+                if runner_idx >= 0
                 else "",
                 "runner_up_r": round(runner, 3) if not np.isnan(runner) else "",
                 "peak_ratio": round(ratio, 2) if not np.isnan(ratio) else "",
@@ -232,7 +247,7 @@ def main() -> None:
             }
         )
         print(
-            f"{activity:<11}{repeat:<3} offset={best_lag:>7.2f} s  r={best_r:>5.3f}"
+            f"{activity:<11}{repeat:<3} offset={best_offset:>7.2f} s  r={best_r:>5.3f}"
             f"  runner={runner:>5.3f}  ratio={ratio:>4.2f}  -> {verdict}"
         )
 
@@ -275,7 +290,7 @@ def main() -> None:
             axis.axhline(0, color="gray", lw=0.5)
             axis.set_ylabel(f"{activity}_{repeat}", fontsize=8)
             axis.tick_params(labelsize=7)
-        axes[-1].set_xlabel("offset (s) — dương: video bắt đầu sau frame CSI đầu")
+        axes[-1].set_xlabel("lag (s) — video time aligned with first CSI frame")
         figure.tight_layout()
         plot_path = PROJECT / "data" / "pose" / "results" / "sync_correlation.png"
         plot_path.parent.mkdir(parents=True, exist_ok=True)

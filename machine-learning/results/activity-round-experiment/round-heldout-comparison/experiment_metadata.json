@@ -1,0 +1,36 @@
+{
+  "evaluation": "leave-one-recording-round-out; all sessions from held-out round excluded from training",
+  "rounds": [
+    "Lan1",
+    "Lan2",
+    "Lan3"
+  ],
+  "sessions": 18,
+  "labels": [
+    "empty",
+    "standing",
+    "left_arm",
+    "right_arm",
+    "walking",
+    "mixed"
+  ],
+  "frames_raw": 10237,
+  "frames_smoothed": 10237,
+  "features": {
+    "temporal_only": [
+      "temporal_std_amplitude",
+      "temporal_std_amplitude_max"
+    ],
+    "frame_plus_temporal": [
+      "mean_amplitude",
+      "std_amplitude",
+      "max_amplitude",
+      "mean_rssi",
+      "motion_score",
+      "temporal_std_amplitude",
+      "temporal_std_amplitude_max"
+    ]
+  },
+  "smoothing": "Existing centered 5-frame moving average on amplitude per CSI tone; offline only (uses future samples).",
+  "caveat": "Activity label is the session label copied to every frame, not frame-level event annotation. Three held-out rounds only; metrics do not establish deployment performance."
+}

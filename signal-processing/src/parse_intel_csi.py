@@ -513,7 +513,7 @@ def main() -> None:
     )
     if remaining:
         print(
-            f"[METADATA] {remaining} field(s) still '{PLACEHOLDER}' — "
+            f"[METADATA] {remaining} field(s) still need values; "
             "fill distance_m, position, environment, notes by hand."
         )
     else:

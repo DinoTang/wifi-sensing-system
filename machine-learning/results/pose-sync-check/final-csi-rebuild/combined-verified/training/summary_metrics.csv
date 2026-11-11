@@ -1,0 +1,4 @@
+metric_group,model,sessions,samples,valid_joint_count,mean_error_image_diagonal,pck_at_005_image_diagonal,presence_accuracy,presence_balanced_accuracy,presence_f1
+pose,training_mean,12,1974,27046.0,0.04226418388119365,0.714338534348887,,,
+pose,ridge,12,1974,27046.0,0.057915236008424555,0.5519485321304445,,,
+presence,logistic_or_constant,12,1974,,,,0.779128672745694,0.5028044958302121,0.8743515850144092

@@ -87,6 +87,11 @@ KEY_JOINTS = [
 VISIBILITY_MIN = 0.3
 
 
+def resolve_indexed_path(value: str | Path) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else PROJECT / path
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Extract pose landmarks from videos")
     parser.add_argument("--index", type=Path, default=DEFAULT_INDEX)
@@ -94,6 +99,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--step", type=int, default=3, help="Lấy mỗi N frame")
     parser.add_argument("--width", type=int, default=640, help="Chiều rộng khi suy luận")
+    parser.add_argument(
+        "--start-seconds",
+        type=float,
+        default=0.0,
+        help="Chỉ trích xuất từ thời điểm này trong video (giây)",
+    )
+    parser.add_argument(
+        "--end-seconds",
+        type=float,
+        default=0.0,
+        help="Dừng trước thời điểm này trong video; 0 nghĩa là hết video",
+    )
     parser.add_argument(
         "--sessions",
         default="",
@@ -103,6 +120,27 @@ def parse_args() -> argparse.Namespace:
         "--limit", type=int, default=0, help="Giới hạn số frame suy luận (để thử)"
     )
     return parser.parse_args()
+
+
+def frame_bounds(
+    start_seconds: float, end_seconds: float, fps: float, total_frames: int
+) -> tuple[int, int]:
+    if start_seconds < 0:
+        raise ValueError("start-seconds must be non-negative.")
+    if end_seconds != 0 and end_seconds <= start_seconds:
+        raise ValueError("end-seconds must be greater than start-seconds.")
+    if fps <= 0 or total_frames <= 0:
+        raise ValueError("Video must have a positive frame rate and frame count.")
+
+    start_frame = int(round(start_seconds * fps))
+    end_frame = (
+        total_frames
+        if end_seconds == 0
+        else min(total_frames, int(round(end_seconds * fps)))
+    )
+    if start_frame >= total_frames or end_frame <= start_frame:
+        raise ValueError("Requested extraction range is outside the video.")
+    return start_frame, end_frame
 
 
 def build_landmarker(model_path: Path, running_mode):
@@ -138,7 +176,13 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    header = ["frame_index", "video_time_s", "person_present"]
+    header = [
+        "frame_index",
+        "video_time_s",
+        "frame_width",
+        "frame_height",
+        "person_present",
+    ]
     for name in LANDMARKS:
         header += [f"{name}_x", f"{name}_y", f"{name}_vis"]
 
@@ -151,16 +195,26 @@ def main() -> None:
         key = f"{row['activity']}_{row['repeat']}"
         if wanted and key not in wanted:
             continue
-        video_path = PROJECT / row["video_file"]
+        video_path = resolve_indexed_path(row["video_file"])
         if not video_path.exists():
             print(f"[SKIP] {key}: không thấy video")
             continue
 
         capture = cv2.VideoCapture(str(video_path))
+        if not capture.isOpened():
+            raise RuntimeError(f"Không giải mã được video {video_path}")
         fps = capture.get(cv2.CAP_PROP_FPS) or 30.0
         width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         total = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        try:
+            start_frame, end_frame = frame_bounds(
+                args.start_seconds, args.end_seconds, fps, total
+            )
+        except ValueError:
+            capture.release()
+            raise
+        capture.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 
         # A fresh landmarker per session: VIDEO mode requires timestamps to
         # increase for the lifetime of the object, so reusing one across videos
@@ -171,7 +225,7 @@ def main() -> None:
         )
 
         out_path = output_dir / f"{key}.csv"
-        frame_index = 0
+        frame_index = start_frame
         rows_written = 0
         frames_with_person = 0
         frames_with_key_joints = 0
@@ -182,6 +236,8 @@ def main() -> None:
             writer.writerow(header)
 
             while True:
+                if frame_index >= end_frame:
+                    break
                 ok, frame = capture.read()
                 if not ok:
                     break
@@ -224,6 +280,8 @@ def main() -> None:
                         [
                             frame_index,
                             round(frame_index / fps, 3),
+                            width,
+                            height,
                             present,
                             *values,
                         ]
@@ -243,6 +301,8 @@ def main() -> None:
                 "activity": row["activity"],
                 "repeat": row["repeat"],
                 "video_frames": total,
+                "extracted_start_seconds": round(start_frame / fps, 3),
+                "extracted_end_seconds": round(min(end_frame, total) / fps, 3),
                 "inferred_frames": rows_written,
                 "fps": round(fps, 2),
                 "width": width,

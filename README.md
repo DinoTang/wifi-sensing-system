@@ -225,6 +225,12 @@ Processed CSI / Features
 
 The Machine Learning module uses processed CSI data to determine whether a person is present in the monitored environment.
 
+For the Task 3 CSI-to-pose and activity experiments, see the
+[research and results guide](machine-learning/results/pose-sync-check/HUONG_DAN_DOC_VA_KET_QUA_TASK3.md).
+The repository includes code, reports, compact metrics, and figures, but not
+the original CSI/video captures. Reproducing training requires separately
+available data; the guide explains the current results and limitations.
+
 ### Input
 
 Processed CSI features from the Signal Processing module.

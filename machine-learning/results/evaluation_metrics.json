@@ -1,0 +1,218 @@
+{
+  "timestamp": "2026-11-11T21:31:30Z",
+  "independent_test": {
+    "total_samples": 131,
+    "mpjpe_pixels": 213.73373413085938,
+    "evaluated_joints": 4290,
+    "accuracy": 0.9923664122137404,
+    "precision": 1.0,
+    "recall": 0.9923664122137404,
+    "f1": 0.9961685823754789,
+    "confusion_matrix": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        130
+      ]
+    ],
+    "pck@5": 21.025641025641026,
+    "pck@10": 48.717948717948715,
+    "pck@20": 85.71095571095572
+  },
+  "validation": {
+    "total_samples": 153,
+    "mpjpe_pixels": 206.98486328125,
+    "evaluated_joints": 4994,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusion_matrix": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        153
+      ]
+    ],
+    "pck@5": 22.066479775730876,
+    "pck@10": 48.79855826992391,
+    "pck@20": 84.68161794152984
+  },
+  "all_sessions_diagnostic_only": {
+    "total_samples": 1054,
+    "mpjpe_pixels": 82.25448608398438,
+    "evaluated_joints": 28424,
+    "accuracy": 0.9990512333965844,
+    "precision": 1.0,
+    "recall": 0.9988425925925926,
+    "f1": 0.9994209612044007,
+    "confusion_matrix": [
+      [
+        190,
+        0
+      ],
+      [
+        1,
+        863
+      ]
+    ],
+    "pck@5": 71.68238108640585,
+    "pck@10": 81.21657754010695,
+    "pck@20": 93.4316070925978
+  },
+  "presence_evaluation_note": "empty_01 is the only empty session and is assigned to train; therefore independent validation (mixed_01) and test (walking_01) contain only human-present windows. Independent empty false-positive testing requires recording an unseen empty_02 session.",
+  "latency": {
+    "mean_latency_ms": 5.0622249994194135,
+    "std_latency_ms": 0.6599516943126034,
+    "p95_latency_ms": 6.352170038735494,
+    "throughput_fps": 197.54159487472208,
+    "mean_e2e_latency_ms": 6.013999002752826,
+    "p95_e2e_latency_ms": 7.079855009214952,
+    "e2e_throughput_fps": 166.27871064532332
+  },
+  "per_session": {
+    "empty_01": {
+      "split": "train",
+      "activity": "empty",
+      "samples": 190,
+      "mpjpe_px": 0.0,
+      "valid_joint_evaluations": 0,
+      "presence_accuracy": 1.0,
+      "presence_confusion_matrix": [
+        [
+          190,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "pck@5": 0.0,
+      "pck@10": 0.0,
+      "pck@20": 0.0
+    },
+    "left_arm_01": {
+      "split": "train",
+      "activity": "left_arm",
+      "samples": 201,
+      "mpjpe_px": 11.19125747680664,
+      "valid_joint_evaluations": 6633,
+      "presence_accuracy": 1.0,
+      "presence_confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          201
+        ]
+      ],
+      "pck@5": 97.40690486959144,
+      "pck@10": 99.44218302427258,
+      "pck@20": 99.89446705864616
+    },
+    "mixed_01": {
+      "split": "val",
+      "activity": "mixed",
+      "samples": 153,
+      "mpjpe_px": 206.98486328125,
+      "valid_joint_evaluations": 4994,
+      "presence_accuracy": 1.0,
+      "presence_confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          153
+        ]
+      ],
+      "pck@5": 22.066479775730876,
+      "pck@10": 48.79855826992391,
+      "pck@20": 84.68161794152984
+    },
+    "right_arm_01": {
+      "split": "train",
+      "activity": "right_arm",
+      "samples": 185,
+      "mpjpe_px": 44.69367980957031,
+      "valid_joint_evaluations": 6105,
+      "presence_accuracy": 1.0,
+      "presence_confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          185
+        ]
+      ],
+      "pck@5": 90.22113022113022,
+      "pck@10": 91.07289107289107,
+      "pck@20": 92.1048321048321
+    },
+    "standing_01": {
+      "split": "train",
+      "activity": "standing",
+      "samples": 194,
+      "mpjpe_px": 6.2972517013549805,
+      "valid_joint_evaluations": 6402,
+      "presence_accuracy": 1.0,
+      "presence_confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          194
+        ]
+      ],
+      "pck@5": 100.0,
+      "pck@10": 100.0,
+      "pck@20": 100.0
+    },
+    "walking_01": {
+      "split": "test",
+      "activity": "walking",
+      "samples": 131,
+      "mpjpe_px": 213.73373413085938,
+      "valid_joint_evaluations": 4290,
+      "presence_accuracy": 0.9923664122137404,
+      "presence_confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          130
+        ]
+      ],
+      "pck@5": 21.025641025641026,
+      "pck@10": 48.717948717948715,
+      "pck@20": 85.71095571095572
+    }
+  },
+  "per_activity_mpjpe": {
+    "left_arm (train)": 11.19125747680664,
+    "mixed (val)": 206.98486328125,
+    "right_arm (train)": 44.69367980957031,
+    "standing (train)": 6.2972517013549805,
+    "walking (test)": 213.73373413085938
+  },
+  "exported_videos": [
+    "results\\pose_comparison_mixed_01.mp4",
+    "results\\pose_comparison_walking_01.mp4"
+  ]
+}

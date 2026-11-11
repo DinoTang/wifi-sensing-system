@@ -1,0 +1,47 @@
+{
+  "task": "csi_human_presence_and_pose_estimation",
+  "version": "1.0.0",
+  "data": {
+    "data_dir": "../signal-processing/data/pose/windows",
+    "window_size": 20,
+    "num_subcarriers": 224,
+    "num_keypoints": 33,
+    "frame_width": 1920,
+    "frame_height": 1080,
+    "normalize_coordinates": true,
+    "train_sessions": ["empty_01", "standing_01", "left_arm_01", "right_arm_01"],
+    "val_sessions": ["mixed_01"],
+    "test_sessions": ["walking_01"]
+  },
+  "model": {
+    "name": "CSIPoseNet",
+    "input_features": 224,
+    "conv_channels": [64, 128],
+    "gru_hidden_dim": 96,
+    "gru_num_layers": 2,
+    "bidirectional": true,
+    "dropout": 0.35,
+    "num_keypoints": 33,
+    "use_temporal_diff": true,
+    "bound_pose": true
+  },
+  "training": {
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "max_epochs": 60,
+    "early_stopping_patience": 15,
+    "gain_shift_aug_std": 0.5,
+    "subcarrier_shift_aug_std": 0.2,
+    "noise_aug_std": 0.08,
+    "loss_weights": {
+      "presence": 1.0,
+      "pose": 5.0
+    },
+    "seed": 42
+  },
+  "evaluation": {
+    "pck_thresholds": [0.05, 0.1, 0.2],
+    "mpjpe_pixel_scale": [1920, 1080]
+  }
+}

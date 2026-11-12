@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10161d">
+  <title>Wi-Fi Sensing · Dashboard CSI</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./dashboard.css">
+  <script type="module" src="./dashboard.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Đến nội dung</a>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="#signal">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>Wi-Fi Sensing<small>Dashboard CSI</small></span>
+      </a>
+      <nav class="navigation" aria-label="Màn hình">
+        <a id="nav-signal" href="#signal" aria-current="page"><span aria-hidden="true">∿</span>Tín hiệu CSI</a>
+        <a id="nav-presence" href="#presence"><span aria-hidden="true">◎</span>Hiện diện</a>
+      </nav>
+      <div class="sidebar-session">
+        <span class="muted">Phiên hiện tại</span>
+        <strong class="mono" id="session-id">—</strong>
+        <span class="muted">Cấu hình thu</span>
+        <strong class="mono" id="capture-info">—</strong>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <span class="transport" id="transport" role="status" data-tone="warn">Đang kết nối</span>
+        <div class="source-controls">
+          <span class="source-tag" id="source-tag" data-source="unknown">Chờ nguồn</span>
+          <label class="sr-only" for="source-mode">Chế độ dữ liệu</label>
+          <select id="source-mode">
+            <option value="backend">Kết nối backend</option>
+            <option value="mock">Dữ liệu giả lập</option>
+          </select>
+        </div>
+      </header>
+
+      <main id="main" tabindex="-1">
+        <div class="page-heading">
+          <div>
+            <h1 id="page-title">Tín hiệu CSI</h1>
+            <p id="page-description">Biên độ Channel State Information theo thời gian.</p>
+          </div>
+          <div class="actions" id="session-actions">
+            <button class="primary" type="button" id="start" disabled>Bắt đầu phiên</button>
+            <button class="secondary" type="button" id="stop" disabled>Dừng phiên</button>
+          </div>
+        </div>
+        <div class="notice demo-controls" id="demo-controls" hidden>
+          <div><strong>Giả lập</strong><span> · Tín hiệu và tọa độ mẫu</span></div>
+          <label for="demo-state">Trạng thái mẫu
+            <select id="demo-state">
+              <option value="present">Có người</option>
+              <option value="empty">Phòng trống</option>
+              <option value="waiting">Chờ dữ liệu</option>
+              <option value="error">Lỗi mô hình</option>
+            </select>
+          </label>
+        </div>
+        <p class="notice error-notice" id="request-error" role="alert" hidden></p>
+
+        <section id="signal-panel" aria-labelledby="page-title">
+          <dl class="metrics">
+            <div class="panel metric"><dt>Biên độ mới nhất</dt><dd><span id="amplitude">—</span><small>đv. thô</small></dd></div>
+            <div class="panel metric"><dt>Tần số lấy mẫu</dt><dd><span id="sample-rate">—</span><small>Hz</small></dd></div>
+            <div class="panel metric"><dt>Mẫu đang hiển thị</dt><dd><span id="point-count">0</span><small>mẫu</small></dd></div>
+          </dl>
+
+          <article class="panel chart-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Biên độ CSI trung bình</h2>
+                <p id="chart-description">Biên độ I/Q thô trước chuẩn hóa</p>
+              </div>
+              <label class="range-select" for="range">Cửa sổ
+                <select id="range"><option value="5">5 giây</option><option value="10" selected>10 giây</option><option value="20">20 giây</option></select>
+              </label>
+            </div>
+            <div class="chart-stage" id="chart-stage">
+              <canvas id="chart" role="img" aria-label="Biểu đồ biên độ CSI theo thời gian"></canvas>
+              <div class="stage-placeholder" id="chart-placeholder">
+                <strong id="chart-empty-title">Đang kết nối</strong>
+                <span id="chart-empty-note">Đang mở luồng dữ liệu.</span>
+              </div>
+              <div class="chart-tooltip" id="chart-tooltip" hidden></div>
+            </div>
+            <footer class="panel-foot">
+              <span class="legend"><i class="line-swatch"></i>Biên độ trung bình</span>
+              <span id="chart-time" class="mono">Chưa có timestamp</span>
+            </footer>
+          </article>
+        </section>
+
+        <section id="presence-panel" aria-labelledby="page-title" hidden>
+          <div class="presence-layout">
+            <article class="panel pose-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Bộ xương 2D</h2>
+                  <p id="pose-description">Tọa độ dự đoán từ CSI</p>
+                </div>
+                <span class="frame-size mono" id="frame-size">—</span>
+              </div>
+              <div class="pose-stage">
+                <canvas id="skeleton" role="img" aria-label="Bộ xương 2D"></canvas>
+                <div class="stage-placeholder" id="pose-placeholder">
+                  <strong id="pose-empty-title">Chưa có kết quả</strong>
+                  <span id="pose-empty-note">Đang đợi dữ liệu cùng timestamp.</span>
+                </div>
+              </div>
+              <footer class="panel-foot pose-legend">
+                <span class="legend"><i class="joint-swatch left"></i>Trái cơ thể</span>
+                <span class="legend"><i class="joint-swatch right"></i>Phải cơ thể</span>
+                <span id="pose-time" class="mono">Chưa có timestamp</span>
+              </footer>
+            </article>
+
+            <article class="panel presence-card">
+              <h2>Trạng thái trong phòng</h2>
+              <div class="verdict" id="verdict" data-tone="neutral">
+                <span class="verdict-icon" aria-hidden="true"></span>
+                <div>
+                  <p id="presence-state" role="status">Chưa có kết quả</p>
+                  <p id="presence-note" class="muted">Đang đợi dữ liệu.</p>
+                </div>
+              </div>
+              <div class="probability" id="probability-group" hidden>
+                <label for="probability">Xác suất có người <strong class="mono" id="probability-value">—</strong></label>
+                <meter id="probability" min="0" max="1" value="0"></meter>
+              </div>
+              <dl class="readings">
+                <div><dt>Khớp hiển thị</dt><dd id="joint-count" class="mono">—</dd></div>
+                <div><dt>Mô hình</dt><dd id="model-version" class="mono">—</dd></div>
+                <div><dt>Xử lý tại backend</dt><dd id="backend-latency" class="mono">—</dd></div>
+              </dl>
+            </article>
+          </div>
+        </section>
+
+        <footer class="data-status" aria-label="Trạng thái dữ liệu">
+          <span id="stream-status" data-tone="neutral" role="status">Chờ dữ liệu</span>
+          <span class="mono" id="display-timing">—</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

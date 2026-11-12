@@ -2,6 +2,8 @@
 
 **Người 4 — backend CSI:** xem [hướng dẫn cài đặt, phát lại, thu trực tiếp và API](backend/README.md).
 
+**Người 5 — giao diện CSI và bộ xương 2D:** xem [hướng dẫn dashboard mới](frontend/README-dashboard.md).
+
 A Wi-Fi sensing system that uses **Channel State Information (CSI)** to detect human presence in an indoor environment.
 
 The system collects CSI data from Wi-Fi signals, processes and extracts meaningful signal features, applies a detection algorithm, and visualizes the results through an application interface.

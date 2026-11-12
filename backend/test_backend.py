@@ -52,14 +52,22 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
 
     with TestClient(create_app(Settings(capture, "replay", speed=8))) as client:
         assert "WebSocket" in client.get("/").text
+        assert "Dashboard CSI" in client.get("/dashboard/").text
+        assert "javascript" in client.get("/dashboard/dashboard.js").headers["content-type"]
         with client.websocket_connect("/ws") as socket:
             assert socket.receive_json()["status"] == "idle"
             response = client.post("/api/session/start")
             assert response.status_code == 202
             assert client.post("/api/session/start").status_code == 409
-            chart = receive_until(socket, lambda item: item["type"] == "chart")
-            pose = receive_until(socket, lambda item: item["type"] == "pose")
-            assert chart["timestamp_ms"] == pose["timestamp_ms"]
+            chart = None
+
+            def matches_chart(item):
+                nonlocal chart
+                if item["type"] == "chart":
+                    chart = item
+                return item["type"] == "pose" and chart is not None and item["timestamp_ms"] == chart["timestamp_ms"]
+
+            pose = receive_until(socket, matches_chart)
             assert len(chart["points"]) == 20
             assert chart["quantity"] == "mean_raw_csi_amplitude"
             assert pose["session_id"] == response.json()["session_id"]
@@ -78,7 +86,7 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
                 for joint in offline["keypoints"]
             ]
             with client.websocket_connect("/ws") as reconnected:
-                assert reconnected.receive_json()["status"] == "ready"
+                receive_until(reconnected, lambda item: item["type"] == "status" and item["status"] == "ready")
                 assert receive_until(reconnected, lambda item: item["type"] == "pose")["session_id"] == pose["session_id"]
             client.post("/api/session/stop").raise_for_status()
             stopped = receive_until(socket, lambda item: item.get("status") == "stopped")

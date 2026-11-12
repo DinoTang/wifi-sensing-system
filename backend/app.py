@@ -5,8 +5,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 import time
 
+from anyio import CancelScope
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .session import Session, Settings
 
@@ -34,6 +36,8 @@ def create_app(settings: Settings) -> FastAPI:
             await session.stop()
 
     app = FastAPI(title="Wi-Fi Sensing CSI", version="1", lifespan=lifespan)
+    dashboard_dir = Path(__file__).resolve().parents[1] / "frontend" / "dashboard"
+    app.mount("/dashboard", StaticFiles(directory=dashboard_dir, html=True), name="dashboard")
 
     @app.get("/", include_in_schema=False)
     async def preview():
@@ -92,6 +96,7 @@ def create_app(settings: Settings) -> FastAPI:
             session.subscribers.discard(subscriber)
             for task in tasks:
                 task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+            with CancelScope(shield=True):
+                await asyncio.gather(*tasks, return_exceptions=True)
 
     return app

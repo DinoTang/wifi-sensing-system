@@ -13,6 +13,9 @@ FEATURES = 224
 STRIDE = 2
 MAX_GAP_MS = 300
 NOMINAL_INTERVAL_MS = 101
+LANDMARK_COUNT = 33
+CADENCE_MEDIAN_MS = (80, 120)
+WINDOW_SPAN_MS = (1500, 2300)
 
 
 def load_model(checkpoint: Path, normalizer: Path):
@@ -24,6 +27,6 @@ def load_model(checkpoint: Path, normalizer: Path):
     model = CSIPosePredictor(checkpoint_path=checkpoint, normalizer_path=normalizer)
     if (model.window_size, model.subcarriers) != (WINDOW_SIZE, FEATURES):
         raise ValueError("Checkpoint does not accept 20 × 224 CSI windows")
-    if model.config.get("data", {}).get("num_keypoints") != len(LANDMARK_NAMES):
+    if model.config.get("data", {}).get("num_keypoints") != LANDMARK_COUNT or len(LANDMARK_NAMES) != LANDMARK_COUNT:
         raise ValueError("Checkpoint does not use the expected BlazePose landmark order")
     return model

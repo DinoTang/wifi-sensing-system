@@ -14,14 +14,16 @@ import uuid
 import numpy as np
 
 from .model import (
-    DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, MAX_GAP_MS, NOMINAL_INTERVAL_MS, STRIDE,
-    WINDOW_SIZE, load_model,
+    CADENCE_MEDIAN_MS, DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, FEATURES, LANDMARK_COUNT,
+    MAX_GAP_MS, NOMINAL_INTERVAL_MS, STRIDE, WINDOW_SIZE, WINDOW_SPAN_MS, load_model,
 )
-from .source import CaptureError, CaptureReader, Record, VHT_RATE
+from .report import SessionMetrics, artifact_digests
+from .source import CaptureError, CaptureReader, Record, VHT, VHT_RATE
 
 LOGGER = logging.getLogger("uvicorn.error")
 POLL_SECONDS = 0.025
 READ_BATCH = 64
+PENDING_WINDOWS = 1
 
 
 @dataclass(frozen=True)
@@ -53,12 +55,16 @@ class Subscriber:
         self.pending: dict[str, dict] = {}
         self.changed = asyncio.Event()
 
-    def put(self, message: dict) -> None:
+    def put(self, message: dict) -> int:
+        discarded = 0
         if message["type"] == "status" and message["status"] != "ready":
-            self.pending.pop("chart", None)
-            self.pending.pop("pose", None)
+            for kind in ("chart", "pose"):
+                if self.pending.pop(kind, None) is not None:
+                    discarded += 1
+        discarded += message["type"] in self.pending
         self.pending[message["type"]] = message
         self.changed.set()
+        return discarded
 
     async def get(self) -> dict:
         await self.changed.wait()
@@ -83,6 +89,7 @@ class Session:
         self.state = "idle"
         self.reason: str | None = None
         self.model_version: str | None = None
+        self.metrics: SessionMetrics | None = None
         self.person_present: bool | None = None
         self.frames = deque(maxlen=WINDOW_SIZE)
         self.timestamps = deque(maxlen=WINDOW_SIZE)
@@ -97,9 +104,11 @@ class Session:
         self.last_ws_send_ms: float | None = None
         self.capture_sequence: int | None = None
         self.counts = dict(records=0, accepted=0, filtered=0, backlog=0, gaps=0,
-                           dropped_windows=0, predictions=0, model_failures=0)
+                           timestamp_order_errors=0, incompatible_records=0, window_candidates=0,
+                           rejected_cadence=0, dropped_windows=0, predictions=0,
+                           present_predictions=0, empty_predictions=0, model_failures=0)
         self.latest: dict[str, dict] = {}
-        self.pending: asyncio.Queue[Window] = asyncio.Queue(maxsize=1)
+        self.pending: asyncio.Queue[Window] = asyncio.Queue(maxsize=PENDING_WINDOWS)
 
     def envelope(self, kind: str) -> dict:
         return {
@@ -119,7 +128,7 @@ class Session:
             "reason": self.reason,
             "person_present": self.person_present,
             "keypoints": [],
-            "capture": {"rate": VHT_RATE, "shape": [2, 2, 56], "features": 224,
+            "capture": {"rate": VHT_RATE, "shape": [VHT["nrx"], VHT["ntx"], VHT["ntone"]], "features": FEATURES,
                         "sequence": self.capture_sequence},
             "window": {"size": WINDOW_SIZE, "filled": len(self.frames), "stride": STRIDE},
             "counts": self.counts.copy(),
@@ -128,17 +137,51 @@ class Session:
             "last_ws_send_ms": self.last_ws_send_ms,
         }
 
+    def report(self) -> dict | None:
+        if self.metrics is None:
+            return None
+        return {
+            "report_version": 1, "session_id": self.session_id, "source": self.settings.source,
+            "status": self.state, "reason": self.reason,
+            "model": {"version": self.model_version, "artifact_sha256": self.metrics.artifacts.copy()},
+            "configuration": {
+                "rate": VHT_RATE, "payload_bytes": VHT["csi_len"],
+                "window_shape": [WINDOW_SIZE, FEATURES], "stride": STRIDE,
+                "maximum_gap_ms": MAX_GAP_MS, "cadence_median_ms": CADENCE_MEDIAN_MS,
+                "window_span_ms": WINDOW_SPAN_MS, "landmarks": LANDMARK_COUNT,
+                "pending_windows": PENDING_WINDOWS if self.settings.source == "live" else 0,
+                "replay_speed": self.settings.speed if self.settings.source == "replay" else None,
+                "live_timeout_s": self.settings.timeout if self.settings.source == "live" else None,
+            },
+            "counts": self.counts.copy(), "last_gap_ms": self.last_gap_ms,
+            **self.metrics.snapshot(self.counts["predictions"]),
+        }
+
+    def record_send(self, message: dict, duration_ms: float | None) -> None:
+        if self.metrics is None or message["session_id"] != self.session_id:
+            return
+        if duration_ms is None:
+            self.metrics.websocket["send_timeouts"] += 1
+        else:
+            self.last_ws_send_ms = round(duration_ms, 3)
+            self.metrics.websocket["sent"] += 1
+            self.metrics.timings["ws_send"].append(duration_ms)
+
     def emit(self, kind: str, **payload) -> None:
         self.sequence += 1
         message = self.status() if kind == "status" else {**self.envelope(kind), **payload}
         self.latest[kind] = message
         for subscriber in self.subscribers:
-            subscriber.put(message)
+            discarded = subscriber.put(message)
+            if self.metrics is not None:
+                self.metrics.websocket["discarded"] += discarded
 
     def set_state(self, status: str, reason: str | None = None) -> None:
         if (status, reason) == (self.state, self.reason):
             return
         self.state, self.reason = status, reason
+        if self.metrics is not None:
+            self.metrics.transition(status, reason, self.target_ms)
         if status != "ready":
             self.person_present = None
             self.latest.pop("pose", None)
@@ -173,21 +216,42 @@ class Session:
                 return False
             self.reset()
             self.session_id = uuid.uuid4().hex
+            self.metrics = SessionMetrics()
             self.set_state("starting")
             self.task = asyncio.create_task(self.run())
             return True
 
-    async def stop(self) -> None:
+    async def stop(self, session_id: str | None = None) -> bool:
         async with self.lock:
-            if self.task is not None and not self.task.done():
-                self.task.cancel()
-                await asyncio.gather(self.task, return_exceptions=True)
-            if self.session_id is not None:
+            if session_id is not None and session_id != self.session_id:
+                return False
+            if self.task is None or self.task.done():
+                return True
+            self.task.cancel()
+            await asyncio.gather(self.task, return_exceptions=True)
+            if self.state != "stopped":
                 self.invalidate_window("stopped", "REQUESTED_STOP")
+                self.metrics.finish()
+            return True
 
     async def run(self) -> None:
+        try:
+            await self.run_capture()
+        except asyncio.CancelledError:
+            self.invalidate_window("stopped", "REQUESTED_STOP")
+            raise
+        except Exception:
+            LOGGER.exception("Unexpected error in CSI session")
+            self.invalidate_window("source_error", "SESSION_FAILED")
+        finally:
+            self.metrics.finish()
+
+    async def run_capture(self) -> None:
         live = self.settings.source == "live"
         try:
+            self.metrics.artifacts = await asyncio.to_thread(
+                artifact_digests, self.settings.checkpoint, self.settings.normalizer,
+            )
             model = await asyncio.to_thread(load_model, self.settings.checkpoint, self.settings.normalizer)
             self.model_version = model.version
         except Exception:
@@ -256,8 +320,7 @@ class Session:
             if not reader.live:
                 if first_capture_ns is None:
                     first_capture_ns, clock_start = record.timestamp_ns, time.perf_counter()
-                due = clock_start + (record.timestamp_ns - first_capture_ns) / (1e9 * self.settings.speed)
-                await asyncio.sleep(max(0, due - time.perf_counter()))
+                await self.wait_for_replay_record(record, clock_start, first_capture_ns)
             window = self.ingest(record, parse_ms)
             if window is None:
                 continue
@@ -269,11 +332,25 @@ class Session:
                 self.counts["dropped_windows"] += 1
             self.pending.put_nowait(window)
 
+    async def wait_for_replay_record(self, record: Record, clock_start: float, first_capture_ns: int) -> None:
+        ns_per_second = 1e9 * self.settings.speed
+        due = clock_start + (record.timestamp_ns - first_capture_ns) / ns_per_second
+        if self.state == "ready" and self.timestamps:
+            gap_ns = (self.timestamps[-1] + MAX_GAP_MS + 1) * 1_000_000
+            if record.timestamp_ns >= gap_ns:
+                gap_due = clock_start + (gap_ns - first_capture_ns) / ns_per_second
+                await asyncio.sleep(max(0, gap_due - time.perf_counter()))
+                # Clear cached output before waiting through a gap. Keep the
+                # last sample timestamp so ingest can measure the actual gap.
+                self.set_state("insufficient_data", "CSI_GAP")
+        await asyncio.sleep(max(0, due - time.perf_counter()))
+
     def ingest(self, record: Record, parse_ms: float) -> Window | None:
         received = time.perf_counter()
         if not record.compatible:
             self.counts["filtered"] += 1
             if not record.rate.startswith("NOHT"):
+                self.counts["incompatible_records"] += 1
                 self.invalidate_window("incompatible", "CSI_CONFIGURATION")
             return None
 
@@ -284,10 +361,18 @@ class Session:
         self.last_received = received
         self.last_received_ms = time.time_ns() // 1_000_000
         self.counts["accepted"] += 1
+        if self.metrics is not None:
+            if self.metrics.first_timestamp_ms is None:
+                self.metrics.first_timestamp_ms = ts
+            self.metrics.last_timestamp_ms = ts
         if previous is not None and not 0 < ts - previous <= MAX_GAP_MS:
             self.last_gap_ms = ts - previous
             self.counts["gaps"] += 1
             reason = "CSI_GAP" if ts > previous else "CSI_TIMESTAMP_ORDER"
+            if reason == "CSI_TIMESTAMP_ORDER":
+                self.counts["timestamp_order_errors"] += 1
+            elif self.metrics is not None:
+                self.metrics.max_gap_ms = max(self.metrics.max_gap_ms or 0, self.last_gap_ms)
             self.invalidate_window("insufficient_data", reason)
         if self.state in {"disconnected", "incompatible"}:
             self.set_state("warming_up", "WAITING_FOR_WINDOW")
@@ -298,10 +383,15 @@ class Session:
         if self.segment_frames < self.next_window:
             return None
         self.next_window += STRIDE
+        self.counts["window_candidates"] += 1
         timestamps = tuple(self.timestamps)
         # 20 frames at about 101 ms per interval. Reject sustained loss or a
         # different packet cadence even if every individual gap is <= 300 ms.
-        if not (80 <= np.median(np.diff(timestamps)) <= 120 and 1500 <= ts - timestamps[0] <= 2300):
+        if not (
+            CADENCE_MEDIAN_MS[0] <= np.median(np.diff(timestamps)) <= CADENCE_MEDIAN_MS[1]
+            and WINDOW_SPAN_MS[0] <= ts - timestamps[0] <= WINDOW_SPAN_MS[1]
+        ):
+            self.counts["rejected_cadence"] += 1
             self.set_state("insufficient_data", "CSI_CADENCE")
             self.generation += 1
             if not self.pending.empty():
@@ -334,7 +424,9 @@ class Session:
             probability = float(result["presence_probability"])
             if not 0 <= probability <= 1:
                 raise ValueError("Invalid model presence probability")
-            present = bool(result["person_present"])
+            present = result["person_present"]
+            if not isinstance(present, bool):
+                raise ValueError("Invalid model presence result")
             coordinate_system = result["coordinate_system"]
             confidence_method = result["confidence_method"]
             # Upstream repeats presence probability on each joint. Send it
@@ -343,7 +435,7 @@ class Session:
                 {key: value for key, value in joint.items() if key != "confidence"}
                 for joint in result["keypoints"]
             ] if present else []
-            if present and (len(keypoints) != 33 or any(
+            if present and ([joint["id"] for joint in keypoints] != list(range(LANDMARK_COUNT)) or any(
                 not (0 <= joint[axis] <= 1) for joint in keypoints for axis in ("x_norm", "y_norm")
             )):
                 raise ValueError("Invalid model keypoints")
@@ -362,6 +454,15 @@ class Session:
         self.person_present = present
         self.last_result_received = window.received
         self.counts["predictions"] += 1
+        self.counts["present_predictions" if present else "empty_predictions"] += 1
+        timing_ms = {
+            "preprocess": round(window.preprocess_ms, 3),
+            "queue": round((started - window.ready) * 1000, 3),
+            "inference": round((completed - started) * 1000, 3),
+            "backend": round((completed - window.ready) * 1000 + window.preprocess_ms, 3),
+        }
+        if self.metrics is not None:
+            self.metrics.record_prediction(timing_ms, completed)
         self.set_state("ready")
         self.emit("chart", timestamp_ms=target, quantity="mean_raw_csi_amplitude",
                   points=[{"timestamp_ms": ts, "value": value}
@@ -370,10 +471,5 @@ class Session:
             "pose", timestamp_ms=target, status="ready", person_present=self.person_present,
             presence_probability=probability, confidence_method=confidence_method,
             coordinate_system=coordinate_system, keypoints=keypoints,
-            timing_ms={
-                "preprocess": round(window.preprocess_ms, 3),
-                "queue": round((started - window.ready) * 1000, 3),
-                "inference": round((completed - started) * 1000, 3),
-                "backend": round((completed - window.ready) * 1000 + window.preprocess_ms, 3),
-            },
+            timing_ms=timing_ms,
         )

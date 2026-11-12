@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import replace
+from hashlib import sha256
 import time
 
 from fastapi.testclient import TestClient
@@ -10,6 +11,7 @@ import pytest
 
 from backend.app import create_app
 from backend.model import DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, load_model
+from backend.report import SessionMetrics, TIMING_SAMPLE_LIMIT
 from backend.session import Session, Settings, Subscriber
 from backend.source import CaptureError, CaptureReader, ROOT
 from parse_intel_csi import convert_session
@@ -54,6 +56,7 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
         assert "WebSocket" in client.get("/").text
         assert "Dashboard CSI" in client.get("/dashboard/").text
         assert "javascript" in client.get("/dashboard/dashboard.js").headers["content-type"]
+        assert client.get("/api/session/report").status_code == 404
         with client.websocket_connect("/ws") as socket:
             assert socket.receive_json()["status"] == "idle"
             response = client.post("/api/session/start")
@@ -88,9 +91,18 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             with client.websocket_connect("/ws") as reconnected:
                 receive_until(reconnected, lambda item: item["type"] == "status" and item["status"] == "ready")
                 assert receive_until(reconnected, lambda item: item["type"] == "pose")["session_id"] == pose["session_id"]
-            client.post("/api/session/stop").raise_for_status()
+            assert client.post("/api/session/stop", params={"session_id": "previous-session"}).status_code == 409
+            client.post("/api/session/stop", params={"session_id": pose["session_id"]}).raise_for_status()
             stopped = receive_until(socket, lambda item: item.get("status") == "stopped")
             assert stopped["person_present"] is None and stopped["keypoints"] == []
+            report = client.get("/api/session/report").json()
+            assert report["session_id"] == pose["session_id"] and report["status"] == "stopped"
+            assert report["finished_ms"] >= report["started_ms"]
+            assert report["model"]["artifact_sha256"]["checkpoint"] == sha256(DEFAULT_CHECKPOINT.read_bytes()).hexdigest()
+            counts = report["counts"]
+            assert counts["predictions"] == counts["present_predictions"] + counts["empty_predictions"]
+            assert report["timing_ms"]["backend"]["samples"] == counts["predictions"]
+            assert report["websocket"]["sent"] >= 3
             with client.websocket_connect("/ws") as reconnected:
                 assert reconnected.receive_json()["status"] == "stopped"
 
@@ -153,6 +165,11 @@ def test_live_app_times_out_recovers_and_stops(tmp_path, monkeypatch, model):
             assert disconnected["person_present"] is None and disconnected["keypoints"] == []
             assert disconnected["counts"]["accepted"] > 20
             assert client.post("/api/session/stop").json()["status"] == "stopped"
+            report = client.get("/api/session/report").json()
+            assert report["source"] == "live" and report["status"] == "stopped"
+            assert report["counts"]["dropped_windows"] > 0
+            assert report["finished_ms"] is not None
+            assert "CSI_TIMEOUT" in {transition["reason"] for transition in report["transitions"]}
 
 
 def test_model_load_failure_is_distinct_from_empty(tmp_path):
@@ -228,3 +245,57 @@ def test_empty_prediction_suppresses_keypoints():
         assert session.latest["pose"]["keypoints"] == []
 
     asyncio.run(run())
+
+
+def test_replay_gap_clears_snapshot_before_next_record():
+    async def run():
+        session = Session(Settings(EMPTY, "replay"))
+        with CaptureReader(EMPTY, live=False) as reader:
+            record = reader.read()
+        assert record is not None
+        target = record.timestamp_ns // 1_000_000
+        session.target_ms = target
+        session.timestamps.append(target)
+        session.set_state("ready")
+        session.emit("chart")
+        session.emit("pose")
+        subscriber = session.subscribe()
+        assert [(await subscriber.get())["type"] for _ in range(3)] == ["status", "chart", "pose"]
+
+        late_record = replace(record, timestamp_ns=record.timestamp_ns + 2_000_000_000)
+        task = asyncio.create_task(session.wait_for_replay_record(
+            late_record, time.perf_counter() - .31, record.timestamp_ns,
+        ))
+        try:
+            message = await asyncio.wait_for(subscriber.get(), timeout=.5)
+            assert message["reason"] == "CSI_GAP" and not task.done()
+            snapshot = session.subscribe()
+            assert set(snapshot.pending) == {"status"}
+            assert snapshot.pending["status"]["person_present"] is None
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    asyncio.run(run())
+
+
+def test_report_bounds_timing_samples():
+    metrics = SessionMetrics()
+    for value in range(TIMING_SAMPLE_LIMIT + 100):
+        metrics.record_prediction({"backend": float(value)}, completed=float(value))
+    snapshot = metrics.snapshot(TIMING_SAMPLE_LIMIT + 100)
+    assert snapshot["timing_ms"]["backend"]["samples"] == TIMING_SAMPLE_LIMIT
+    assert snapshot["timing_ms"]["backend"]["max"] == TIMING_SAMPLE_LIMIT + 99
+    assert snapshot["prediction_rate_hz"] == 1
+
+
+def test_stop_keeps_a_completed_replay_report(tmp_path, model, monkeypatch):
+    monkeypatch.setattr("backend.session.load_model", lambda *_: model)
+    (tmp_path / "raw.csi").touch()
+    (tmp_path / "recorder.log").touch()
+    with TestClient(create_app(Settings(tmp_path, "replay"))) as client:
+        client.post("/api/session/start").raise_for_status()
+        wait_for_status(client, "ended")
+        before = client.get("/api/session/report").json()
+        assert client.post("/api/session/stop").json()["status"] == "ended"
+        assert before == client.get("/api/session/report").json()

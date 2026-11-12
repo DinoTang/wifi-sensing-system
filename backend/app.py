@@ -47,6 +47,14 @@ def create_app(settings: Settings) -> FastAPI:
     async def status():
         return sent(session.status())
 
+    @app.get("/api/session/report", responses={404: {"description": "No session has started"}})
+    async def report():
+        """Return the current or most recent session's measurements as JSON."""
+        result = session.report()
+        if result is None:
+            raise HTTPException(404, "No session has started")
+        return result
+
     @app.post("/api/session/start", status_code=202)
     async def start(request: Request):
         check_request_origin(request)
@@ -55,9 +63,10 @@ def create_app(settings: Settings) -> FastAPI:
         return sent(session.status())
 
     @app.post("/api/session/stop")
-    async def stop(request: Request):
+    async def stop(request: Request, session_id: str | None = None):
         check_request_origin(request)
-        await session.stop()
+        if not await session.stop(session_id):
+            raise HTTPException(409, "The session has changed")
         return sent(session.status())
 
     @app.websocket("/ws")
@@ -76,8 +85,12 @@ def create_app(settings: Settings) -> FastAPI:
             while True:
                 message = await subscriber.get()
                 started = time.perf_counter()
-                await asyncio.wait_for(websocket.send_json(sent(message)), timeout=2)
-                session.last_ws_send_ms = round((time.perf_counter() - started) * 1000, 3)
+                try:
+                    await asyncio.wait_for(websocket.send_json(sent(message)), timeout=2)
+                except TimeoutError:
+                    session.record_send(message, None)
+                    raise
+                session.record_send(message, (time.perf_counter() - started) * 1000)
 
         async def watch_disconnect():
             while (await websocket.receive())["type"] != "websocket.disconnect":

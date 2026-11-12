@@ -47,11 +47,14 @@ function readPose(message) {
       if (inUnitInterval(x) && inUnitInterval(y)) joints.set(joint.id, {x, y});
     }
   }
+  const motion = message.motion;
   return {
     present: message.person_present,
     probability: inUnitInterval(message.presence_probability) ? message.presence_probability : null,
     frame,
     joints,
+    motion: Number.isFinite(motion?.score) && motion.score >= 0 && ['low', 'high'].includes(motion.level)
+      ? {score: motion.score, level: motion.level} : null,
     processingMs: Number.isFinite(message.timing_ms?.backend) && message.timing_ms.backend >= 0
       ? message.timing_ms.backend : null,
     model: typeof message.model_version === 'string' ? message.model_version : null,

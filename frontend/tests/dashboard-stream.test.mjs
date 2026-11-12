@@ -22,10 +22,11 @@ const pose = (sequence, timestamp, fields) => envelope('pose', sequence, {
 test('joins only the current session and exact chart timestamp in either arrival order', () => {
   const stream = new CsiStream();
   stream.accept(status(1, 'ready'), 0);
-  stream.accept(pose(2, T), 10);
+  stream.accept(pose(2, T, {motion: {score: 18.3, level: 'high'}}), 10);
   assert.equal(stream.snapshot(11).pose, null);
   stream.accept(chart(3, T), 15);
   assert.equal(stream.snapshot(16).pose.timestamp, T);
+  assert.deepEqual(stream.snapshot(16).pose.motion, {score: 18.3, level: 'high'});
 
   stream.accept(chart(4, T + 200), 200);
   assert.equal(stream.snapshot(201).pose, null);

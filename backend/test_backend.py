@@ -3,16 +3,20 @@
 import asyncio
 from dataclasses import replace
 from hashlib import sha256
+import sys
 import time
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 import numpy as np
 import pytest
 
 from backend.app import create_app
+from backend import intel_capture
+from backend.intel_capture import IntelCaptureSettings
 from backend.model import DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, load_model
 from backend.report import SessionMetrics, TIMING_SAMPLE_LIMIT
-from backend.session import Session, Settings, Subscriber
+from backend.session import MOTION_STD_THRESHOLD, Session, Settings, Subscriber
 from backend.source import CaptureError, CaptureReader, ROOT
 from parse_intel_csi import convert_session
 
@@ -88,6 +92,10 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
                 {key: value for key, value in joint.items() if key != "confidence"}
                 for joint in offline["keypoints"]
             ]
+            motion = float(window.std(axis=0).mean())
+            assert pose["motion"] == {
+                "score": round(motion, 3), "level": "high" if motion >= MOTION_STD_THRESHOLD else "low",
+            }
             with client.websocket_connect("/ws") as reconnected:
                 receive_until(reconnected, lambda item: item["type"] == "status" and item["status"] == "ready")
                 assert receive_until(reconnected, lambda item: item["type"] == "pose")["session_id"] == pose["session_id"]
@@ -170,6 +178,108 @@ def test_live_app_times_out_recovers_and_stops(tmp_path, monkeypatch, model):
             assert report["counts"]["dropped_windows"] > 0
             assert report["finished_ms"] is not None
             assert "CSI_TIMEOUT" in {transition["reason"] for transition in report["transitions"]}
+
+
+@pytest.fixture
+def automatic_capture(tmp_path, monkeypatch):
+    iax = tmp_path / "iax"
+    recorder = iax / "csi" / "iaxcsi" / "cpp" / "iaxcsi"
+    activation = iax / "tools" / "iaxcsi-activate.sh"
+    for path in (recorder, activation):
+        path.parent.mkdir(parents=True)
+        path.touch(mode=0o700)
+
+    async def prepare(capture, log, script):
+        assert script == activation
+
+    monkeypatch.setattr(intel_capture, "sys", SimpleNamespace(platform="linux"))
+    monkeypatch.setattr(intel_capture, "shutil", SimpleNamespace(which=lambda name: name))
+    monkeypatch.setattr(intel_capture.IntelCapture, "prepare", prepare)
+    return Settings(tmp_path / "captures", "live", intel_capture=IntelCaptureSettings(iax))
+
+
+def test_automatic_capture_start_stop_and_restart(automatic_capture, monkeypatch, model):
+    monkeypatch.setattr("backend.session.load_model", lambda *_: model)
+    spawn = intel_capture.spawn
+    children = []
+    # Write a real Intel fixture before the reader opens, just as a fast recorder can.
+    recorder_script = """
+from pathlib import Path
+import sys
+import time
+
+raw, fixture = map(Path, sys.argv[1:])
+raw.write_bytes((fixture / 'raw.csi').read_bytes())
+sys.stdout.buffer.write((fixture / 'recorder.log').read_bytes())
+sys.stdout.buffer.flush()
+ready = raw.with_name('writer-ready')
+ready.touch()
+while not raw.with_name('writer-finished').exists():
+    time.sleep(0.02)
+sys.exit(124)
+"""
+
+    async def start_child(*args, stdout):
+        if args[0] == "ping":
+            assert args[2:] == ("-I", "wlp0s20f3", "-s", "56", "-i", "0.1", "-w", "66", "192.168.0.1")
+            process = await spawn(sys.executable, "-c", "import time; time.sleep(60)", stdout=stdout)
+        else:
+            assert args[:13] == ("sudo", "-n", "--", "timeout", "-k", "5s", "-s", "INT",
+                                 "60s", "stdbuf", "-oL", "-eL", automatic_capture.intel_capture.iax_dir /
+                                 "csi" / "iaxcsi" / "cpp" / "iaxcsi")
+            raw = args[-1]
+            process = await spawn(sys.executable, "-c", recorder_script, raw, WALKING, stdout=stdout)
+            deadline = time.monotonic() + 5
+            while not raw.with_name("writer-ready").exists():
+                if process.returncode is not None or time.monotonic() >= deadline:
+                    await intel_capture.stop_process(process)
+                    pytest.fail("Test recorder did not write its fixture")
+                await asyncio.sleep(0.01)
+        children.append(process)
+        return process
+
+    monkeypatch.setattr(intel_capture, "spawn", start_child)
+    with TestClient(create_app(automatic_capture)) as client:
+        assert not automatic_capture.session_dir.exists()
+        first = client.post("/api/session/start").json()["session_id"]
+        ready = wait_for_status(client, "ready")
+        assert ready["capture"]["automatic"]
+        assert ready["counts"]["backlog"] == 0
+        assert ready["counts"]["predictions"] > 0
+        assert client.post("/api/session/stop", params={"session_id": first}).json()["status"] == "stopped"
+        assert all(process.returncode is not None for process in children)
+        first_raw = automatic_capture.session_dir / first / "raw.csi"
+        assert first_raw.stat().st_size > 0
+
+        second = client.post("/api/session/start").json()["session_id"]
+        assert second != first
+        assert client.post("/api/session/stop", params={"session_id": first}).status_code == 409
+        wait_for_status(client, "ready")
+        (automatic_capture.session_dir / second / "writer-finished").touch()
+        assert wait_for_status(client, "ended")["reason"] == "CAPTURE_COMPLETE"
+        assert all(process.returncode is not None for process in children)
+        assert first_raw.stat().st_size == (WALKING / "raw.csi").stat().st_size
+
+
+def test_automatic_capture_reports_recorder_failure(automatic_capture, monkeypatch, model):
+    monkeypatch.setattr("backend.session.load_model", lambda *_: model)
+    spawn = intel_capture.spawn
+    children = []
+
+    async def start_child(*args, stdout):
+        code = "import time; time.sleep(60)" if args[0] == "ping" else (
+            "import sys; print('sudo: a password is required', file=sys.stderr); sys.exit(1)"
+        )
+        process = await spawn(sys.executable, "-c", code, stdout=stdout)
+        children.append(process)
+        return process
+
+    monkeypatch.setattr(intel_capture, "spawn", start_child)
+    with TestClient(create_app(automatic_capture)) as client:
+        started = client.post("/api/session/start").json()["session_id"]
+        assert wait_for_status(client, "source_error")["reason"] == "CAPTURE_SUDO"
+        assert all(process.returncode is not None for process in children)
+        assert (automatic_capture.session_dir / started / "raw.csi").stat().st_size == 0
 
 
 def test_model_load_failure_is_distinct_from_empty(tmp_path):

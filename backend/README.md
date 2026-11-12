@@ -17,7 +17,20 @@ Mở <http://127.0.0.1:8000/dashboard/> rồi bấm **Bắt đầu phiên**. Dù
 
 Trên Linux dùng `.venv/bin/python` thay cho `.\.venv\Scripts\python`. Backend mặc định chỉ lắng nghe loopback. Để thử từ máy frontend trên LAN, đặt `--host` bằng địa chỉ mạng phù hợp trong môi trường nhóm tin cậy. API điều khiển phiên chưa có xác thực. Trình duyệt có thể dùng trang cùng origin hoặc reverse proxy cùng origin để truy cập API và WebSocket. Backend frontend (ví dụ NiceGUI) có thể kết nối WebSocket từ phía máy chủ.
 
-## Thu trực tiếp từ Intel recorder
+## Thu trực tiếp bằng nút Bắt đầu phiên
+
+Trên Ubuntu, kết nối card Intel đã cài IAX với Wi-Fi 5 GHz ở độ rộng 20 MHz. Lệnh dưới đây dùng cấu hình của script thu gốc: card `wlp0s20f3`, kênh 36, router `192.168.0.1` và bộ thu ở `~/iax/csi/iaxcsi/cpp/iaxcsi`.
+
+```bash
+sudo -v && .venv/bin/python -m backend \
+  --source live --auto-capture --session "$HOME/csi-data/live"
+```
+
+Giữ terminal này mở. Vào <http://127.0.0.1:8000/dashboard/> và bấm **Bắt đầu phiên**. Backend kiểm tra Wi-Fi và router, chạy script kích hoạt IAX, xác nhận `csi_enabled=1`, mở bộ thu rồi ping router mỗi 100 ms với tải 56 byte. **Dừng phiên** dừng cả hai tiến trình. Mặc định phiên tự kết thúc sau 60 giây. Có thể chọn thời lượng bằng `--duration` và đổi thiết bị hoặc mạng bằng `--iax-dir`, `--interface`, `--router`, `--channel` và `--ssid`.
+
+Mỗi lần bấm bắt đầu tạo thư mục `~/csi-data/live/<session_id>`. Lấy ID đầy đủ ở mục Phiên trên dashboard hoặc qua `GET /api/status`. Dùng `setup.log` để kiểm tra Wi-Fi và kích hoạt, `recorder.log` để kiểm tra bộ thu, và `ping.log` để xem lưu lượng tới router. `raw.csi` tăng kích thước trong lúc thu nếu driver gửi khung CSI. Khi báo `CAPTURE_SUDO`, dừng backend bằng Ctrl+C rồi chạy lại lệnh trên trong terminal Ubuntu để gia hạn quyền sudo.
+
+### Đọc từ bộ thu do nhóm chạy riêng
 
 1. Tạo một thư mục mới cho phiên trên máy thu. Trỏ backend vào thư mục đó bằng lệnh sau.
 
@@ -39,7 +52,8 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 - Dùng `machine-learning/src/predict.py`, checkpoint `best_model.pt`, Z-score từ `normalization_params.json` và threshold presence 0,5 của mô hình 1.0.0. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. `presence_probability` là sigmoid của đầu ra có người, không phải độ tin cậy từng khớp.
 - Đầu vào là CSI. Timestamp mục tiêu là timestamp của mẫu CSI cuối cửa sổ, giữ nguyên cơ sở thời gian của recorder và đổi từ ns sang ms bằng phép chia nguyên. Mẫu lùi/trùng timestamp, gap trên 300 ms hoặc cấu hình sai làm mất hiệu lực tư thế cũ. Cửa sổ còn phải có trung vị khoảng mẫu 80–120 ms và thời gian từ mẫu đầu đến mẫu cuối 1.500–2.300 ms để chặn nhịp sai hoặc thiếu mẫu kéo dài. Khi gặp gap, hệ thống tích lũy lại 20 mẫu nên vị trí stride sau gap có thể khác batch offline.
 - Replay đọc theo thứ tự và lập lịch theo timestamp của bản ghi đầu. Khi lịch phát gặp khoảng trống quá 300 ms theo thời gian bản ghi, backend xóa kết quả đã lưu trước khi chờ đến gói tiếp theo. Live dùng một cửa sổ đang suy luận và tối đa một cửa sổ chờ. Cửa sổ mới nhất thay thế cửa sổ chờ khi quá tải. Mẫu quá cũ hoặc cửa sổ đã bị vô hiệu hóa sẽ bị loại. Mỗi client chỉ giữ tối đa một thông điệp chờ cho mỗi loại.
-- `main@e94e396` bàn giao một mô hình nghiên cứu riêng với 17 điểm và tọa độ `training_mean` cố định. Phiên bản này dùng checkpoint 33 điểm đi kèm nhánh được yêu cầu. Tùy chọn `--checkpoint` và `--normalizer` chỉ dành cho cặp tệp tương thích, đến từ nguồn được nhóm tin cậy.
+- `main@e94e396` có báo cáo trên 1.974 cửa sổ đã đồng bộ. Mô hình Ridge dự đoán tọa độ có PCK@0,05 bằng 0,552, trong khi tư thế trung bình đạt 0,714. Dashboard hiển thị tư thế 33 khớp của CSIPoseNet ở chế độ thử nghiệm. Kiểm chứng theo khớp khi đi lại, ngồi và chuyển tư thế cần bản ghi CSI và video đồng bộ của các động tác này.
+- `motion` trong thông điệp `pose` dùng trung bình độ lệch chuẩn theo thời gian của từng vị trí CSI trong cửa sổ 20 mẫu, trước Z-score. `level` là `high` từ ngưỡng khảo sát 10,15 trở lên và `low` ở dưới ngưỡng. Chỉ số mô tả biến thiên của kênh vô tuyến. Nhiễu, thay đổi môi trường và chuyển động đều có thể ảnh hưởng đến chỉ số. Xem [báo cáo tín hiệu](../signal-processing/docs/report_nguoi2.md).
 
 ## HTTP và WebSocket
 
@@ -61,7 +75,8 @@ Ví dụ một thông điệp `pose` cho phòng trống:
   "model_version": "1.0.0", "status": "ready", "person_present": false,
   "presence_probability": 0.02, "confidence_method": "model_presence_sigmoid_probability",
   "coordinate_system": {"type": "2D_pixel", "reference_width": 1920, "reference_height": 1080, "origin": "top_left"},
-  "keypoints": [], "timing_ms": {"preprocess": 0.4, "queue": 0.1, "inference": 4.5, "backend": 5.0}
+  "keypoints": [], "motion": {"score": 3.46, "level": "low"},
+  "timing_ms": {"preprocess": 0.4, "queue": 0.1, "inference": 4.5, "backend": 5.0}
 }
 ```
 
@@ -75,8 +90,10 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 - `incompatible`: `CSI_CONFIGURATION`, cấu hình không khớp đầu vào checkpoint.
 - `disconnected`: `WAITING_FOR_CAPTURE_FILES` hoặc `CSI_TIMEOUT`. Phiên live có thể tiếp tục khi nguồn hoạt động lại.
 - `source_error`: `INVALID_CAPTURE` (lệch cặp, tệp bị thay thế hoặc dữ liệu hỏng), `CAPTURE_UNAVAILABLE` (tệp không đọc được) hoặc `SESSION_FAILED` (phiên gặp lỗi ngoài dự kiến). Dùng log backend để tìm nguyên nhân rồi chạy lại.
+- Thu tự động báo lỗi riêng khi Wi-Fi sai kênh hoặc độ rộng, router mất kết nối, driver chưa bật CSI, thiếu quyền sudo, recorder thoát sớm hoặc không ghi được CSI. Dashboard hiển thị hướng kiểm tra tương ứng.
 - `model_error`: `MODEL_LOAD_FAILED` hoặc `MODEL_INFERENCE_FAILED`.
-- `ended` / `stopped`: `REPLAY_COMPLETE` / `REQUESTED_STOP`.
+- `ended`: `REPLAY_COMPLETE` hoặc `CAPTURE_COMPLETE` khi đã hết thời lượng thu tự động.
+- `stopped`: `REQUESTED_STOP`.
 
 ## Kiểm thử
 
@@ -96,6 +113,8 @@ Windows, Intel Core i5-11300H, Python 3.12.14 và PyTorch 2.6.0 CPU, một luồ
 - **Đi bộ, replay 1×.** 1.080 bản ghi, 558 VHT phù hợp, 10 gap. Client nhận 187 kết quả qua WebSocket, trung bình 3,21 Hz tính từ kết quả đầu đến kết quả cuối, gồm các khoảng phải tích lũy lại sau gap. Backend p50/p95 là 5,11/8,00 ms, suy luận p50/p95 là 4,56/7,40 ms. Từ thời điểm gửi đến nhận trên loopback cùng máy, p95 là 1 ms theo timestamp ms. Giao diện đã vẽ biểu đồ và 33 khớp. Lệnh dừng xóa cả hai khỏi màn hình.
 - **Phòng trống, replay 8×.** 1.100 bản ghi, 572 VHT phù hợp, 10 gap, 181 kết quả. Backend p50/p95 là 6,94/9,22 ms ở tốc độ thử tải này. **Checkpoint dự đoán có người ở 181/181 cửa sổ**, dù phiên được gắn nhãn phòng trống. So sánh cửa sổ phát lại với parser và suy luận offline xác nhận backend chuyển đúng đầu vào. Trường hợp engine trả `person_present: false` được kiểm thử riêng và không phát khớp. Backend giữ nguyên đầu ra của checkpoint thay vì dùng nhãn phiên làm đầu vào.
 - **Khôi phục và lỗi.** Kiểm thử tự động gồm bản ghi thiếu byte, log thiếu dòng, lệch cặp, sai cấu hình, gap, timeout khi dừng ghi, ghi trở lại sau timeout, lỗi tải/chạy mô hình, kết nối lại và dừng. Test live ghi thêm các byte từ bản ghi Intel thật vào hai tệp trong khi backend đang đọc.
+- **Thu tự động.** Kiểm thử với tiến trình thu thay thế đã đọc được dữ liệu từ lúc bắt đầu, dừng cả bộ thu lẫn ping, bắt đầu lại trong thư mục mới, kết thúc theo thời lượng và phân biệt lỗi sudo với mất nguồn CSI.
+- **Biến thiên CSI.** Ở các phiên ngày 25/10 và 03/11, mức cao xuất hiện trong 708/728 cửa sổ đi lại. Mức thấp xuất hiện trong 506/563 cửa sổ ngồi yên và 714/714 cửa sổ phòng trống. Các số đếm này dựa trên nhãn của toàn phiên và dùng để kiểm tra cách hiển thị chỉ số.
 - **Còn cần xác nhận tại hiện trường.** Chạy đúng tiến trình Intel recorder trên máy thu để xác minh flush, tốc độ và độ trễ từ lúc thu tới lúc frontend hiển thị. Kiểm tra lại mô hình trên nhiều phiên phòng trống độc lập. Tập huấn luyện của checkpoint `Khanh` có `sync_ok=0` theo báo cáo bàn giao, nên phần kiểm thử này xác minh vận chuyển dữ liệu và suy luận. Đánh giá độ chính xác tư thế cần dữ liệu đối chiếu đã đồng bộ.
 
 Trích log thử nghiệm với phiên đi bộ:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from contextlib import AsyncExitStack
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -13,6 +14,7 @@ import uuid
 
 import numpy as np
 
+from .intel_capture import IntelCapture, IntelCaptureError, IntelCaptureSettings
 from .model import (
     CADENCE_MEDIAN_MS, DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, FEATURES, LANDMARK_COUNT,
     MAX_GAP_MS, NOMINAL_INTERVAL_MS, STRIDE, WINDOW_SIZE, WINDOW_SPAN_MS, load_model,
@@ -24,6 +26,8 @@ LOGGER = logging.getLogger("uvicorn.error")
 POLL_SECONDS = 0.025
 READ_BATCH = 64
 PENDING_WINDOWS = 1
+# Exploratory threshold from signal-processing/docs/report_nguoi2.md.
+MOTION_STD_THRESHOLD = 10.15
 
 
 @dataclass(frozen=True)
@@ -35,6 +39,7 @@ class Settings:
     checkpoint: Path = DEFAULT_CHECKPOINT
     normalizer: Path = DEFAULT_NORMALIZER
     autostart: bool = False
+    intel_capture: IntelCaptureSettings | None = None
 
 
 @dataclass(frozen=True)
@@ -86,6 +91,7 @@ class Session:
 
     def reset(self) -> None:
         self.session_id: str | None = None
+        self.capture_dir = self.settings.session_dir
         self.state = "idle"
         self.reason: str | None = None
         self.model_version: str | None = None
@@ -129,7 +135,7 @@ class Session:
             "person_present": self.person_present,
             "keypoints": [],
             "capture": {"rate": VHT_RATE, "shape": [VHT["nrx"], VHT["ntx"], VHT["ntone"]], "features": FEATURES,
-                        "sequence": self.capture_sequence},
+                        "sequence": self.capture_sequence, "automatic": self.settings.intel_capture is not None},
             "window": {"size": WINDOW_SIZE, "filled": len(self.frames), "stride": STRIDE},
             "counts": self.counts.copy(),
             "last_received_ms": self.last_received_ms,
@@ -152,6 +158,7 @@ class Session:
                 "pending_windows": PENDING_WINDOWS if self.settings.source == "live" else 0,
                 "replay_speed": self.settings.speed if self.settings.source == "replay" else None,
                 "live_timeout_s": self.settings.timeout if self.settings.source == "live" else None,
+                "automatic_capture_s": self.settings.intel_capture.duration if self.settings.intel_capture else None,
             },
             "counts": self.counts.copy(), "last_gap_ms": self.last_gap_ms,
             **self.metrics.snapshot(self.counts["predictions"]),
@@ -216,6 +223,8 @@ class Session:
                 return False
             self.reset()
             self.session_id = uuid.uuid4().hex
+            if self.settings.intel_capture is not None:
+                self.capture_dir = self.settings.session_dir / self.session_id
             self.metrics = SessionMetrics()
             self.set_state("starting")
             self.task = asyncio.create_task(self.run())
@@ -259,13 +268,30 @@ class Session:
             self.set_state("model_error", "MODEL_LOAD_FAILED")
             return
 
-        worker = asyncio.create_task(self.inference_worker(model)) if live else None
+        worker = None
         try:
-            self.set_state("warming_up", "WAITING_FOR_CSI")
-            if live:
-                await self.wait_for_capture()
-            with CaptureReader(self.settings.session_dir, live=live) as reader:
-                await self.consume(reader, model)
+            async with AsyncExitStack() as stack:
+                capture = None
+                if self.settings.intel_capture is not None:
+                    self.set_state("starting", "PREPARING_CAPTURE")
+                    capture = await stack.enter_async_context(IntelCapture(self.settings.intel_capture, self.capture_dir))
+                    LOGGER.info("Intel CSI files: %s", self.capture_dir)
+                self.set_state("warming_up", "WAITING_FOR_CSI")
+                if live and capture is None:
+                    await self.wait_for_capture()
+                if live:
+                    worker = asyncio.create_task(self.inference_worker(model))
+                with CaptureReader(self.capture_dir, live=live, skip_existing=capture is None) as reader:
+                    await self.consume(reader, model, capture)
+            if capture is not None:
+                if self.counts["records"] == 0:
+                    raise IntelCaptureError("CAPTURE_NO_DATA", "Recorder finished without any CSI frames")
+                if self.counts["predictions"] == 0:
+                    raise IntelCaptureError("CAPTURE_NO_RESULT", "Recorder finished without a valid prediction")
+                self.invalidate_window("ended", "CAPTURE_COMPLETE")
+        except IntelCaptureError as error:
+            LOGGER.warning("Intel CSI session %s failed in %s: %s", self.session_id, self.capture_dir, error)
+            self.invalidate_window("source_error", error.reason)
         except CaptureError:
             LOGGER.exception("CSI capture invalid")
             self.invalidate_window("source_error", "INVALID_CAPTURE")
@@ -279,13 +305,13 @@ class Session:
 
     async def wait_for_capture(self) -> None:
         deadline = time.perf_counter() + self.settings.timeout
-        while not all((self.settings.session_dir / name).is_file()
+        while not all((self.capture_dir / name).is_file()
                       for name in ("raw.csi", "recorder.log")):
             if time.perf_counter() >= deadline:
                 self.set_state("disconnected", "WAITING_FOR_CAPTURE_FILES")
             await asyncio.sleep(POLL_SECONDS)
 
-    async def consume(self, reader: CaptureReader, model) -> None:
+    async def consume(self, reader: CaptureReader, model, capture: IntelCapture | None = None) -> None:
         clock_start = time.perf_counter()
         first_capture_ns: int | None = None
         for_batch = 0
@@ -295,13 +321,16 @@ class Session:
                 await asyncio.sleep(0)
             if reader.live and time.perf_counter() - (self.last_received or clock_start) >= self.settings.timeout:
                 if self.state != "disconnected":
-                    self.invalidate_window("disconnected", "CSI_TIMEOUT")
+                    reason = "CAPTURE_NO_DATA" if capture is not None and self.counts["records"] == 0 else "CSI_TIMEOUT"
+                    self.invalidate_window("disconnected", reason)
             if (reader.live and self.state == "ready"
                     and time.perf_counter() - self.last_result_received >= self.settings.timeout):
                 self.set_state("insufficient_data", "RESULT_TIMEOUT")
             read_started = time.perf_counter()
             record = reader.read()
             if record is None:
+                if capture is not None and capture.finished():
+                    return
                 if not reader.live:
                     if self.state == "ready":
                         # Keep the last result available for one output interval.
@@ -467,9 +496,11 @@ class Session:
         self.emit("chart", timestamp_ms=target, quantity="mean_raw_csi_amplitude",
                   points=[{"timestamp_ms": ts, "value": value}
                           for ts, value in zip(window.timestamps, window.chart_values)])
+        motion_score = float(window.amplitudes.std(axis=0).mean())
         self.emit(
             "pose", timestamp_ms=target, status="ready", person_present=self.person_present,
             presence_probability=probability, confidence_method=confidence_method,
             coordinate_system=coordinate_system, keypoints=keypoints,
+            motion={"score": round(motion_score, 3), "level": "high" if motion_score >= MOTION_STD_THRESHOLD else "low"},
             timing_ms=timing_ms,
         )

@@ -104,7 +104,7 @@
               <div class="panel-head">
                 <div>
                   <h2>Bộ xương 2D</h2>
-                  <p id="pose-description">Tọa độ dự đoán từ CSI</p>
+                  <p id="pose-description">Tọa độ ước lượng thử nghiệm từ CSI</p>
                 </div>
                 <span class="frame-size mono" id="frame-size">—</span>
               </div>
@@ -136,6 +136,7 @@
                 <meter id="probability" min="0" max="1" value="0"></meter>
               </div>
               <dl class="readings">
+                <div><dt>Biến thiên CSI</dt><dd id="motion-level" class="mono">—</dd></div>
                 <div><dt>Khớp hiển thị</dt><dd id="joint-count" class="mono">—</dd></div>
                 <div><dt>Mô hình</dt><dd id="model-version" class="mono">—</dd></div>
                 <div><dt>Xử lý tại backend</dt><dd id="backend-latency" class="mono">—</dd></div>

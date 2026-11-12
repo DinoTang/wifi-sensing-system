@@ -16,11 +16,14 @@ Mở <http://127.0.0.1:8000/dashboard/> và bấm **Bắt đầu phiên**. Bản
 python -m backend --source replay --session signal-processing/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE
 ```
 
-Để chạy với máy thu, chọn thư mục nơi Intel recorder đang ghi `raw.csi` và `recorder.log`.
+Trên Ubuntu có Intel IAX, bật chế độ thu tự động. Sau khi mở dashboard, bấm **Bắt đầu phiên** để backend khởi động bộ thu và **Dừng phiên** để kết thúc.
 
-```powershell
-python -m backend --source live --session "D:/duong-dan-den-phien-csi"
+```bash
+sudo -v && .venv/bin/python -m backend \
+  --source live --auto-capture --session "$HOME/csi-data/live"
 ```
+
+Xem [cấu hình và nhật ký thu trên Ubuntu](../backend/README.md#thu-trực-tiếp-bằng-nút-bắt-đầu-phiên).
 
 Địa chỉ backend mặc định là `127.0.0.1:8000`. Khi đổi `--host` hoặc `--port`, mở `/dashboard/` tại địa chỉ tương ứng. Dashboard kết nối `/ws` và các API điều khiển trên cùng địa chỉ đang mở. Nếu dùng reverse proxy, chuyển tiếp cả HTTP và WebSocket trên cùng origin.
 
@@ -29,7 +32,7 @@ python -m backend --source live --session "D:/duong-dan-den-phien-csi"
 ## Hai màn hình
 
 - **Tín hiệu CSI** hiển thị biên độ I/Q thô trung bình của 224 giá trị mà backend cung cấp. Trục ngang tính giây tương đối so với mẫu mới nhất. Chọn cửa sổ 5, 10 hoặc 20 giây. Rê chuột qua đường để xem biên độ và timestamp. Tần số lấy mẫu tính từ trung vị khoảng cách giữa các mẫu hợp lệ trong cửa sổ.
-- **Hiện diện** hiển thị dự đoán **Có người** hoặc **Phòng trống**, xác suất có người nếu backend cung cấp, và bộ xương 2D nếu tọa độ hợp lệ. Màu xanh biểu thị phía trái của cơ thể và màu vàng biểu thị phía phải. Hai màn hình dùng chung phiên và nguồn dữ liệu.
+- **Hiện diện** hiển thị dự đoán **Có người** hoặc **Phòng trống**, mức biến thiên CSI và bộ xương 2D thử nghiệm nếu tọa độ hợp lệ. Mức biến thiên giúp quan sát sự khác biệt giữa đi lại và ngồi yên trong dữ liệu đã thu. Độ chính xác của từng khớp khi đổi tư thế còn hạn chế. Màu xanh biểu thị phía trái của cơ thể và màu vàng biểu thị phía phải. Hai màn hình dùng chung phiên và nguồn dữ liệu.
 
 Nhãn **Trực tiếp**, **Phát lại** và **Giả lập** mô tả nguồn. Nút bắt đầu và dừng gọi API phiên của backend và chỉ có trong chế độ kết nối backend. Khi lỗi nguồn, lỗi mô hình hoặc mất WebSocket, dashboard báo **Chưa có kết quả** và xóa khớp. Mất WebSocket kích hoạt kết nối lại. Khi backend báo thiếu mẫu, biểu đồ tạm chờ. Khi có mẫu mới, đường biểu đồ tách đoạn ở khoảng thiếu. Khung trạng thái ở cuối màn hình giải thích các tình huống đang kết nối, đang tích lũy, đang nhận, dữ liệu cũ, lỗi và dừng.
 

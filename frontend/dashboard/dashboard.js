@@ -18,7 +18,7 @@ const PHASES = {
   incompatible: ['Sai cấu hình CSI', 'Nguồn CSI không khớp cấu hình mô hình.', 'error'],
   disconnected: ['Mất nguồn CSI', 'Backend đang đợi dữ liệu từ bộ thu.', 'error'],
   model_error: ['Lỗi mô hình', 'Backend chưa thể trả kết quả suy luận.', 'error'],
-  source_error: ['Lỗi bản ghi CSI', 'Kiểm tra tệp dữ liệu và log của backend.', 'error'],
+  source_error: ['Lỗi nguồn CSI', 'Kiểm tra tệp dữ liệu và log của backend.', 'error'],
   ended: ['Đã phát lại xong', 'Bắt đầu phiên mới để xem lại.', 'neutral'],
   stopped: ['Đã dừng phiên', 'Bắt đầu phiên mới để tiếp tục.', 'neutral'],
 };
@@ -28,6 +28,17 @@ const REASONS = {
   CSI_TIMESTAMP_ORDER: 'Timestamp của bộ thu bị trùng hoặc đi lùi.',
   RESULT_TIMEOUT: 'Backend chưa trả kết quả mới.',
   WAITING_FOR_CAPTURE_FILES: 'Backend đang đợi tệp của bộ thu.',
+  CAPTURE_PLATFORM: 'Thu tự động cần chạy backend trên Ubuntu có bộ thu Intel.',
+  CAPTURE_TOOLS: 'Thiếu công cụ thu Intel IAX. Xem thông báo trong terminal backend.',
+  CAPTURE_WIFI: 'Kết nối card Intel với Wi-Fi đã cấu hình rồi bắt đầu lại.',
+  CAPTURE_WIFI_CHANNEL: 'Kiểm tra kênh Wi-Fi đã cấu hình và độ rộng 20 MHz.',
+  CAPTURE_RECORDER_BUSY: 'Bộ thu iaxcsi đang chạy trong một tiến trình khác.',
+  CAPTURE_ROUTER: 'Không ping được router. Kiểm tra kết nối và địa chỉ --router.',
+  CAPTURE_ACTIVATION: 'Driver Intel chưa bật CSI. Xem setup.log của phiên.',
+  CAPTURE_SUDO: 'Quyền sudo cần được xác thực. Chạy lại lệnh mở backend trong terminal Ubuntu.',
+  CAPTURE_RECORDER_EXITED: 'Bộ thu Intel thoát sớm. Xem recorder.log của phiên.',
+  CAPTURE_NO_DATA: 'Chưa ghi được khung CSI. Kiểm tra recorder.log và ping.log của phiên.',
+  CAPTURE_NO_RESULT: 'Phiên chưa tạo được cửa sổ hợp lệ. Kiểm tra VHT20 và nhịp gói CSI.',
   MODEL_LOAD_FAILED: 'Backend không nạp được mô hình.',
   MODEL_INFERENCE_FAILED: 'Backend gặp lỗi khi chạy suy luận.',
 };
@@ -123,13 +134,15 @@ async function controlSession(action) {
   if (pendingAction || mode !== 'backend' || transport !== 'open') return;
   const controller = new AbortController();
   pendingAction = controller;
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), action === 'stop' ? 8000 : 5000);
   element('request-error').hidden = true;
   scheduleRender();
   try {
-    const response = await fetch(`/api/session/${action}`, {method: 'POST', signal: controller.signal});
+    const url = new URL(`/api/session/${action}`, location.href);
+    if (action === 'stop' && stream.status?.session_id) url.searchParams.set('session_id', stream.status.session_id);
+    const response = await fetch(url, {method: 'POST', signal: controller.signal});
     if (!response.ok) {
-      throw new Error(response.status === 409 ? 'Một phiên khác đang chạy.' : `Backend trả lỗi HTTP ${response.status}.`);
+      throw new Error(response.status === 409 ? 'Trạng thái phiên đã thay đổi.' : `Backend trả lỗi HTTP ${response.status}.`);
     }
   } catch (error) {
     if (pendingAction === controller) {
@@ -163,6 +176,12 @@ function phaseFor(snapshot) {
   if (stream.status.status === 'ready' && !snapshot.chart) {
     return ['Chờ cửa sổ CSI', 'Backend đang chuẩn bị mẫu tiếp theo.', 'warn'];
   }
+  if (stream.status.reason === 'PREPARING_CAPTURE') {
+    return ['Đang chuẩn bị bộ thu', 'Đang kiểm tra Wi-Fi, router và driver Intel.', 'warn'];
+  }
+  if (stream.status.reason === 'CAPTURE_COMPLETE') {
+    return ['Đã thu xong', 'Bấm Bắt đầu phiên để thu lại.', 'neutral'];
+  }
   const [title, description, tone] = PHASES[stream.status.status];
   return [title, REASONS[stream.status.reason] ?? description, tone];
 }
@@ -176,7 +195,7 @@ function updateHeader(phase) {
   };
   setText('transport', transportLabel[transport][0]);
   element('transport').dataset.tone = transportLabel[transport][1];
-  setText('source-tag', SOURCE_LABELS[source] ?? 'Chờ nguồn');
+  setText('source-tag', state?.capture?.automatic ? 'Thu tự động' : SOURCE_LABELS[source] ?? 'Chờ nguồn');
   element('source-tag').dataset.source = source ?? 'unknown';
   setText('session-id', mode === 'mock' ? 'Giả lập' : state?.session_id?.slice(0, 8) ?? '—');
   element('session-id').title = mode === 'mock' ? '' : state?.session_id ?? '';
@@ -267,10 +286,12 @@ function renderPresence(chart, pose, phase) {
   setText('joint-count', pose ? `${joints}/${LANDMARK_COUNT}` : '—');
   setText('model-version', pose?.model ?? stream.status?.model_version ?? '—');
   setText('backend-latency', pose?.processingMs != null ? `${format.format(pose.processingMs)} ms` : '—');
+  const motion = pose?.motion;
+  setText('motion-level', motion ? `${motion.level === 'high' ? 'Cao' : 'Thấp'} · ${format.format(motion.score)}` : '—');
   element('probability-group').hidden = probability === null;
   element('probability').value = probability ?? 0;
   setText('probability-value', probability === null ? '—' : `${format.format(probability * 100)}%`);
-  setText('pose-description', mode === 'mock' ? 'Tọa độ mẫu · BlazePose' : 'Tọa độ dự đoán từ CSI · BlazePose');
+  setText('pose-description', mode === 'mock' ? 'Tọa độ mẫu · BlazePose' : 'Tọa độ ước lượng thử nghiệm từ CSI');
   setText('frame-size', pose?.frame ? `${pose.frame.width} × ${pose.frame.height}` : '—');
   showTimestamp('pose-time', pose?.timestamp ?? null);
 

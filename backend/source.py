@@ -74,10 +74,11 @@ def read_metadata(handle: BinaryIO) -> tuple[int, dict[str, str]] | None:
 
 
 class CaptureReader:
-    def __init__(self, folder: Path, *, live: bool):
+    def __init__(self, folder: Path, *, live: bool, skip_existing: bool = True):
         self.raw_path = folder / "raw.csi"
         self.log_path = folder / "recorder.log"
         self.live = live
+        self.skip_existing = skip_existing
         self.files = ExitStack()
 
     def __enter__(self) -> CaptureReader:
@@ -86,7 +87,7 @@ class CaptureReader:
             self.log = self.files.enter_context(self.log_path.open("rb"))
             stats = tuple(os.fstat(handle.fileno()) for handle in (self.raw, self.log))
             self.identity = tuple((stat.st_dev, stat.st_ino) for stat in stats)
-            self.initial_sizes = tuple(stat.st_size if self.live else 0 for stat in stats)
+            self.initial_sizes = tuple(stat.st_size if self.live and self.skip_existing else 0 for stat in stats)
             self.observed_sizes = tuple(stat.st_size for stat in stats)
         except BaseException:
             self.files.close()

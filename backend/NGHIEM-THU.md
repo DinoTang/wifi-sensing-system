@@ -6,10 +6,11 @@ Backend nhận `raw.csi` và `recorder.log` từ cùng một tiến trình Intel
 
 Chạy từ gốc repo sau khi cài môi trường Python theo [README backend](README.md).
 
-1. Mở terminal thứ nhất và chạy backend với bản ghi đi bộ. Đây là phiên ngày 25/10, ngoài sáu phiên được liệt kê trong báo cáo mô hình.
+1. Mở terminal thứ nhất và chạy backend với bản ghi đi bộ Lần 3. Bản ghi này nằm trong dữ liệu huấn luyện SMN 1.1 và dùng để kiểm tra đường truyền đến dashboard.
 
    ```powershell
-   python -m backend --source replay --session hardware/csi_extracted/labeled/walking_01_20261025-053626_PiI7
+   $round = 'signal-processing/SMN-20261105T143709Z-1-001/SMN/csi-data-lan3'
+   python -m backend --source replay --session "$round/video-sessions/P01_trial03_20261105-112653_fKOx/walking/csi"
    ```
 
 2. Mở [dashboard](http://127.0.0.1:8000/dashboard/), giữ phiên ở trạng thái chưa bắt đầu. Trong terminal thứ hai chạy lệnh dưới đây. Lệnh kết nối WebSocket trước, bắt đầu phiên qua HTTP, kiểm tra trình tự thông điệp, ghép biểu đồ và tư thế theo timestamp, rồi tải báo cáo khi backend báo `REPLAY_COMPLETE`.
@@ -40,13 +41,13 @@ python -m pytest -q backend/test_backend.py
 
 Các ca tích hợp kiểm tra bản ghi nhị phân ghi dở, log chưa đủ dòng, lệch timestamp giữa hai tệp, mất mẫu, ghi trở lại sau timeout, lỗi mô hình, kết nối lại và dừng. Ca live trong bộ kiểm thử dùng byte Intel thật được ghi thêm vào thư mục tạm để thử bộ đọc tệp. Khi nguồn mất, client kết nối lại chỉ nhận trạng thái hiện tại. Cửa sổ hợp lệ mới được dựng sau khi nguồn phục hồi.
 
-Để nghiệm thu với thiết bị, chạy Intel recorder và backend ở chế độ live theo [hướng dẫn thu trực tiếp](README.md#thu-trực-tiếp-từ-intel-recorder). Dùng thư mục phiên mới, xác nhận hai tệp tăng kích thước trong lúc thu, rồi quan sát `warming_up` → `ready`. Tạm ngừng nguồn đủ lâu để thấy `CSI_TIMEOUT` và kiểm tra dashboard xóa tư thế. Nối lại, chờ đủ một cửa sổ mới và xuất JSON trước khi bắt đầu phiên khác.
+Để nghiệm thu với thiết bị, chạy backend với `--source live --auto-capture` theo [hướng dẫn thu trực tiếp](README.md#thu-trực-tiếp-bằng-nút-bắt-đầu-phiên). Chọn 30 giây, 1 phút hoặc 2 phút và kiểm tra đồng hồ đếm ngược. Xác nhận hai tệp trong thư mục phiên mới tăng kích thước và trạng thái chuyển từ `warming_up` sang `ready`. Kiểm tra biểu đồ sau khi phiên kết thúc và xuất JSON trước khi bắt đầu phiên khác.
 
 Ghi model máy thu, cấu hình Wi-Fi, hệ điều hành, phiên bản PyTorch và tốc độ thu vào biên bản. Nếu đo độ trễ từ thời điểm thu tới hiển thị, ghi cách xác minh đồng hồ và sai số đồng bộ. Dùng số đo từng giai đoạn riêng khi chưa xác minh đồng hồ.
 
 Một phiên phát được bộ xương chứng minh dữ liệu đi qua parser, cửa sổ, mô hình và giao diện. Báo cáo độ chính xác hiện diện cần nhãn thật của các phiên độc lập. Báo cáo sai số khớp cần nhãn tư thế đã đồng bộ. Giữ riêng số liệu kiểm thử kỹ thuật, ví dụ trong tập huấn luyện và kết quả kiểm tra tổng quát hóa.
 
-## Kết quả đo trên máy kiểm thử
+## Kết quả đo với checkpoint Khanh 1.0.0
 
 Các số dưới đây đo trên Windows 11, Intel Core i5-11300H, Python 3.12.14 và PyTorch 2.6.0 CPU. Client HTTP và WebSocket chạy qua loopback tới một tiến trình backend riêng.
 

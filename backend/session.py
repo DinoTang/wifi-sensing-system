@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from contextlib import AsyncExitStack
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 from pathlib import Path
 import time
@@ -92,6 +92,8 @@ class Session:
     def reset(self) -> None:
         self.session_id: str | None = None
         self.capture_dir = self.settings.session_dir
+        self.capture_settings = self.settings.intel_capture
+        self.capture_started_ms: int | None = None
         self.state = "idle"
         self.reason: str | None = None
         self.model_version: str | None = None
@@ -128,6 +130,8 @@ class Session:
         }
 
     def status(self) -> dict:
+        defaults = self.settings.intel_capture
+        duration_s = self.capture_settings.duration if self.capture_settings else None
         return {
             **self.envelope("status"),
             "status": self.state,
@@ -135,7 +139,10 @@ class Session:
             "person_present": self.person_present,
             "keypoints": [],
             "capture": {"rate": VHT_RATE, "shape": [VHT["nrx"], VHT["ntx"], VHT["ntone"]], "features": FEATURES,
-                        "sequence": self.capture_sequence, "automatic": self.settings.intel_capture is not None},
+                        "sequence": self.capture_sequence, "automatic": defaults is not None,
+                        "duration_options_s": defaults.duration_options_s if defaults else [],
+                        "default_duration_s": defaults.duration if defaults else None,
+                        "duration_s": duration_s, "started_ms": self.capture_started_ms},
             "window": {"size": WINDOW_SIZE, "filled": len(self.frames), "stride": STRIDE},
             "counts": self.counts.copy(),
             "last_received_ms": self.last_received_ms,
@@ -158,7 +165,8 @@ class Session:
                 "pending_windows": PENDING_WINDOWS if self.settings.source == "live" else 0,
                 "replay_speed": self.settings.speed if self.settings.source == "replay" else None,
                 "live_timeout_s": self.settings.timeout if self.settings.source == "live" else None,
-                "automatic_capture_s": self.settings.intel_capture.duration if self.settings.intel_capture else None,
+                "automatic_capture_s": self.capture_settings.duration if self.capture_settings else None,
+                "recorder_started_ms": self.capture_started_ms,
             },
             "counts": self.counts.copy(), "last_gap_ms": self.last_gap_ms,
             **self.metrics.snapshot(self.counts["predictions"]),
@@ -217,13 +225,15 @@ class Session:
         self.subscribers.add(subscriber)
         return subscriber
 
-    async def start(self) -> bool:
+    async def start(self, duration_s: int | None = None) -> bool:
         async with self.lock:
             if self.task is not None and not self.task.done():
                 return False
             self.reset()
             self.session_id = uuid.uuid4().hex
-            if self.settings.intel_capture is not None:
+            if self.capture_settings is not None:
+                if duration_s is not None:
+                    self.capture_settings = replace(self.capture_settings, duration=duration_s)
                 self.capture_dir = self.settings.session_dir / self.session_id
             self.metrics = SessionMetrics()
             self.set_state("starting")
@@ -272,9 +282,10 @@ class Session:
         try:
             async with AsyncExitStack() as stack:
                 capture = None
-                if self.settings.intel_capture is not None:
+                if self.capture_settings is not None:
                     self.set_state("starting", "PREPARING_CAPTURE")
-                    capture = await stack.enter_async_context(IntelCapture(self.settings.intel_capture, self.capture_dir))
+                    capture = await stack.enter_async_context(IntelCapture(self.capture_settings, self.capture_dir))
+                    self.capture_started_ms = capture.started_ms
                     LOGGER.info("Intel CSI files: %s", self.capture_dir)
                 self.set_state("warming_up", "WAITING_FOR_CSI")
                 if live and capture is None:
@@ -458,15 +469,17 @@ class Session:
                 raise ValueError("Invalid model presence result")
             coordinate_system = result["coordinate_system"]
             confidence_method = result["confidence_method"]
+            pose_reason = result.get("pose_reason") if present else None
             # Upstream repeats presence probability on each joint. Send it
             # once at frame level so it cannot be read as joint confidence.
             keypoints = [
                 {key: value for key, value in joint.items() if key != "confidence"}
                 for joint in result["keypoints"]
             ] if present else []
-            if present and ([joint["id"] for joint in keypoints] != list(range(LANDMARK_COUNT)) or any(
-                not (0 <= joint[axis] <= 1) for joint in keypoints for axis in ("x_norm", "y_norm")
-            )):
+            expected_joints = list(range(LANDMARK_COUNT)) if present and pose_reason is None else []
+            if (pose_reason not in (None, "CSI_OUTSIDE_POSE_CALIBRATION")
+                    or [joint["id"] for joint in keypoints] != expected_joints
+                    or any(not 0 <= joint[axis] <= 1 for joint in keypoints for axis in ("x_norm", "y_norm"))):
                 raise ValueError("Invalid model keypoints")
         except Exception:
             if window.generation == self.generation:
@@ -500,7 +513,7 @@ class Session:
         self.emit(
             "pose", timestamp_ms=target, status="ready", person_present=self.person_present,
             presence_probability=probability, confidence_method=confidence_method,
-            coordinate_system=coordinate_system, keypoints=keypoints,
+            coordinate_system=coordinate_system, keypoints=keypoints, pose_reason=pose_reason,
             motion={"score": round(motion_score, 3), "level": "high" if motion_score >= MOTION_STD_THRESHOLD else "low"},
             timing_ms=timing_ms,
         )

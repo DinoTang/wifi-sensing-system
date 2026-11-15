@@ -1,6 +1,6 @@
 # Backend CSI cho người thứ 4
 
-Backend chạy mô hình CSIPoseNet đã bàn giao trên nhánh `Khanh`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket. Trang kiểm thử tích hợp hiển thị cả ba loại thông điệp.
+Backend dùng mô hình `smn-csiposenet-1.1` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
 
 ## Cài đặt và phát lại
 
@@ -10,10 +10,11 @@ Chạy từ thư mục gốc repo với Python 3.10–3.12. Nếu dùng Windows 
 python -m venv .venv
 .\.venv\Scripts\python -m pip install "torch>=2.6,<3" --index-url https://download.pytorch.org/whl/cpu
 .\.venv\Scripts\python -m pip install -r backend/requirements.txt
-.\.venv\Scripts\python -m backend --source replay --session hardware/csi_extracted/labeled/walking_01_20261025-053626_PiI7
+$round = 'signal-processing/SMN-20261105T143709Z-1-001/SMN/csi-data-lan3'
+.\.venv\Scripts\python -m backend --source replay --session "$round/video-sessions/P01_trial03_20261105-112653_fKOx/walking/csi"
 ```
 
-Mở <http://127.0.0.1:8000/dashboard/> rồi bấm **Bắt đầu phiên**. Dùng bản ghi phòng trống ngày 03/11 tại `signal-processing/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE` để kiểm tra hiển thị 0 khớp. Đây là phiên đã dùng khi huấn luyện. Phiên phòng trống độc lập ngày 25/10 dùng để kiểm tra khả năng tổng quát hóa. Mặc định tốc độ phát bằng tốc độ thu. `--speed 8` tăng tốc phát lại. `--autostart` tự bắt đầu khi server khởi động.
+Mở <http://127.0.0.1:8000/dashboard/> rồi bấm **Bắt đầu phiên**. Bản ghi đi bộ Lần 3 có đủ hai tệp và dùng cùng bố trí máy thu với mô hình. Để phát bản ghi đứng yên Lần 3, dùng `$round/labeled/test_2026110511304425340_20261105-113047_skHz`. Để thử phòng trống, dùng `signal-processing/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE`. Đây là các ca phát lại kiểm tra hệ thống. Mặc định tốc độ phát bằng tốc độ thu. `--speed 8` tăng tốc phát lại. `--autostart` tự bắt đầu khi server khởi động.
 
 Trên Linux dùng `.venv/bin/python` thay cho `.\.venv\Scripts\python`. Backend mặc định chỉ lắng nghe loopback. Để thử từ máy frontend trên LAN, đặt `--host` bằng địa chỉ mạng phù hợp trong môi trường nhóm tin cậy. API điều khiển phiên chưa có xác thực. Trình duyệt có thể dùng trang cùng origin hoặc reverse proxy cùng origin để truy cập API và WebSocket. Backend frontend (ví dụ NiceGUI) có thể kết nối WebSocket từ phía máy chủ.
 
@@ -26,7 +27,7 @@ sudo -v && .venv/bin/python -m backend \
   --source live --auto-capture --session "$HOME/csi-data/live"
 ```
 
-Giữ terminal này mở. Vào <http://127.0.0.1:8000/dashboard/> và bấm **Bắt đầu phiên**. Backend kiểm tra Wi-Fi và router, chạy script kích hoạt IAX, xác nhận `csi_enabled=1`, mở bộ thu rồi ping router mỗi 100 ms với tải 56 byte. **Dừng phiên** dừng cả hai tiến trình. Mặc định phiên tự kết thúc sau 60 giây. Có thể chọn thời lượng bằng `--duration` và đổi thiết bị hoặc mạng bằng `--iax-dir`, `--interface`, `--router`, `--channel` và `--ssid`.
+Giữ terminal này mở. Vào <http://127.0.0.1:8000/dashboard/>, chọn **30 giây**, **1 phút** hoặc **2 phút**, rồi bấm **Bắt đầu phiên**. Backend chuẩn bị Wi-Fi và bật IAX, sau đó bắt đầu tính thời lượng khi khởi chạy bộ thu. Backend ping router mỗi 100 ms với tải 56 byte trong lúc thu. **Dừng phiên** kết thúc sớm. `--duration` đặt thời lượng mặc định (60 giây nếu bỏ qua). Dùng `--iax-dir`, `--interface`, `--router`, `--channel` và `--ssid` khi máy hoặc mạng dùng cấu hình khác.
 
 Mỗi lần bấm bắt đầu tạo thư mục `~/csi-data/live/<session_id>`. Lấy ID đầy đủ ở mục Phiên trên dashboard hoặc qua `GET /api/status`. Dùng `setup.log` để kiểm tra Wi-Fi và kích hoạt, `recorder.log` để kiểm tra bộ thu, và `ping.log` để xem lưu lượng tới router. `raw.csi` tăng kích thước trong lúc thu nếu driver gửi khung CSI. Khi báo `CAPTURE_SUDO`, dừng backend bằng Ctrl+C rồi chạy lại lệnh trên trong terminal Ubuntu để gia hạn quyền sudo.
 
@@ -49,17 +50,18 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 
 - Nền tích hợp là `Khanh@5769e40`. Dùng layout và `decode_points` của `signal-processing/src/parse_intel_csi.py`. Bản ghi hợp lệ có `VHT,20,VHT20`, `2×2×56`, payload 896 byte. Bản ghi NOHT xen kẽ được bỏ qua.
 - Cửa sổ dùng 20 mẫu × 224 biên độ I/Q theo thứ tự gốc của parser, bước 2 mẫu, nhịp danh định khoảng 101 ms. Biên độ làm tròn 4 chữ số như CSV và qua float16 → float32 như NPZ huấn luyện. Giữ các vị trí zero và không chạy pipeline lọc/đặc trưng dành cho bài toán phân loại hoạt động.
-- Dùng `machine-learning/src/predict.py`, checkpoint `best_model.pt`, Z-score từ `normalization_params.json` và threshold presence 0,5 của mô hình 1.0.0. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. `presence_probability` là sigmoid của đầu ra có người, không phải độ tin cậy từng khớp.
+- Mặc định `machine-learning/src/predict.py` nạp cặp `smn_pose.pt` và `smn_normalization.json` của bản SMN 1.1. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. Mô hình hiện diện dùng đặc trưng từ biên độ theo thời gian và từng đường ăng-ten, với ngưỡng xác suất 0,5. Mô hình tư thế dùng lớp chuẩn hóa có giới hạn để tránh bão hòa ở các điểm CSI gần như cố định trong dữ liệu huấn luyện.
 - Đầu vào là CSI. Timestamp mục tiêu là timestamp của mẫu CSI cuối cửa sổ, giữ nguyên cơ sở thời gian của recorder và đổi từ ns sang ms bằng phép chia nguyên. Mẫu lùi/trùng timestamp, gap trên 300 ms hoặc cấu hình sai làm mất hiệu lực tư thế cũ. Cửa sổ còn phải có trung vị khoảng mẫu 80–120 ms và thời gian từ mẫu đầu đến mẫu cuối 1.500–2.300 ms để chặn nhịp sai hoặc thiếu mẫu kéo dài. Khi gặp gap, hệ thống tích lũy lại 20 mẫu nên vị trí stride sau gap có thể khác batch offline.
 - Replay đọc theo thứ tự và lập lịch theo timestamp của bản ghi đầu. Khi lịch phát gặp khoảng trống quá 300 ms theo thời gian bản ghi, backend xóa kết quả đã lưu trước khi chờ đến gói tiếp theo. Live dùng một cửa sổ đang suy luận và tối đa một cửa sổ chờ. Cửa sổ mới nhất thay thế cửa sổ chờ khi quá tải. Mẫu quá cũ hoặc cửa sổ đã bị vô hiệu hóa sẽ bị loại. Mỗi client chỉ giữ tối đa một thông điệp chờ cho mỗi loại.
-- `main@e94e396` có báo cáo trên 1.974 cửa sổ đã đồng bộ. Mô hình Ridge dự đoán tọa độ có PCK@0,05 bằng 0,552, trong khi tư thế trung bình đạt 0,714. Dashboard hiển thị tư thế 33 khớp của CSIPoseNet ở chế độ thử nghiệm. Kiểm chứng theo khớp khi đi lại, ngồi và chuyển tư thế cần bản ghi CSI và video đồng bộ của các động tác này.
+- Đánh giá SMN 1.1 giữ riêng cả một đợt có video đồng bộ. Tỷ lệ khớp nhìn thấy nằm trong bán kính 5% đường chéo ảnh đạt 56,0% và 69,6% khi đi bộ, 98,7% và 85,7% khi đứng yên. Các số liệu lấy từ hai lượt train và kiểm tra chéo Lần 2 và Lần 3. Checkpoint đi kèm được huấn luyện từ cả hai đợt: 2.237 cửa sổ tư thế, với nhãn hiện diện bổ sung từ các lần thu cũ. Hai đợt có cùng người và bố trí thiết bị. Dữ liệu video đã đồng bộ chưa có phiên ngồi hoặc đứng lên có nhãn.
+- Khi CSI cách xa dải dùng để học tư thế, backend gửi kết quả hiện diện kèm `pose_reason: "CSI_OUTSIDE_POSE_CALIBRATION"` và mảng khớp rỗng. Khi thử phiên thu mới, giữ vị trí router và máy thu gần với bố trí đã dùng để huấn luyện và kiểm tra riêng trường hợp phòng trống, đứng yên và đi lại.
 - `motion` trong thông điệp `pose` dùng trung bình độ lệch chuẩn theo thời gian của từng vị trí CSI trong cửa sổ 20 mẫu, trước Z-score. `level` là `high` từ ngưỡng khảo sát 10,15 trở lên và `low` ở dưới ngưỡng. Chỉ số mô tả biến thiên của kênh vô tuyến. Nhiễu, thay đổi môi trường và chuyển động đều có thể ảnh hưởng đến chỉ số. Xem [báo cáo tín hiệu](../signal-processing/docs/report_nguoi2.md).
 
 ## HTTP và WebSocket
 
 - `GET /api/status` trả trạng thái, lý do, số bản ghi đọc/nhận/lọc/bỏ, số gap, số cửa sổ suy luận, cấu hình và timestamp nhận gần nhất.
 - `GET /api/session/report` trả báo cáo JSON của phiên đang chạy hoặc phiên gần nhất. Báo cáo có cấu hình đầu vào, SHA-256 của checkpoint, bộ chuẩn hóa và parser, thống kê cửa sổ, chuyển trạng thái, nhịp suy luận và độ trễ từng giai đoạn. API trả 404 trước phiên đầu tiên. Xuất JSON trước khi bắt đầu phiên mới.
-- `POST /api/session/start` trả HTTP 202 và ID phiên. Khi đã có phiên đang chạy, trả 409. Server chọn thư mục và nguồn từ tham số CLI.
+- `POST /api/session/start` trả HTTP 202 và ID phiên. Thu tự động nhận `?duration_s=30`, `60` hoặc `120`. Giá trị ngoài các lựa chọn hoặc truyền thời lượng cho phiên phát lại bị từ chối với 422. Khi đã có phiên đang chạy, API trả 409. `capture.started_ms` là mốc bắt đầu của bộ thu để dashboard tính thời gian còn lại.
 - `POST /api/session/stop` dừng phiên và trả trạng thái hiện tại. Gọi lại sau khi phiên đã kết thúc sẽ trả trạng thái kết thúc đã ghi nhận. Có thể gửi `?session_id=<id>` để chỉ dừng đúng phiên đó. API trả 409 nếu phiên đã đổi.
 - `WS /ws` gửi snapshot hiện tại lúc kết nối, rồi cập nhật theo thời gian thực. `sequence` tăng trong vòng đời của tiến trình server. Client có thể thấy khoảng nhảy khi bỏ thông điệp chờ. Khi đổi `session_id`, nhận trạng thái khác `ready` hoặc mất WebSocket, xóa ngay tư thế cũ.
 - Tài liệu HTTP tự sinh tại <http://127.0.0.1:8000/docs>.
@@ -72,7 +74,7 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 {
   "type": "pose", "schema_version": 1, "session_id": "demo", "sequence": 20,
   "source": "replay", "timestamp_ms": 1792920264420, "server_sent_ms": 1794463200123,
-  "model_version": "1.0.0", "status": "ready", "person_present": false,
+  "model_version": "smn-csiposenet-1.1", "status": "ready", "person_present": false,
   "presence_probability": 0.02, "confidence_method": "model_presence_sigmoid_probability",
   "coordinate_system": {"type": "2D_pixel", "reference_width": 1920, "reference_height": 1080, "origin": "top_left"},
   "keypoints": [], "motion": {"score": 3.46, "level": "low"},
@@ -80,7 +82,7 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 }
 ```
 
-`chart` có `quantity: "mean_raw_csi_amplitude"` và tối đa 20 `points` dạng `{"timestamp_ms": 1792920264420, "value": 125.4}`. Đây là biên độ trung bình của 224 vị trí ở mỗi mẫu, trước Z-score. Khi có người, mỗi khớp có `id`, `name`, `x_pixel`, `y_pixel`, `x_norm` và `y_norm`. [Dashboard hai màn hình](../frontend/README-dashboard.md) đọc hợp đồng này tại `/dashboard/`.
+`chart` có `quantity: "mean_raw_csi_amplitude"` và tối đa 20 `points` dạng `{"timestamp_ms": 1792920264420, "value": 125.4}`. Đây là biên độ trung bình của 224 vị trí ở mỗi mẫu, trước chuẩn hóa. Khi mô hình có kết quả tư thế, mỗi khớp có `id`, `name`, `x_pixel`, `y_pixel`, `x_norm` và `y_norm`. [Dashboard hai màn hình](../frontend/README-dashboard.md) đọc hợp đồng này tại `/dashboard/`.
 
 ### Trạng thái và lỗi
 
@@ -106,7 +108,7 @@ python -m pytest -q backend/test_backend.py
 
 Xem [quy trình nghiệm thu và xuất bằng chứng JSON](NGHIEM-THU.md) để chạy các tình huống phòng trống, có người và mất nguồn.
 
-### Kết quả trên máy thử
+### Kết quả kiểm thử với checkpoint Khanh 1.0.0
 
 Windows, Intel Core i5-11300H, Python 3.12.14 và PyTorch 2.6.0 CPU, một luồng PyTorch. Hai phiên Intel bên dưới được ghi ngày 25/10 và nằm ngoài sáu phiên dùng trong báo cáo huấn luyện của nhánh `Khanh`.
 

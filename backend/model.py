@@ -1,4 +1,4 @@
-"""Reuse the checkpoint and preprocessing distributed on the Khanh branch."""
+"""Load the CSI pose checkpoint bundled with the backend."""
 
 from pathlib import Path
 import sys
@@ -6,8 +6,9 @@ import sys
 from .source import ROOT
 
 ML_ROOT = ROOT / "machine-learning"
-DEFAULT_CHECKPOINT = ML_ROOT / "models" / "checkpoints" / "best_model.pt"
-DEFAULT_NORMALIZER = DEFAULT_CHECKPOINT.with_name("normalization_params.json")
+DEFAULT_CHECKPOINT = ML_ROOT / "models" / "checkpoints" / "smn_pose.pt"
+DEFAULT_NORMALIZER = DEFAULT_CHECKPOINT.with_name("smn_normalization.json")
+LEGACY_NORMALIZER = DEFAULT_CHECKPOINT.with_name("normalization_params.json")
 WINDOW_SIZE = 20
 FEATURES = 224
 STRIDE = 2

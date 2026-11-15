@@ -18,9 +18,11 @@ import torch
 try:
     from .dataset import CSINormalizer
     from .models import load_checkpoint
+    from .presence import PresenceClassifier
 except ImportError:
     from dataset import CSINormalizer
     from models import load_checkpoint
+    from presence import PresenceClassifier
 
 # Standard MediaPipe 33 BlazePose landmark names
 LANDMARK_NAMES = [
@@ -56,6 +58,11 @@ class CSIPosePredictor:
         self.frame_width = data_cfg.get("frame_width", 1920.0)
         self.frame_height = data_cfg.get("frame_height", 1080.0)
         self.version = self.config.get("version", "1.0.0")
+        presence_config = self.config.get("presence_classifier")
+        self.presence_classifier = PresenceClassifier.from_config(presence_config) if presence_config is not None else None
+        self.pose_max_distance = data_cfg.get("pose_max_distance")
+        self.pose_reference_tones = np.asarray(data_cfg.get("pose_reference_tones", []), dtype=int)
+        self.normalized_input_clip = data_cfg.get("normalized_input_clip")
 
     def predict_window(
         self,
@@ -122,6 +129,13 @@ class CSIPosePredictor:
 
         # 2. Preprocess & Normalize
         csi_norm = self.normalizer.transform(csi_window[None, :, :])  # (1, 20, 224)
+        mean_offset = np.abs(csi_norm[0].mean(axis=0))
+        pose_outside_calibration = (
+            (self.pose_max_distance is not None and mean_offset.mean() > self.pose_max_distance)
+            or np.any(mean_offset[self.pose_reference_tones] > 2.5)
+        )
+        if self.normalized_input_clip is not None:
+            np.clip(csi_norm, -self.normalized_input_clip, self.normalized_input_clip, out=csi_norm)
         tensor = torch.tensor(csi_norm, dtype=torch.float32, device=self.device)
 
         # 3. Model Forward Pass
@@ -131,20 +145,23 @@ class CSIPosePredictor:
             pres_prob = float(torch.sigmoid(pres_logits)[0].item())
             kpts_norm = pred_kpts[0].cpu().numpy()  # (33, 2) in [0, 1] range
 
+        if self.presence_classifier is not None:
+            pres_prob = self.presence_classifier.probability(csi_window)
         is_present = pres_prob >= self.presence_threshold
         t1 = time.perf_counter()
         latency_ms = (t1 - t0) * 1000.0
 
         # 4. Construct Keypoints Payload
         keypoints_payload = []
-        for i, name in enumerate(LANDMARK_NAMES):
+        show_pose = is_present and not pose_outside_calibration
+        for i, name in enumerate(LANDMARK_NAMES if show_pose else ()):
             xn = float(kpts_norm[i, 0])
             yn = float(kpts_norm[i, 1])
             px = int(round(xn * self.frame_width))
             py = int(round(yn * self.frame_height))
 
             # Confidence derived strictly from model presence sigmoid probability (never video label visibility)
-            conf = pres_prob if is_present else 0.0
+            conf = pres_prob
 
             keypoints_payload.append({
                 "id": i,
@@ -162,8 +179,9 @@ class CSIPosePredictor:
             "person_present": is_present,
             "presence_probability": round(pres_prob, 4),
             "confidence_method": "model_presence_sigmoid_probability",
-            "keypoints": keypoints_payload if is_present else [],
-            "num_keypoints": len(LANDMARK_NAMES) if is_present else 0,
+            "keypoints": keypoints_payload,
+            "num_keypoints": len(keypoints_payload),
+            "pose_reason": "CSI_OUTSIDE_POSE_CALIBRATION" if is_present and pose_outside_calibration else None,
             "latency_ms": round(latency_ms, 2),
             "coordinate_system": {
                 "type": "2D_pixel",

@@ -56,9 +56,13 @@ def create_app(settings: Settings) -> FastAPI:
         return result
 
     @app.post("/api/session/start", status_code=202)
-    async def start(request: Request):
+    async def start(request: Request, duration_s: int | None = None):
         check_request_origin(request)
-        if not await session.start():
+        if duration_s is not None:
+            capture = settings.intel_capture
+            if capture is None or duration_s not in capture.duration_options_s:
+                raise HTTPException(422, "Unsupported automatic capture duration")
+        if not await session.start(duration_s):
             raise HTTPException(409, "A session is already active")
         return sent(session.status())
 

@@ -23,6 +23,9 @@ from parse_intel_csi import convert_session
 CAPTURES = ROOT / "hardware" / "csi_extracted" / "labeled"
 EMPTY = CAPTURES / "empty_01_20261025-052422_4eki"
 WALKING = CAPTURES / "walking_01_20261025-053626_PiI7"
+SMN = ROOT / "signal-processing" / "SMN-20261105T143709Z-1-001" / "SMN" / "csi-data-lan3"
+SMN_WALKING = SMN / "video-sessions" / "P01_trial03_20261105-112653_fKOx" / "walking" / "csi"
+SMN_STANDING = SMN / "labeled" / "test_2026110511304425340_20261105-113047_skHz"
 
 
 def receive_until(socket, condition, limit=100):
@@ -63,6 +66,7 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
         assert client.get("/api/session/report").status_code == 404
         with client.websocket_connect("/ws") as socket:
             assert socket.receive_json()["status"] == "idle"
+            assert client.post("/api/session/start", params={"duration_s": 30}).status_code == 422
             response = client.post("/api/session/start")
             assert response.status_code == 202
             assert client.post("/api/session/start").status_code == 409
@@ -87,6 +91,7 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             ], dtype=np.float16).astype(np.float32)
             offline = model.predict_window(window, timestamp=pose["timestamp_ms"])
             assert pose["person_present"] == offline["person_present"]
+            assert pose["pose_reason"] == offline["pose_reason"]
             assert pose["presence_probability"] == offline["presence_probability"]
             assert pose["keypoints"] == [
                 {key: value for key, value in joint.items() if key != "confidence"}
@@ -113,6 +118,28 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             assert report["websocket"]["sent"] >= 3
             with client.websocket_connect("/ws") as reconnected:
                 assert reconnected.receive_json()["status"] == "stopped"
+
+
+@pytest.mark.parametrize("capture,minimum_positions,maximum_positions", [
+    (SMN_WALKING, 250, 610),
+    (SMN_STANDING, 0, 65),
+])
+def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_positions, model):
+    session = Session(Settings(capture, "replay"))
+    hips = []
+    with CaptureReader(capture, live=False) as reader:
+        while (record := reader.read()) is not None:
+            window = session.ingest(record, 0)
+            if window is None:
+                continue
+            prediction = model.predict_window(window.amplitudes)
+            if prediction["person_present"] and prediction["pose_reason"] is None:
+                assert len(prediction["keypoints"]) == 33
+                hips.append(sum(prediction["keypoints"][index]["x_pixel"] for index in (23, 24)) / 2)
+    assert model.version == "smn-csiposenet-1.1"
+    assert len(hips) >= 160
+    spread = np.percentile(hips, 95) - np.percentile(hips, 5)
+    assert minimum_positions <= spread <= maximum_positions
 
 
 def test_partial_binary_and_log_then_verify_pairing(tmp_path):
@@ -202,6 +229,8 @@ def test_automatic_capture_start_stop_and_restart(automatic_capture, monkeypatch
     monkeypatch.setattr("backend.session.load_model", lambda *_: model)
     spawn = intel_capture.spawn
     children = []
+    recorder_durations = []
+    ping_deadlines = []
     # Write a real Intel fixture before the reader opens, just as a fast recorder can.
     recorder_script = """
 from pathlib import Path
@@ -221,12 +250,15 @@ sys.exit(124)
 
     async def start_child(*args, stdout):
         if args[0] == "ping":
-            assert args[2:] == ("-I", "wlp0s20f3", "-s", "56", "-i", "0.1", "-w", "66", "192.168.0.1")
+            assert args[2:9] == ("-I", "wlp0s20f3", "-s", "56", "-i", "0.1", "-w")
+            assert args[-1] == "192.168.0.1"
+            ping_deadlines.append(int(args[9]))
             process = await spawn(sys.executable, "-c", "import time; time.sleep(60)", stdout=stdout)
         else:
-            assert args[:13] == ("sudo", "-n", "--", "timeout", "-k", "5s", "-s", "INT",
-                                 "60s", "stdbuf", "-oL", "-eL", automatic_capture.intel_capture.iax_dir /
-                                 "csi" / "iaxcsi" / "cpp" / "iaxcsi")
+            assert args[:8] == ("sudo", "-n", "--", "timeout", "-k", "5s", "-s", "INT")
+            assert args[9:13] == ("stdbuf", "-oL", "-eL", automatic_capture.intel_capture.iax_dir /
+                                  "csi" / "iaxcsi" / "cpp" / "iaxcsi")
+            recorder_durations.append(args[8])
             raw = args[-1]
             process = await spawn(sys.executable, "-c", recorder_script, raw, WALKING, stdout=stdout)
             deadline = time.monotonic() + 5
@@ -241,9 +273,13 @@ sys.exit(124)
     monkeypatch.setattr(intel_capture, "spawn", start_child)
     with TestClient(create_app(automatic_capture)) as client:
         assert not automatic_capture.session_dir.exists()
+        assert client.get("/api/status").json()["capture"]["duration_options_s"] == [30, 60, 120]
+        assert client.post("/api/session/start", params={"duration_s": 31}).status_code == 422
         first = client.post("/api/session/start").json()["session_id"]
         ready = wait_for_status(client, "ready")
         assert ready["capture"]["automatic"]
+        assert ready["capture"]["duration_s"] == 60
+        assert 0 < ready["capture"]["started_ms"] <= ready["server_sent_ms"]
         assert ready["counts"]["backlog"] == 0
         assert ready["counts"]["predictions"] > 0
         assert client.post("/api/session/stop", params={"session_id": first}).json()["status"] == "stopped"
@@ -251,13 +287,20 @@ sys.exit(124)
         first_raw = automatic_capture.session_dir / first / "raw.csi"
         assert first_raw.stat().st_size > 0
 
-        second = client.post("/api/session/start").json()["session_id"]
-        assert second != first
-        assert client.post("/api/session/stop", params={"session_id": first}).status_code == 409
-        wait_for_status(client, "ready")
-        (automatic_capture.session_dir / second / "writer-finished").touch()
-        assert wait_for_status(client, "ended")["reason"] == "CAPTURE_COMPLETE"
-        assert all(process.returncode is not None for process in children)
+        for duration in (30, 120):
+            response = client.post("/api/session/start", params={"duration_s": duration})
+            assert response.status_code == 202
+            session_id = response.json()["session_id"]
+            assert session_id != first
+            assert client.post("/api/session/stop", params={"session_id": first}).status_code == 409
+            assert wait_for_status(client, "ready")["capture"]["duration_s"] == duration
+            assert client.post("/api/session/start", params={"duration_s": 60}).status_code == 409
+            (automatic_capture.session_dir / session_id / "writer-finished").touch()
+            assert wait_for_status(client, "ended")["reason"] == "CAPTURE_COMPLETE"
+            assert client.get("/api/session/report").json()["configuration"]["automatic_capture_s"] == duration
+            assert all(process.returncode is not None for process in children)
+        assert recorder_durations == ["60s", "30s", "120s"]
+        assert ping_deadlines == [66, 36, 126]
         assert first_raw.stat().st_size == (WALKING / "raw.csi").stat().st_size
 
 

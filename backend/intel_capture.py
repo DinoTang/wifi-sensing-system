@@ -10,10 +10,13 @@ from pathlib import Path
 import re
 import shutil
 import sys
+import time
 
 LOGGER = logging.getLogger("uvicorn.error")
 SUDO = ("sudo", "-n", "--")
 KILL_GRACE_SECONDS = 5
+CAPTURE_DURATIONS_S = (30, 60, 120)
+DEFAULT_CAPTURE_DURATION_S = 60
 
 
 @dataclass(frozen=True)
@@ -23,7 +26,11 @@ class IntelCaptureSettings:
     router: str = "192.168.0.1"
     channel: int = 36
     ssid: str | None = None
-    duration: int = 60
+    duration: int = DEFAULT_CAPTURE_DURATION_S
+
+    @property
+    def duration_options_s(self) -> list[int]:
+        return sorted({*CAPTURE_DURATIONS_S, self.duration})
 
 
 class IntelCaptureError(RuntimeError):
@@ -74,6 +81,7 @@ class IntelCapture:
         self.directory = directory
         self.recorder: asyncio.subprocess.Process | None = None
         self.ping: asyncio.subprocess.Process | None = None
+        self.started_ms: int | None = None
 
     async def check(self, log, reason: str, *args, allowed=(0,)) -> tuple[int, str]:
         process = await spawn(*args, stdout=asyncio.subprocess.PIPE)
@@ -113,6 +121,7 @@ class IntelCapture:
             raw = self.directory / "raw.csi"
             raw.touch(mode=0o600, exist_ok=False)
             with (self.directory / "recorder.log").open("xb") as log:
+                self.started_ms = time.time_ns() // 1_000_000
                 self.recorder = await spawn(
                     *SUDO, "timeout", "-k", f"{KILL_GRACE_SECONDS}s", "-s", "INT",
                     f"{config.duration}s", "stdbuf", "-oL", "-eL", recorder, config.interface, raw,

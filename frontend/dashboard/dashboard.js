@@ -45,6 +45,7 @@ const REASONS = {
 const SOURCE_LABELS = {live: 'Trực tiếp', replay: 'Phát lại', mock: 'Giả lập'};
 const STARTABLE = new Set(['idle', 'ended', 'stopped', 'source_error']);
 const MAX_RECONNECT_MS = 5000;
+const durationLabel = seconds => seconds % 60 === 0 ? format.format(seconds / 60) + ' phút' : format.format(seconds) + ' giây';
 
 let mode = new URLSearchParams(location.search).get('source') === 'demo' ? 'mock' : 'backend';
 let view = 'signal';
@@ -60,6 +61,7 @@ let lastChart = null;
 let lastPose = null;
 let lastView = view;
 let drawTime = null;
+let durationOptions = '';
 
 function setText(id, value) {
   const target = element(id);
@@ -71,7 +73,14 @@ function scheduleRender() {
 }
 
 function receive(message) {
-  if (stream.accept(message, performance.now())) scheduleRender();
+  const previousSession = stream.status?.session_id;
+  if (!stream.accept(message, performance.now())) return;
+  if (message.type === 'status' && message.session_id && previousSession !== message.session_id) {
+    const seconds = String(message.capture?.duration_s);
+    const range = element('range');
+    if ([...range.options].some(option => option.value === seconds)) range.value = seconds;
+  }
+  scheduleRender();
 }
 
 function connect() {
@@ -140,6 +149,9 @@ async function controlSession(action) {
   try {
     const url = new URL(`/api/session/${action}`, location.href);
     if (action === 'stop' && stream.status?.session_id) url.searchParams.set('session_id', stream.status.session_id);
+    if (action === 'start' && !element('capture-duration-control').hidden) {
+      url.searchParams.set('duration_s', element('capture-duration').value);
+    }
     const response = await fetch(url, {method: 'POST', signal: controller.signal});
     if (!response.ok) {
       throw new Error(response.status === 409 ? 'Trạng thái phiên đã thay đổi.' : `Backend trả lỗi HTTP ${response.status}.`);
@@ -180,7 +192,8 @@ function phaseFor(snapshot) {
     return ['Đang chuẩn bị bộ thu', 'Đang kiểm tra Wi-Fi, router và driver Intel.', 'warn'];
   }
   if (stream.status.reason === 'CAPTURE_COMPLETE') {
-    return ['Đã thu xong', 'Bấm Bắt đầu phiên để thu lại.', 'neutral'];
+    const duration = stream.status.capture?.duration_s;
+    return [duration ? 'Đã thu xong ' + durationLabel(duration) : 'Đã thu xong', 'Bấm Bắt đầu phiên để thu lại.', 'neutral'];
   }
   const [title, description, tone] = PHASES[stream.status.status];
   return [title, REASONS[stream.status.reason] ?? description, tone];
@@ -208,10 +221,34 @@ function updateHeader(phase) {
   const startable = STARTABLE.has(state?.status)
     || (state?.status === 'model_error' && state.reason === 'MODEL_LOAD_FAILED');
   const controlsEnabled = transport === 'open' && !pendingAction && Boolean(state);
+  const durations = capture?.duration_options_s;
+  const durationSelect = element('capture-duration');
+  const canSelectDuration = Boolean(capture?.automatic && durations?.length);
+  element('capture-duration-control').hidden = !canSelectDuration;
+  durationSelect.disabled = !controlsEnabled || !startable;
+  if (canSelectDuration && durationOptions !== durations.join(',')) {
+    durationOptions = durations.join(',');
+    durationSelect.replaceChildren(...durations.map(seconds => new Option(durationLabel(seconds), seconds)));
+    durationSelect.value = capture.default_duration_s;
+  }
+  if (canSelectDuration && state.session_id && !startable) durationSelect.value = capture.duration_s;
   element('start').disabled = !controlsEnabled || !startable;
   element('stop').disabled = !controlsEnabled || startable;
   setText('stream-status', phase[0]);
   element('stream-status').dataset.tone = phase[2];
+}
+
+function updateCaptureClock(now) {
+  const status = stream.status;
+  const capture = status?.capture;
+  const clock = element('capture-clock');
+  clock.hidden = !capture?.started_ms || STARTABLE.has(status.status);
+  if (clock.hidden) return;
+  const serverTime = status.server_sent_ms + now - stream.statusReceivedAt;
+  const seconds = Math.ceil(Math.max(0, capture.started_ms + capture.duration_s * 1000 - serverTime) / 1000);
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
+  setText('capture-clock', seconds ? 'Còn ' + mm + ':' + ss : 'Đang kết thúc');
 }
 
 function updateView() {
@@ -247,20 +284,22 @@ function sampleRate(points) {
 
 function renderSignal(chart, phase) {
   const range = Number(element('range').value);
-  const points = chart
-    ? stream.points.filter(point => point.timestamp_ms >= chart.timestamp - range * 1000)
+  const end = stream.points.at(-1)?.timestamp_ms;
+  const points = end !== undefined
+    ? stream.points.filter(point => point.timestamp_ms >= end - range * 1000)
     : [];
-  setText('chart-description', mode === 'mock' ? 'Biên độ I/Q mẫu' : 'Biên độ I/Q thô trước chuẩn hóa');
+  setText('chart-description', mode === 'mock' ? 'Biên độ I/Q mẫu'
+    : !chart && points.length ? 'Biên độ I/Q đã ghi trong phiên' : 'Biên độ I/Q thô trước chuẩn hóa');
   setText('amplitude', points.length ? format.format(points.at(-1).value) : '—');
-  setText('sample-rate', chart ? sampleRate(chart.points) : '—');
+  setText('sample-rate', chart ? sampleRate(chart.points) : sampleRate(points));
   setText('point-count', String(points.length));
-  showTimestamp('chart-time', chart?.timestamp ?? null);
+  showTimestamp('chart-time', end ?? null);
   element('chart-placeholder').hidden = Boolean(points.length);
   setText('chart-empty-title', phase[0]);
   setText('chart-empty-note', phase[1]);
 
   const canvas = element('chart');
-  const hover = paintChart(canvas, points, chart?.timestamp ?? 0, range, pointer);
+  const hover = paintChart(canvas, points, end ?? 0, range, pointer);
   canvas.setAttribute('aria-label', points.length
     ? `Biểu đồ biên độ CSI, ${points.length} mẫu trong ${range} giây`
     : 'Biểu đồ CSI chưa có mẫu');
@@ -275,6 +314,7 @@ function renderSignal(chart, phase) {
 
 function renderPresence(chart, pose, phase) {
   const label = pose ? (pose.present ? 'Có người' : 'Phòng trống') : 'Chưa có kết quả';
+  const motion = pose?.motion;
   const note = pose
     ? (mode === 'mock' ? 'Trạng thái mẫu' : 'Dự đoán của mô hình từ CSI')
     : (chart ? 'Chờ kết quả cùng timestamp với biểu đồ.' : phase[1]);
@@ -286,7 +326,6 @@ function renderPresence(chart, pose, phase) {
   setText('joint-count', pose ? `${joints}/${LANDMARK_COUNT}` : '—');
   setText('model-version', pose?.model ?? stream.status?.model_version ?? '—');
   setText('backend-latency', pose?.processingMs != null ? `${format.format(pose.processingMs)} ms` : '—');
-  const motion = pose?.motion;
   setText('motion-level', motion ? `${motion.level === 'high' ? 'Cao' : 'Thấp'} · ${format.format(motion.score)}` : '—');
   element('probability-group').hidden = probability === null;
   element('probability').value = probability ?? 0;
@@ -296,8 +335,13 @@ function renderPresence(chart, pose, phase) {
   showTimestamp('pose-time', pose?.timestamp ?? null);
 
   element('pose-placeholder').hidden = joints > 0;
-  setText('pose-empty-title', pose?.present && !joints ? 'Thiếu tọa độ khớp' : label);
-  setText('pose-empty-note', pose && !pose.present ? 'Không có bộ xương ở cửa sổ này.' : note);
+  if (pose?.reason === 'CSI_OUTSIDE_POSE_CALIBRATION') {
+    setText('pose-empty-title', 'Chưa đủ cơ sở vẽ khớp');
+    setText('pose-empty-note', 'Tín hiệu CSI khác dữ liệu dùng để học tư thế 2D.');
+  } else {
+    setText('pose-empty-title', pose?.present && !joints ? 'Thiếu tọa độ khớp' : label);
+    setText('pose-empty-note', pose && !pose.present ? 'Không có bộ xương ở cửa sổ này.' : note);
+  }
   const canvas = element('skeleton');
   paintSkeleton(canvas, pose);
   canvas.setAttribute('aria-label', joints ? `Bộ xương 2D, ${joints} khớp` : 'Bộ xương 2D chưa có khớp');
@@ -309,6 +353,7 @@ function render() {
   const {chart, pose} = snapshot;
   const phase = phaseFor(snapshot);
   updateHeader(phase);
+  updateCaptureClock(performance.now());
   updateView();
   if (view === 'signal') renderSignal(chart, phase);
   else renderPresence(chart, pose, phase);
@@ -358,7 +403,9 @@ const resizeObserver = new ResizeObserver(scheduleRender);
 resizeObserver.observe(element('chart'));
 resizeObserver.observe(element('skeleton'));
 setInterval(() => {
-  const {chart, pose} = stream.snapshot(performance.now());
+  const now = performance.now();
+  updateCaptureClock(now);
+  const {chart, pose} = stream.snapshot(now);
   if (chart !== lastChart || pose !== lastPose) scheduleRender();
 }, 200);
 route();

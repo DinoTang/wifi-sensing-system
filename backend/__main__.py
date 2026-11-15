@@ -10,8 +10,8 @@ import sys
 import uvicorn
 
 from .app import create_app
-from .intel_capture import IntelCaptureSettings
-from .model import DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER
+from .intel_capture import DEFAULT_CAPTURE_DURATION_S, IntelCaptureSettings
+from .model import DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, LEGACY_NORMALIZER
 from .session import Settings
 
 
@@ -23,7 +23,7 @@ def main() -> None:
     parser.add_argument("--speed", type=float, default=1.0, help="Replay speed multiplier")
     parser.add_argument("--timeout", type=float, default=2.0, help="Live CSI inactivity timeout in seconds")
     parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
-    parser.add_argument("--normalizer", type=Path, default=DEFAULT_NORMALIZER)
+    parser.add_argument("--normalizer", type=Path)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--autostart", action="store_true")
@@ -34,7 +34,8 @@ def main() -> None:
     capture.add_argument("--router", type=IPv4Address, default="192.168.0.1")
     capture.add_argument("--channel", type=int, default=36)
     capture.add_argument("--ssid", help="Require this Wi-Fi network before starting IAX")
-    capture.add_argument("--duration", type=int, default=60, help="Capture length in seconds")
+    capture.add_argument("--duration", type=int, default=DEFAULT_CAPTURE_DURATION_S,
+                         help="Default capture length in seconds")
     args = parser.parse_args()
     if not math.isfinite(args.speed) or args.speed <= 0:
         parser.error("--speed must be positive and finite")
@@ -52,10 +53,14 @@ def main() -> None:
             args.iax_dir.expanduser().resolve(), interface=args.interface, router=str(args.router),
             channel=args.channel, ssid=args.ssid, duration=args.duration,
         )
+    paired_normalizer = (
+        args.checkpoint.with_name(DEFAULT_NORMALIZER.name)
+        if args.checkpoint.name == DEFAULT_CHECKPOINT.name else LEGACY_NORMALIZER
+    )
     uvicorn.run(create_app(Settings(
         session_dir=args.session.resolve(), source=args.source,
         speed=args.speed, timeout=args.timeout, checkpoint=args.checkpoint,
-        normalizer=args.normalizer, autostart=args.autostart, intel_capture=intel_capture,
+        normalizer=args.normalizer or paired_normalizer, autostart=args.autostart, intel_capture=intel_capture,
     )), host=args.host, port=args.port)
 
 

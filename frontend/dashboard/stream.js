@@ -1,7 +1,7 @@
 export const STALE_MS = 2_500;
 export const MAX_GAP_MS = 300;
-export const MAX_HISTORY_MS = 20_000;
-export const MAX_POINTS = 300;
+export const MAX_HISTORY_MS = 120_000;
+export const MAX_POINTS = 2_000;
 export const LANDMARK_COUNT = 33;
 export const QUANTITY = 'mean_raw_csi_amplitude';
 
@@ -11,13 +11,14 @@ const STATES = new Set([
   'disconnected', 'model_error', 'source_error', 'ended', 'stopped',
 ]);
 const MAX_PENDING_POSES = 8;
+const MAX_WINDOW_POINTS = 300;
 
 const isTimestamp = value => Number.isSafeInteger(value) && value >= 0 && value <= 8.64e15;
 const inUnitInterval = value => Number.isFinite(value) && value >= 0 && value <= 1;
 
 function chartPoints(message) {
   if (message.quantity !== QUANTITY || !Array.isArray(message.points)
-    || !message.points.length || message.points.length > MAX_POINTS) return null;
+    || !message.points.length || message.points.length > MAX_WINDOW_POINTS) return null;
 
   let previous = -1;
   for (const point of message.points) {
@@ -53,6 +54,7 @@ function readPose(message) {
     probability: inUnitInterval(message.presence_probability) ? message.presence_probability : null,
     frame,
     joints,
+    reason: message.pose_reason === 'CSI_OUTSIDE_POSE_CALIBRATION' ? message.pose_reason : null,
     motion: Number.isFinite(motion?.score) && motion.score >= 0 && ['low', 'high'].includes(motion.level)
       ? {score: motion.score, level: motion.level} : null,
     processingMs: Number.isFinite(message.timing_ms?.backend) && message.timing_ms.backend >= 0
@@ -69,6 +71,7 @@ export class CsiStream {
   reset() {
     this.sequence = -1;
     this.status = null;
+    this.statusReceivedAt = null;
     this.segment = 0;
     this.clearWindow();
   }
@@ -92,11 +95,11 @@ export class CsiStream {
       const sameSession = this.status?.session_id === message.session_id
         && this.status.source === message.source;
       if (!sameSession || message.status !== 'ready') {
-        const retain = sameSession && message.status === 'insufficient_data'
-          && (message.reason === 'CSI_GAP' || message.reason === 'CSI_CADENCE');
+        const retain = sameSession && message.reason !== 'CSI_TIMESTAMP_ORDER';
         this.clearWindow(retain);
       }
       this.status = message;
+      this.statusReceivedAt = receivedAt;
     } else {
       if (this.status?.status !== 'ready' || !message.session_id
         || message.session_id !== this.status.session_id || message.source !== this.status.source

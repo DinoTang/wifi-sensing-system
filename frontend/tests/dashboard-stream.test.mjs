@@ -70,11 +70,12 @@ test('clears results on data loss, stale receipt, stop, and reconnect', () => {
   assert.deepEqual(stream.snapshot(32), {stale: false, chart: null, pose: null});
   assert.equal(stream.accept(pose(13, T + 200), 40), false);
   stream.accept(status(14, 'stopped'), 50);
-  assert.equal(stream.points.length, 0);
+  assert.equal(stream.points.length, 2);
   stream.reset();
   stream.accept(status(0, 'ready', {session_id: 'session-b'}), 60);
   assert.equal(stream.accept(chart(15, T), 62), false);
   assert.equal(stream.snapshot(63).pose, null);
+  assert.equal(stream.points.length, 0);
 });
 
 test('deduplicates overlapping windows and separates both timestamp and backend gaps', () => {
@@ -94,10 +95,11 @@ test('deduplicates overlapping windows and separates both timestamp and backend 
 test('retains bounded history during continuous input', () => {
   const stream = new CsiStream();
   stream.accept(status(1, 'ready'), 0);
-  for (let index = 1; index <= 1000; index += 1) {
+  for (let index = 1; index <= 1400; index += 1) {
     stream.accept(chart(index + 1, T + index * 100), index * 10);
   }
   assert.ok(stream.points.length <= MAX_POINTS);
+  assert.equal(stream.points.at(-1).timestamp_ms - stream.points[0].timestamp_ms, 120_000);
   assert.ok(stream.points.at(-1).timestamp_ms - stream.points[0].timestamp_ms <= MAX_HISTORY_MS);
   assert.ok(stream.chartArrivals.length <= 25);
 });

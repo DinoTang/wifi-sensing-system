@@ -57,7 +57,10 @@ async def observe(websocket, session_id: str) -> dict:
             chart_timestamp = times[-1]
         elif kind == "pose":
             present = message["person_present"]
-            if not isinstance(present, bool) or len(message["keypoints"]) != (LANDMARK_COUNT if present else 0):
+            reason = message.get("pose_reason")
+            count = LANDMARK_COUNT if present and reason is None else 0
+            if (not isinstance(present, bool) or reason not in (None, "CSI_OUTSIDE_POSE_CALIBRATION")
+                    or (reason is not None and not present) or len(message["keypoints"]) != count):
                 raise ValueError("Invalid presence and keypoint combination")
             received["present" if present else "empty"] += 1
             if message["timestamp_ms"] == chart_timestamp:

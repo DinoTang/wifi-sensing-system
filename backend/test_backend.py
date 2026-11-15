@@ -136,7 +136,7 @@ def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_p
             if prediction["person_present"] and prediction["pose_reason"] is None:
                 assert len(prediction["keypoints"]) == 33
                 hips.append(sum(prediction["keypoints"][index]["x_pixel"] for index in (23, 24)) / 2)
-    assert model.version == "smn-csiposenet-1.1"
+    assert model.version == "smn-csiposenet-1.2"
     assert len(hips) >= 160
     spread = np.percentile(hips, 95) - np.percentile(hips, 5)
     assert minimum_positions <= spread <= maximum_positions

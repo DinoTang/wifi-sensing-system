@@ -7,21 +7,24 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 import torch
+from torch.nn import functional as F
 
 from dataset import CSINormalizer
 from losses import MaskedPoseLoss
 from models import CSIPoseNet, save_checkpoint
 from presence import presence_features
 
-MODEL_VERSION = "smn-csiposenet-1.1"
+MODEL_VERSION = "smn-csiposenet-1.2"
 STD_FLOOR = 12
 INPUT_CLIP = 6
 EPOCHS = 30
 MODEL_ARGS = {
     "input_features": 224, "conv_channels": [48, 64], "gru_hidden_dim": 64,
     "gru_num_layers": 1, "bidirectional": True, "dropout": .25, "num_keypoints": 33,
-    "use_temporal_diff": True, "bound_pose": True,
+    "use_temporal_diff": True, "bound_pose": True, "pose_tail_steps": 4,
 }
+ARM_JOINTS = (13, 14, 15, 16)
+ARM_SHOULDERS = (11, 12, 11, 12)
 
 
 def load_windows(path: Path, *, with_pose: bool) -> dict:
@@ -38,7 +41,8 @@ def load_windows(path: Path, *, with_pose: bool) -> dict:
         size = data["frame_size"]
         if size.shape != (2,) or np.any(size <= 0) or not np.isfinite(size).all():
             raise ValueError(f"Invalid reference image size in {path}")
-        data["mask"] &= data["valid"][:, None] & (activities != "empty")[:, None]
+        data["mask"] &= (data["valid"][:, None] & (activities != "empty")[:, None]
+                         & np.isfinite(data["poses"]).all(axis=-1))
     return data
 
 
@@ -53,6 +57,26 @@ def fit_presence(groups: list[dict]) -> dict:
     )
     return {"center": scaler.mean_.tolist(), "scale": scaler.scale_.tolist(),
             "weights": model.coef_[0].tolist(), "intercept": float(model.intercept_[0])}
+
+
+def arm_pose_loss(predicted, expected, visible):
+    """Supervise elbow and wrist offsets and the lift of each wrist independently."""
+    visible_pairs = visible[:, ARM_JOINTS] & visible[:, ARM_SHOULDERS]
+    actual_offsets = expected[:, ARM_JOINTS] - expected[:, ARM_SHOULDERS]
+    predicted_offsets = predicted[:, ARM_JOINTS] - predicted[:, ARM_SHOULDERS]
+    actual = actual_offsets[visible_pairs]
+    relative_loss = F.smooth_l1_loss(predicted_offsets[visible_pairs], actual, beta=.05, reduction="sum")
+    relative_loss = relative_loss / max(actual.numel(), 1)
+
+    # Y increases downwards. Exclude wrists nearly level with their shoulders.
+    actual_lift = -actual_offsets[:, 2:, 1]
+    predicted_lift = -predicted_offsets[:, 2:, 1]
+    labeled = visible_pairs[:, 2:] & (actual_lift.abs() >= .015)
+    raised = actual_lift[labeled] > 0
+    weights = torch.where(raised, 3., 1.)  # Raised wrists are rarer in these recordings.
+    lift_loss = F.binary_cross_entropy_with_logits(24 * predicted_lift[labeled], raised.float(),
+                                                   weight=weights, reduction="sum")
+    return 2 * relative_loss + .35 * lift_loss / weights.sum().clamp(min=1)
 
 
 def fit_pose(rounds: list[dict]):
@@ -80,11 +104,13 @@ def fit_pose(rounds: list[dict]):
                 continue
             frames = inputs[batch]
             noise = .08 * torch.randn_like(frames)
-            offsets = .7 * torch.randn(len(batch), 1, 16)[:, :, subbands]
+            offsets = .55 * torch.randn(len(batch), 1, 16)[:, :, subbands]
             gain = (1 + .12 * torch.randn(len(batch), 1, 1)).clamp(.6, 1.4)
             prediction, coordinates = net((gain * (frames + noise) + offsets).clamp(-INPUT_CLIP, INPUT_CLIP))
             mask = joints_visible[batch]
-            loss, _, _ = loss_function(prediction, coordinates, occupied[batch], joints[batch], mask, mask)
+            expected = joints[batch]
+            loss, _, _ = loss_function(prediction, coordinates, occupied[batch], expected, mask, mask)
+            loss = loss + arm_pose_loss(coordinates, expected, mask)
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(net.parameters(), 2)

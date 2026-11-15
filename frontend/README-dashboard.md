@@ -55,6 +55,6 @@ Chế độ đối chiếu video cần video gốc và ánh xạ thời gian đ�
 node --test frontend/tests/dashboard-stream.test.mjs
 ```
 
-Kiểm thử mặc định phát lại các bản ghi đi bộ và đứng yên Lần 3 với checkpoint SMN 1.1. Những bản ghi này kiểm tra luồng CSI đến tọa độ khớp. Số liệu kiểm tra cả đợt giữ riêng và phạm vi mô hình nằm trong [README backend](../backend/README.md#hợp-đồng-xử-lý-và-mô-hình).
+Kiểm thử mặc định phát lại các bản ghi đi bộ và đứng yên Lần 3 với checkpoint SMN 1.2. Các ca giơ tay trái, tay phải, cả hai tay và phối hợp đi lại dùng thêm hai đợt CSI của nhóm. Cách chạy và kết quả đối chiếu với video nằm trong [hướng dẫn nghiệm thu](../backend/NGHIEM-THU.md#kiểm-tra-giơ-tay-và-chuyển-động-hỗn-hợp).
 
 Trên trình duyệt, đã kiểm tra hai màn hình ở 1280 × 820 và 390 × 844, bộ xương 33 khớp khi có người, 0 khớp khi phòng trống, xóa khớp khi dừng hoặc mất WebSocket, và kết nối lại với nguồn mới. Kiểm thử giả lập xác nhận trạng thái chờ và lỗi mô hình. Trong một đoạn phát lại đi bộ 1×, dashboard quan sát khoảng 5,2 cập nhật/giây và 1,1 ms từ lúc nhận đến lúc vẽ tại một cửa sổ. Kết quả này đo trên máy kiểm thử. Việc kiểm tra trọn đường truyền từ bộ thu Intel đang ghi trên phần cứng thật vẫn cần thực hiện tại hiện trường.

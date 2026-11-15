@@ -46,9 +46,11 @@ class TestDatasetAndNormalizer:
 
 
 class TestModelArchitecture:
-    def test_csiposenet_forward_and_checkpoint_roundtrip(self, tmp_path):
+    @pytest.mark.parametrize("pose_tail_steps", [0, 4])
+    def test_csiposenet_forward_and_checkpoint_roundtrip(self, tmp_path, pose_tail_steps):
         batch_size, seq_len, feat_dim = 4, 20, 224
-        model = CSIPoseNet(input_features=feat_dim, gru_hidden_dim=64, num_keypoints=33)
+        model = CSIPoseNet(input_features=feat_dim, gru_hidden_dim=64, num_keypoints=33,
+                          pose_tail_steps=pose_tail_steps)
         dummy_input = torch.randn(batch_size, seq_len, feat_dim)
 
         pres_logits, keypoints = model(dummy_input)
@@ -58,6 +60,8 @@ class TestModelArchitecture:
 
         ckpt = tmp_path / "model.pt"
         cfg = {"model": {"name": "CSIPoseNet", "input_features": 224, "gru_hidden_dim": 64, "num_keypoints": 33}}
+        if pose_tail_steps:
+            cfg["model"]["pose_tail_steps"] = pose_tail_steps
         save_checkpoint(model, ckpt, config=cfg, epoch=3, val_loss=0.123)
         loaded_model, loaded_cfg = load_checkpoint(ckpt)
         assert loaded_cfg["model"]["gru_hidden_dim"] == 64

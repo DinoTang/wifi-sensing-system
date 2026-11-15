@@ -1,6 +1,6 @@
 # Backend CSI cho người thứ 4
 
-Backend dùng mô hình `smn-csiposenet-1.1` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
+Backend dùng mô hình `smn-csiposenet-1.2` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
 
 ## Cài đặt và phát lại
 
@@ -50,10 +50,11 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 
 - Nền tích hợp là `Khanh@5769e40`. Dùng layout và `decode_points` của `signal-processing/src/parse_intel_csi.py`. Bản ghi hợp lệ có `VHT,20,VHT20`, `2×2×56`, payload 896 byte. Bản ghi NOHT xen kẽ được bỏ qua.
 - Cửa sổ dùng 20 mẫu × 224 biên độ I/Q theo thứ tự gốc của parser, bước 2 mẫu, nhịp danh định khoảng 101 ms. Biên độ làm tròn 4 chữ số như CSV và qua float16 → float32 như NPZ huấn luyện. Giữ các vị trí zero và không chạy pipeline lọc/đặc trưng dành cho bài toán phân loại hoạt động.
-- Mặc định `machine-learning/src/predict.py` nạp cặp `smn_pose.pt` và `smn_normalization.json` của bản SMN 1.1. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. Mô hình hiện diện dùng đặc trưng từ biên độ theo thời gian và từng đường ăng-ten, với ngưỡng xác suất 0,5. Mô hình tư thế dùng lớp chuẩn hóa có giới hạn để tránh bão hòa ở các điểm CSI gần như cố định trong dữ liệu huấn luyện.
+- Mặc định `machine-learning/src/predict.py` nạp cặp `smn_pose.pt` và `smn_normalization.json` của bản SMN 1.2. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. Bộ phân loại hiện diện dùng đặc trưng từ biên độ theo thời gian và từng đường ăng-ten, với trọng số của bản 1.1 và ngưỡng xác suất 0,5. Mô hình tư thế dùng lớp chuẩn hóa có giới hạn để tránh bão hòa ở các điểm CSI gần như cố định trong dữ liệu huấn luyện.
+- SMN 1.2 ưu tiên bốn gói mới nhất trong cửa sổ khi dự đoán khớp. Hàm mất mát đo vị trí khuỷu tay và cổ tay so với vai của từng bên theo nhãn video. Mỗi cửa sổ xuất tọa độ liên tục, nên người thử có thể đổi động tác trong cùng phiên.
 - Đầu vào là CSI. Timestamp mục tiêu là timestamp của mẫu CSI cuối cửa sổ, giữ nguyên cơ sở thời gian của recorder và đổi từ ns sang ms bằng phép chia nguyên. Mẫu lùi/trùng timestamp, gap trên 300 ms hoặc cấu hình sai làm mất hiệu lực tư thế cũ. Cửa sổ còn phải có trung vị khoảng mẫu 80–120 ms và thời gian từ mẫu đầu đến mẫu cuối 1.500–2.300 ms để chặn nhịp sai hoặc thiếu mẫu kéo dài. Khi gặp gap, hệ thống tích lũy lại 20 mẫu nên vị trí stride sau gap có thể khác batch offline.
 - Replay đọc theo thứ tự và lập lịch theo timestamp của bản ghi đầu. Khi lịch phát gặp khoảng trống quá 300 ms theo thời gian bản ghi, backend xóa kết quả đã lưu trước khi chờ đến gói tiếp theo. Live dùng một cửa sổ đang suy luận và tối đa một cửa sổ chờ. Cửa sổ mới nhất thay thế cửa sổ chờ khi quá tải. Mẫu quá cũ hoặc cửa sổ đã bị vô hiệu hóa sẽ bị loại. Mỗi client chỉ giữ tối đa một thông điệp chờ cho mỗi loại.
-- Đánh giá SMN 1.1 giữ riêng cả một đợt có video đồng bộ. Tỷ lệ khớp nhìn thấy nằm trong bán kính 5% đường chéo ảnh đạt 56,0% và 69,6% khi đi bộ, 98,7% và 85,7% khi đứng yên. Các số liệu lấy từ hai lượt train và kiểm tra chéo Lần 2 và Lần 3. Checkpoint đi kèm được huấn luyện từ cả hai đợt: 2.237 cửa sổ tư thế, với nhãn hiện diện bổ sung từ các lần thu cũ. Hai đợt có cùng người và bố trí thiết bị. Dữ liệu video đã đồng bộ chưa có phiên ngồi hoặc đứng lên có nhãn.
+- Checkpoint tư thế SMN 1.2 học từ 2.237 cửa sổ của Lần 2 và Lần 3, gồm phòng trống, đứng yên, giơ tay trái, giơ tay phải, đi lại và phối hợp động tác. Đánh giá bằng video đồng bộ của cả hai đợt và cách chạy lại nằm trong [hướng dẫn nghiệm thu](NGHIEM-THU.md#kiểm-tra-giơ-tay-và-chuyển-động-hỗn-hợp).
 - Khi CSI cách xa dải dùng để học tư thế, backend gửi kết quả hiện diện kèm `pose_reason: "CSI_OUTSIDE_POSE_CALIBRATION"` và mảng khớp rỗng. Khi thử phiên thu mới, giữ vị trí router và máy thu gần với bố trí đã dùng để huấn luyện và kiểm tra riêng trường hợp phòng trống, đứng yên và đi lại.
 - `motion` trong thông điệp `pose` dùng trung bình độ lệch chuẩn theo thời gian của từng vị trí CSI trong cửa sổ 20 mẫu, trước Z-score. `level` là `high` từ ngưỡng khảo sát 10,15 trở lên và `low` ở dưới ngưỡng. Chỉ số mô tả biến thiên của kênh vô tuyến. Nhiễu, thay đổi môi trường và chuyển động đều có thể ảnh hưởng đến chỉ số. Xem [báo cáo tín hiệu](../signal-processing/docs/report_nguoi2.md).
 
@@ -74,7 +75,7 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 {
   "type": "pose", "schema_version": 1, "session_id": "demo", "sequence": 20,
   "source": "replay", "timestamp_ms": 1792920264420, "server_sent_ms": 1794463200123,
-  "model_version": "smn-csiposenet-1.1", "status": "ready", "person_present": false,
+  "model_version": "smn-csiposenet-1.2", "status": "ready", "person_present": false,
   "presence_probability": 0.02, "confidence_method": "model_presence_sigmoid_probability",
   "coordinate_system": {"type": "2D_pixel", "reference_width": 1920, "reference_height": 1080, "origin": "top_left"},
   "keypoints": [], "motion": {"score": 3.46, "level": "low"},

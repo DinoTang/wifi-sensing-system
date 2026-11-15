@@ -125,12 +125,14 @@ class CSIPoseNet(nn.Module):
         num_keypoints: int = 33,
         use_temporal_diff: bool = True,
         bound_pose: bool = True,
+        pose_tail_steps: int = 0,
     ):
         super().__init__()
         self.num_keypoints = num_keypoints
         self.bidirectional = bidirectional
         self.use_temporal_diff = use_temporal_diff
         self.bound_pose = bound_pose
+        self.pose_tail_steps = pose_tail_steps
 
         conv_in_channels = input_features * 2 if use_temporal_diff else input_features
 
@@ -231,7 +233,11 @@ class CSIPoseNet(nn.Module):
         energy_logit = self.energy_presence_head(ef_norm)
 
         presence_logits = (static_logit + energy_logit).squeeze(-1)  # (batch_size,)
-        pose_raw = self.pose_head(feat).view(-1, self.num_keypoints, 2)  # (batch_size, 33, 2)
+        pose_feat = feat
+        if self.pose_tail_steps:
+            # Favor recent frames when older packets show a different gesture.
+            pose_feat = (feat + gru_out[:, -self.pose_tail_steps:, :].mean(dim=1)) / 2
+        pose_raw = self.pose_head(pose_feat).view(-1, self.num_keypoints, 2)  # (batch_size, 33, 2)
         pose = torch.sigmoid(pose_raw) if self.bound_pose else pose_raw
 
         return presence_logits, pose
@@ -280,6 +286,7 @@ def load_checkpoint(
             num_keypoints=model_cfg.get("num_keypoints", 33),
             use_temporal_diff=model_cfg.get("use_temporal_diff", True),
             bound_pose=model_cfg.get("bound_pose", True),
+            pose_tail_steps=model_cfg.get("pose_tail_steps", 0),
         )
 
     model.load_state_dict(checkpoint["model_state_dict"])

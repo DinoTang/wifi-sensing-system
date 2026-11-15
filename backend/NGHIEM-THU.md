@@ -6,7 +6,7 @@ Backend nhận `raw.csi` và `recorder.log` từ cùng một tiến trình Intel
 
 Chạy từ gốc repo sau khi cài môi trường Python theo [README backend](README.md).
 
-1. Mở terminal thứ nhất và chạy backend với bản ghi đi bộ Lần 3. Bản ghi này nằm trong dữ liệu huấn luyện SMN 1.1 và dùng để kiểm tra đường truyền đến dashboard.
+1. Mở terminal thứ nhất và chạy backend với bản ghi đi bộ Lần 3. Bản ghi này nằm trong dữ liệu huấn luyện SMN 1.2 và dùng để kiểm tra đường truyền đến dashboard.
 
    ```powershell
    $round = 'signal-processing/SMN-20261105T143709Z-1-001/SMN/csi-data-lan3'
@@ -23,6 +23,23 @@ Chạy từ gốc repo sau khi cài môi trường Python theo [README backend](
 4. Dừng backend và chạy lại với `signal-processing/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE` để trình diễn phòng trống. Dùng một tên JSON mới. Phiên 03/11 này đã xuất hiện trong tập huấn luyện. Lặp lại với `hardware/csi_extracted/labeled/empty_01_20261025-052422_4eki` để kiểm tra riêng khả năng tổng quát hóa.
 
 `backend.verify` yêu cầu backend chạy ở chế độ replay và chưa có phiên hoạt động. Nếu đổi cổng hoặc chạy chậm, dùng `--base-url http://127.0.0.1:8015` hoặc `--timeout 180`. Tốc độ mặc định là 1×. Ghi rõ `--speed` khi đưa số liệu vào báo cáo.
+
+## Kiểm tra giơ tay và chuyển động hỗn hợp
+
+Trong một phiên live 2 phút, lần lượt đứng yên, giơ và hạ tay trái, tay phải rồi cả hai tay. Sau đó đi lại và đổi động tác trong cùng phiên. Trên màn hình **Hiện diện**, quan sát cổ tay so với vai cùng bên và vị trí hông. Trái và phải tính theo bên của người thực hiện. Chạy riêng một phiên phòng trống.
+
+Để phát lại, dùng `python -m backend --source replay --session <thu-muc-phien>` với cặp `raw.csi` và `recorder.log` từ cùng phiên trong bộ SMN. Chẳng hạn, ba thư mục trong `csi-data-lan3/labeled` dành cho giơ tay trái, tay phải và phối hợp động tác lần lượt là `test_2026110511321713388_20261105-113219_unjU`, `test_2026110511334930064_20261105-113352_WWrN` và `test_202611051136547003_20261105-113657_oRku`.
+
+- Phát lại qua WebSocket đủ 12 bản ghi từ hai đợt đã dùng để học. Phòng trống có 0/381 cửa sổ vẽ khớp, đứng yên vẽ khớp ở 364/369 và hông thay đổi khoảng 14–17 px từ phân vị 5 đến 95. Khi đi bộ, tương quan vị trí hông theo chiều ngang với video đạt 0,98 ở cả hai lượt.
+- Với phiên giơ từng tay, cổ tay trái đúng lúc giơ ở 184/184 và lúc hạ ở 170/171. Cổ tay phải đạt 195/195 và 155/168. Trong phiên hỗn hợp, 252/262 cửa sổ khớp cả hai trạng thái cổ tay và 85/85 cửa sổ giơ đồng thời được nhận đúng. Chỉ tính cửa sổ thấy rõ vai, cổ tay và cổ tay cách độ cao vai ít nhất 1,5% chiều cao ảnh.
+- Khi huấn luyện trên một đợt và kiểm tra trên đợt kia, kết quả phối hợp hai tay là 86/137 và 83/125. Riêng ca giơ cùng lúc đạt 40/50 và 1/35. Hai đợt có cùng người và bố trí thiết bị, nên cần kiểm thử tiếp trên phiên thu Intel mới. Bộ video đồng bộ hiện thiếu phiên ngồi có nhãn.
+
+Để tính lại điểm với NPZ đã đồng bộ, chạy từ gốc repo. Mỗi tệp chứa `amplitudes`, `activity`, `poses`, `mask`, `valid` và `frame_size`. Công cụ tính cả các dự đoán bị bỏ khớp vào mẫu số.
+
+```bash
+.venv/bin/python machine-learning/src/evaluate_smn.py \
+  "$HOME/smn-windows/Lan2_windows.npz" "$HOME/smn-windows/Lan3_windows.npz"
+```
 
 ## Đọc báo cáo
 

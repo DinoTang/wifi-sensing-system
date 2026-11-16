@@ -26,13 +26,14 @@ Chạy từ gốc repo sau khi cài môi trường Python theo [README backend](
 
 ## Kiểm tra giơ tay và chuyển động hỗn hợp
 
-Trong một phiên live 2 phút, lần lượt đứng yên, giơ và hạ tay trái, tay phải rồi cả hai tay. Sau đó đi lại và đổi động tác trong cùng phiên. Trên màn hình **Hiện diện**, quan sát cổ tay so với vai cùng bên và vị trí hông. Trái và phải tính theo bên của người thực hiện. Chạy riêng một phiên phòng trống.
+Trong phiên thu trực tiếp có người, để người thử tự chọn động tác, thứ tự và thời điểm đổi tư thế trong vùng thu. Trên màn hình **Hiện diện**, đối chiếu cổ tay so với vai cùng bên và vị trí hông với chuyển động thực tế. Trái và phải tính theo bên của người thực hiện. Chạy riêng một phiên phòng trống để kiểm tra báo nhầm.
 
 Để phát lại, dùng `python -m backend --source replay --session <thu-muc-phien>` với cặp `raw.csi` và `recorder.log` từ cùng phiên trong bộ SMN. Chẳng hạn, ba thư mục trong `csi-data-lan3/labeled` dành cho giơ tay trái, tay phải và phối hợp động tác lần lượt là `test_2026110511321713388_20261105-113219_unjU`, `test_2026110511334930064_20261105-113352_WWrN` và `test_202611051136547003_20261105-113657_oRku`.
 
 - Phát lại qua WebSocket đủ 12 bản ghi từ hai đợt đã dùng để học. Phòng trống có 0/381 cửa sổ vẽ khớp, đứng yên vẽ khớp ở 364/369 và hông thay đổi khoảng 14–17 px từ phân vị 5 đến 95. Khi đi bộ, tương quan vị trí hông theo chiều ngang với video đạt 0,98 ở cả hai lượt.
 - Với phiên giơ từng tay, cổ tay trái đúng lúc giơ ở 184/184 và lúc hạ ở 170/171. Cổ tay phải đạt 195/195 và 155/168. Trong phiên hỗn hợp, 252/262 cửa sổ khớp cả hai trạng thái cổ tay và 85/85 cửa sổ giơ đồng thời được nhận đúng. Chỉ tính cửa sổ thấy rõ vai, cổ tay và cổ tay cách độ cao vai ít nhất 1,5% chiều cao ảnh.
 - Khi huấn luyện trên một đợt và kiểm tra trên đợt kia, kết quả phối hợp hai tay là 86/137 và 83/125. Riêng ca giơ cùng lúc đạt 40/50 và 1/35. Hai đợt có cùng người và bố trí thiết bị, nên cần kiểm thử tiếp trên phiên thu Intel mới. Bộ video đồng bộ hiện thiếu phiên ngồi có nhãn.
+- Để chấm sai số trước buổi thi, dùng một phiên cử động tự do độc lập ở bố trí sẽ thi. Video đồng bộ cung cấp tọa độ tham chiếu khi đánh giá. Backend thu trực tiếp suy luận từ các cửa sổ CSI. Lần 1 có video và mốc bắt đầu do người thu ghi nhận, với sai số đồng bộ từng khung hình chưa được xác minh.
 
 Để tính lại điểm với NPZ đã đồng bộ, chạy từ gốc repo. Mỗi tệp chứa `amplitudes`, `activity`, `poses`, `mask`, `valid` và `frame_size`. Công cụ tính cả các dự đoán bị bỏ khớp vào mẫu số.
 

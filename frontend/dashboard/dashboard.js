@@ -38,7 +38,7 @@ const REASONS = {
   CAPTURE_SUDO: 'Quyền sudo cần được xác thực. Chạy lại lệnh mở backend trong terminal Ubuntu.',
   CAPTURE_RECORDER_EXITED: 'Bộ thu Intel thoát sớm. Xem recorder.log của phiên.',
   CAPTURE_NO_DATA: 'Chưa ghi được khung CSI. Kiểm tra recorder.log và ping.log của phiên.',
-  CAPTURE_NO_RESULT: 'Phiên chưa tạo được cửa sổ hợp lệ. Kiểm tra VHT20 và nhịp gói CSI.',
+  CAPTURE_NO_RESULT: 'Phiên chưa có kết quả. Kiểm tra nhịp gói VHT20 và log suy luận.',
   MODEL_LOAD_FAILED: 'Backend không nạp được mô hình.',
   MODEL_INFERENCE_FAILED: 'Backend gặp lỗi khi chạy suy luận.',
 };
@@ -58,6 +58,7 @@ let pendingAction = null;
 let animationFrame = 0;
 let pointer = null;
 let lastChart = null;
+let lastSignal = null;
 let lastPose = null;
 let lastView = view;
 let drawTime = null;
@@ -93,6 +94,7 @@ function connect() {
   scheduleRender();
   const url = new URL('/ws', location.href);
   url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  url.searchParams.set('include_signal', 'true');
   const current = new WebSocket(url);
   socket = current;
   current.addEventListener('open', () => {
@@ -189,8 +191,11 @@ function phaseFor(snapshot) {
     return ['Mất kết nối', 'Đang thử kết nối lại với backend.', 'error'];
   }
   if (!stream.status) return ['Đang kết nối', 'Đang đợi trạng thái từ backend.', 'warn'];
-  if (snapshot.stale) return ['Dữ liệu đã cũ', 'Đang đợi cửa sổ CSI mới.', 'warn'];
-  if (stream.status.status === 'ready' && !snapshot.chart) {
+  const signalView = view === 'signal';
+  if (signalView ? snapshot.signalStale : snapshot.stale) {
+    return ['Dữ liệu đã cũ', 'Đang đợi mẫu CSI mới.', 'warn'];
+  }
+  if (stream.status.status === 'ready' && !(signalView ? snapshot.signal : snapshot.chart)) {
     return ['Chờ cửa sổ CSI', 'Backend đang chuẩn bị mẫu tiếp theo.', 'warn'];
   }
   if (stream.status.reason === 'PREPARING_CAPTURE') {
@@ -349,8 +354,11 @@ function renderPresence(chart, pose, phase) {
 
   element('pose-placeholder').hidden = joints > 0;
   if (pose?.reason === 'CSI_OUTSIDE_POSE_CALIBRATION') {
-    setText('pose-empty-title', 'Chưa đủ cơ sở vẽ khớp');
-    setText('pose-empty-note', 'Tín hiệu CSI khác dữ liệu dùng để học tư thế 2D.');
+    setText('pose-empty-title', 'CSI ngoài dải mô hình tư thế');
+    const calibration = pose.calibration;
+    setText('pose-empty-note', calibration
+      ? `Độ lệch chuẩn hóa ${format.format(calibration.distance)}. Giới hạn ${format.format(calibration.limit)}.`
+      : 'Tín hiệu CSI khác dữ liệu dùng để học tư thế 2D.');
   } else {
     setText('pose-empty-title', pose?.present && !joints ? 'Thiếu tọa độ khớp' : label);
     setText('pose-empty-note', pose && !pose.present ? 'Không có bộ xương ở cửa sổ này.' : note);
@@ -363,16 +371,16 @@ function renderPresence(chart, pose, phase) {
 function render() {
   animationFrame = 0;
   const snapshot = stream.snapshot(performance.now());
-  const {chart, pose} = snapshot;
+  const {chart, pose, signal} = snapshot;
   const phase = phaseFor(snapshot);
   updateHeader(phase);
   updateCaptureClock(performance.now());
   updateView();
-  if (view === 'signal') renderSignal(chart, phase);
+  if (view === 'signal') renderSignal(signal, phase);
   else renderPresence(chart, pose, phase);
 
-  const result = view === 'signal' ? chart : pose;
-  const previous = view === 'signal' ? lastChart : lastPose;
+  const result = view === 'signal' ? signal : pose;
+  const previous = view === 'signal' ? lastSignal : lastPose;
   if (view !== lastView) {
     drawTime = null;
   } else if (result !== previous) {
@@ -380,11 +388,12 @@ function render() {
   }
   const arrivals = stream.chartArrivals;
   const duration = arrivals.at(-1) - arrivals[0];
-  const refresh = chart && duration > 0 ? `${format.format(1000 * (arrivals.length - 1) / duration)} Hz cập nhật` : null;
+  const refresh = signal && duration > 0 ? `${format.format(1000 * (arrivals.length - 1) / duration)} Hz cập nhật CSI` : null;
   setText('display-timing', [
     refresh, drawTime !== null ? `${format.format(drawTime)} ms từ nhận đến vẽ` : null,
   ].filter(Boolean).join(' · ') || '—');
   lastChart = chart;
+  lastSignal = signal;
   lastPose = pose;
   lastView = view;
 }
@@ -418,8 +427,8 @@ resizeObserver.observe(element('skeleton'));
 setInterval(() => {
   const now = performance.now();
   updateCaptureClock(now);
-  const {chart, pose} = stream.snapshot(now);
-  if (chart !== lastChart || pose !== lastPose) scheduleRender();
+  const {chart, pose, signal} = stream.snapshot(now);
+  if (chart !== lastChart || pose !== lastPose || signal !== lastSignal) scheduleRender();
 }, 200);
 route();
 changeMode();

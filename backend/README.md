@@ -23,6 +23,7 @@ Trên Linux dùng `.venv/bin/python` thay cho `.\.venv\Scripts\python`. Backend 
 Trên Ubuntu, kết nối card Intel đã cài IAX với Wi-Fi 5 GHz ở độ rộng 20 MHz. Lệnh dưới đây dùng cấu hình của script thu gốc: card `wlp0s20f3`, kênh 36, router `192.168.0.1` và bộ thu ở `~/iax/csi/iaxcsi/cpp/iaxcsi`.
 
 ```bash
+iw dev wlp0s20f3 info | grep -F 'width:'
 sudo -v && .venv/bin/python -m backend \
   --source live --auto-capture --session "$HOME/csi-data/live"
 ```
@@ -55,7 +56,7 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 - Đầu vào là CSI. Timestamp mục tiêu là timestamp của mẫu CSI cuối cửa sổ, giữ nguyên cơ sở thời gian của recorder và đổi từ ns sang ms bằng phép chia nguyên. Mẫu lùi/trùng timestamp, gap trên 300 ms hoặc cấu hình sai làm mất hiệu lực tư thế cũ. Cửa sổ còn phải có trung vị khoảng mẫu 80–120 ms và thời gian từ mẫu đầu đến mẫu cuối 1.500–2.300 ms để chặn nhịp sai hoặc thiếu mẫu kéo dài. Khi gặp gap, hệ thống tích lũy lại 20 mẫu nên vị trí stride sau gap có thể khác batch offline.
 - Replay đọc theo thứ tự và lập lịch theo timestamp của bản ghi đầu. Khi lịch phát gặp khoảng trống quá 300 ms theo thời gian bản ghi, backend xóa kết quả đã lưu trước khi chờ đến gói tiếp theo. Live dùng một cửa sổ đang suy luận và tối đa một cửa sổ chờ. Cửa sổ mới nhất thay thế cửa sổ chờ khi quá tải. Mẫu quá cũ hoặc cửa sổ đã bị vô hiệu hóa sẽ bị loại. Mỗi client chỉ giữ tối đa một thông điệp chờ cho mỗi loại.
 - Trọng số tư thế học từ 2.237 cửa sổ của Lần 2 và Lần 3, gồm phòng trống, đứng yên, giơ tay trái, giơ tay phải, đi lại và phối hợp động tác. Đánh giá bằng video đồng bộ của cả hai đợt và cách chạy lại nằm trong [hướng dẫn nghiệm thu](NGHIEM-THU.md#kiểm-tra-giơ-tay-và-chuyển-động-hỗn-hợp).
-- Khi CSI cách xa dải dùng để học tư thế, backend gửi kết quả hiện diện kèm `pose_reason: "CSI_OUTSIDE_POSE_CALIBRATION"` và mảng khớp rỗng. Khi thử phiên thu mới, giữ vị trí router và máy thu gần với bố trí đã dùng để huấn luyện và kiểm tra riêng trường hợp phòng trống, đứng yên và đi lại.
+- Khi CSI cách xa dải dùng để học tư thế, backend gửi kết quả hiện diện, mảng khớp rỗng và lý do `CSI_OUTSIDE_POSE_CALIBRATION`. Trường `pose_calibration` báo độ lệch tính trên CSI đã chuẩn hóa (`distance`) và giới hạn của checkpoint (`limit`). Khi thử phiên thu mới, giữ vị trí router và máy thu gần với bố trí đã dùng để huấn luyện và kiểm tra riêng trường hợp phòng trống, đứng yên và đi lại.
 - `motion` trong thông điệp `pose` dùng trung bình độ lệch chuẩn theo thời gian của từng vị trí CSI trong cửa sổ 20 mẫu, trước Z-score. `level` là `high` từ ngưỡng khảo sát 10,15 trở lên và `low` ở dưới ngưỡng. Chỉ số mô tả biến thiên của kênh vô tuyến. Nhiễu, thay đổi môi trường và chuyển động đều có thể ảnh hưởng đến chỉ số. Xem [báo cáo tín hiệu](../signal-processing/docs/report_nguoi2.md).
 
 ## HTTP và WebSocket
@@ -65,6 +66,7 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 - `POST /api/session/start` trả HTTP 202 và ID phiên. Thu tự động nhận `?duration_s=30`, `60` hoặc `120`. Giá trị ngoài các lựa chọn hoặc truyền thời lượng cho phiên phát lại bị từ chối với 422. Khi đã có phiên đang chạy, API trả 409. `capture.started_ms` là mốc bắt đầu của bộ thu để dashboard tính thời gian còn lại.
 - `POST /api/session/stop` dừng phiên và trả trạng thái hiện tại. Gọi lại sau khi phiên đã kết thúc sẽ trả trạng thái kết thúc đã ghi nhận. Có thể gửi `?session_id=<id>` để chỉ dừng đúng phiên đó. API trả 409 nếu phiên đã đổi.
 - `WS /ws` gửi snapshot hiện tại lúc kết nối, rồi cập nhật theo thời gian thực. `sequence` tăng trong vòng đời của tiến trình server. Client có thể thấy khoảng nhảy khi bỏ thông điệp chờ. Khi đổi `session_id`, nhận trạng thái khác `ready` hoặc mất WebSocket, xóa ngay tư thế cũ.
+- Dashboard mở `/ws?include_signal=true` để nhận thêm `signal` trong phiên live. Thông điệp có cùng `quantity` và `points` như `chart`, phát từ các gói VHT20 hợp lệ kể cả lúc tích lũy mẫu hoặc suy luận gặp lỗi. `chart` vẫn đi cùng `pose` theo đúng timestamp của cửa sổ suy luận. Khi hết thời lượng thu tự động, backend dừng bộ thu rồi chờ tối đa theo `--timeout` để xử lý cửa sổ cuối còn chờ.
 - Tài liệu HTTP tự sinh tại <http://127.0.0.1:8000/docs>.
 
 Mỗi thông điệp có `type`, `schema_version`, `session_id`, `sequence`, `source` (`replay` hoặc `live`), `timestamp_ms`, `server_sent_ms` và `model_version`. Timestamp của `pose` và `chart` cùng cửa sổ giống nhau. `server_sent_ms` là đồng hồ hệ điều hành trên máy backend lúc gửi. Khi nhận `status`, `person_present: null` nghĩa là chưa có kết quả hợp lệ. Trạng thái `ready` trên `pose` với `person_present: false` là dự đoán phòng trống và có `keypoints: []`.
@@ -76,7 +78,7 @@ Ví dụ một thông điệp `pose` cho phòng trống:
   "type": "pose", "schema_version": 1, "session_id": "demo", "sequence": 20,
   "source": "replay", "timestamp_ms": 1792920264420, "server_sent_ms": 1794463200123,
   "model_version": "smn-csiposenet-1.3", "status": "ready", "person_present": false,
-  "presence_probability": 0.02, "confidence_method": "model_presence_sigmoid_probability",
+  "presence_probability": 0.02, "confidence_method": "csi_presence_logistic_probability",
   "coordinate_system": {"type": "2D_pixel", "reference_width": 1920, "reference_height": 1080, "origin": "top_left"},
   "keypoints": [], "motion": {"score": 3.46, "level": "low"},
   "timing_ms": {"preprocess": 0.4, "queue": 0.1, "inference": 4.5, "backend": 5.0}

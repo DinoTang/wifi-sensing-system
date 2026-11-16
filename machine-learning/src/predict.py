@@ -132,9 +132,9 @@ class CSIPosePredictor:
         # These tones were constant in the pose training data. Recorder fill
         # values on them can differ, so always supply the training mean there.
         csi_norm[:, :, self.pose_reference_tones] = 0
-        mean_offset = np.abs(csi_norm[0].mean(axis=0))
+        pose_distance = float(np.abs(csi_norm[0].mean(axis=0)).mean())
         pose_outside_calibration = (
-            self.pose_max_distance is not None and mean_offset.mean() > self.pose_max_distance
+            self.pose_max_distance is not None and pose_distance > self.pose_max_distance
         )
         if self.normalized_input_clip is not None:
             np.clip(csi_norm, -self.normalized_input_clip, self.normalized_input_clip, out=csi_norm)
@@ -147,8 +147,10 @@ class CSIPosePredictor:
             pres_prob = float(torch.sigmoid(pres_logits)[0].item())
             kpts_norm = pred_kpts[0].cpu().numpy()  # (33, 2) in [0, 1] range
 
+        confidence_method = "model_presence_sigmoid_probability"
         if self.presence_classifier is not None:
             pres_prob = self.presence_classifier.probability(csi_window)
+            confidence_method = "csi_presence_logistic_probability"
         is_present = pres_prob >= self.presence_threshold
         t1 = time.perf_counter()
         latency_ms = (t1 - t0) * 1000.0
@@ -162,9 +164,6 @@ class CSIPosePredictor:
             px = int(round(xn * self.frame_width))
             py = int(round(yn * self.frame_height))
 
-            # Confidence derived strictly from model presence sigmoid probability (never video label visibility)
-            conf = pres_prob
-
             keypoints_payload.append({
                 "id": i,
                 "name": name,
@@ -172,18 +171,21 @@ class CSIPosePredictor:
                 "y_pixel": py,
                 "x_norm": round(xn, 4),
                 "y_norm": round(yn, 4),
-                "confidence": round(conf, 4),
+                "confidence": round(pres_prob, 4),
             })
 
+        pose_reason = "CSI_OUTSIDE_POSE_CALIBRATION" if is_present and pose_outside_calibration else None
         return {
             "status": "success",
             "timestamp": resolved_ts,
             "person_present": is_present,
             "presence_probability": round(pres_prob, 4),
-            "confidence_method": "model_presence_sigmoid_probability",
+            "confidence_method": confidence_method,
             "keypoints": keypoints_payload,
             "num_keypoints": len(keypoints_payload),
-            "pose_reason": "CSI_OUTSIDE_POSE_CALIBRATION" if is_present and pose_outside_calibration else None,
+            "pose_reason": pose_reason,
+            "pose_calibration": {"distance": round(pose_distance, 4), "limit": self.pose_max_distance}
+            if pose_reason else None,
             "latency_ms": round(latency_ms, 2),
             "coordinate_system": {
                 "type": "2D_pixel",

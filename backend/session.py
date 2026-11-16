@@ -26,6 +26,8 @@ LOGGER = logging.getLogger("uvicorn.error")
 POLL_SECONDS = 0.025
 READ_BATCH = 64
 PENDING_WINDOWS = 1
+SIGNAL_STATES = {"warming_up", "ready", "insufficient_data", "model_error"}
+AMPLITUDE_QUANTITY = "mean_raw_csi_amplitude"
 # Exploratory threshold from signal-processing/docs/report_nguoi2.md.
 MOTION_STD_THRESHOLD = 10.15
 
@@ -56,18 +58,25 @@ class Window:
 class Subscriber:
     """Keep only the newest message of each type for a slow client."""
 
-    def __init__(self):
+    def __init__(self, *, include_signal: bool = False):
+        self.include_signal = include_signal
         self.pending: dict[str, dict] = {}
         self.changed = asyncio.Event()
 
     def put(self, message: dict) -> int:
+        kind = message["type"]
+        if kind == "signal" and not self.include_signal:
+            return 0
         discarded = 0
-        if message["type"] == "status" and message["status"] != "ready":
-            for kind in ("chart", "pose"):
-                if self.pending.pop(kind, None) is not None:
+        if kind == "status" and message["status"] != "ready":
+            invalid = ("chart", "pose")
+            if message["status"] not in SIGNAL_STATES and message["status"] not in ("ended", "stopped"):
+                invalid += ("signal",)
+            for old_kind in invalid:
+                if self.pending.pop(old_kind, None) is not None:
                     discarded += 1
-        discarded += message["type"] in self.pending
-        self.pending[message["type"]] = message
+        discarded += kind in self.pending
+        self.pending[kind] = message
         self.changed.set()
         return discarded
 
@@ -101,6 +110,7 @@ class Session:
         self.person_present: bool | None = None
         self.frames = deque(maxlen=WINDOW_SIZE)
         self.timestamps = deque(maxlen=WINDOW_SIZE)
+        self.chart_values = deque(maxlen=WINDOW_SIZE)
         self.next_window = WINDOW_SIZE
         self.segment_frames = 0
         self.generation = 0
@@ -206,23 +216,31 @@ class Session:
         LOGGER.info("CSI session=%s source=%s status=%s reason=%s counts=%s",
                     self.session_id, self.settings.source, status, reason, self.counts)
 
+    def drop_pending_window(self) -> None:
+        if not self.pending.empty():
+            self.pending.get_nowait()
+            self.pending.task_done()
+            self.counts["dropped_windows"] += 1
+
     def invalidate_window(self, status: str, reason: str) -> None:
         self.generation += 1
         self.frames.clear()
         self.timestamps.clear()
+        self.chart_values.clear()
+        self.latest.pop("signal", None)
         self.segment_frames = 0
         self.next_window = WINDOW_SIZE
-        if not self.pending.empty():
-            self.pending.get_nowait()
-            self.counts["dropped_windows"] += 1
+        self.drop_pending_window()
         self.set_state(status, reason)
 
-    def subscribe(self) -> Subscriber:
-        subscriber = Subscriber()
-        subscriber.put(self.latest.get("status", self.status()))
-        for kind in ("chart", "pose"):
-            if kind in self.latest:
-                subscriber.put(self.latest[kind])
+    def subscribe(self, *, include_signal: bool = False) -> Subscriber:
+        subscriber = Subscriber(include_signal=include_signal)
+        status = self.latest.get("status", self.status())
+        subscriber.put(status)
+        for kind in ("chart", "pose", "signal"):
+            message = self.latest.get(kind)
+            if message is not None and message["sequence"] > status["sequence"]:
+                subscriber.put(message)
         self.subscribers.add(subscriber)
         return subscriber
 
@@ -280,6 +298,7 @@ class Session:
             return
 
         worker = None
+        capture_completed = False
         try:
             async with AsyncExitStack() as stack:
                 capture = None
@@ -296,11 +315,17 @@ class Session:
                 with CaptureReader(self.capture_dir, live=live, skip_existing=capture is None) as reader:
                     await self.consume(reader, model, capture)
             if capture is not None:
+                # The recorder can finish while its last complete window is
+                # queued or running. Give that inference the usual live budget.
+                try:
+                    await asyncio.wait_for(self.pending.join(), timeout=self.settings.timeout)
+                except asyncio.TimeoutError:
+                    LOGGER.warning("Final CSI inference timed out for session %s", self.session_id)
                 if self.counts["records"] == 0:
                     raise IntelCaptureError("CAPTURE_NO_DATA", "Recorder finished without any CSI frames")
                 if self.counts["predictions"] == 0:
                     raise IntelCaptureError("CAPTURE_NO_RESULT", "Recorder finished without a valid prediction")
-                self.invalidate_window("ended", "CAPTURE_COMPLETE")
+                capture_completed = True
         except IntelCaptureError as error:
             LOGGER.warning("Intel CSI session %s failed in %s: %s", self.session_id, self.capture_dir, error)
             self.invalidate_window("source_error", error.reason)
@@ -314,6 +339,8 @@ class Session:
             if worker is not None:
                 worker.cancel()
                 await asyncio.gather(worker, return_exceptions=True)
+        if capture_completed:
+            self.invalidate_window("ended", "CAPTURE_COMPLETE")
 
     async def wait_for_capture(self) -> None:
         deadline = time.perf_counter() + self.settings.timeout
@@ -369,8 +396,7 @@ class Session:
                 await self.predict(model, window)
                 continue
             if self.pending.full():
-                self.pending.get_nowait()
-                self.counts["dropped_windows"] += 1
+                self.drop_pending_window()
             self.pending.put_nowait(window)
 
     async def wait_for_replay_record(self, record: Record, clock_start: float, first_capture_ns: int) -> None:
@@ -418,11 +444,19 @@ class Session:
         if self.state in {"disconnected", "incompatible"}:
             self.set_state("warming_up", "WAITING_FOR_WINDOW")
 
+        amplitudes = record.amplitude()
         self.timestamps.append(ts)
-        self.frames.append(record.amplitude())
+        self.frames.append(amplitudes)
+        self.chart_values.append(round(float(amplitudes.mean()), 4))
         self.segment_frames += 1
-        if self.segment_frames < self.next_window:
-            return None
+        window = self.build_window(ts, received, parse_ms) if self.segment_frames >= self.next_window else None
+        if self.settings.source == "live" and self.state in SIGNAL_STATES and (
+            self.segment_frames == 1 or self.segment_frames % STRIDE == 0
+        ):
+            self.emit_trace("signal", self.timestamps, self.chart_values)
+        return window
+
+    def build_window(self, ts: int, received: float, parse_ms: float) -> Window | None:
         self.next_window += STRIDE
         self.counts["window_candidates"] += 1
         timestamps = tuple(self.timestamps)
@@ -435,21 +469,28 @@ class Session:
             self.counts["rejected_cadence"] += 1
             self.set_state("insufficient_data", "CSI_CADENCE")
             self.generation += 1
-            if not self.pending.empty():
-                self.pending.get_nowait()
-                self.counts["dropped_windows"] += 1
+            self.drop_pending_window()
             return None
         # build_pose_windows stores float16. The model loads those values as float32.
-        frames = np.stack(self.frames)
-        amplitudes = frames.astype(np.float16).astype(np.float32)
-        chart_values = tuple(round(float(value), 4) for value in frames.mean(axis=1))
+        amplitudes = np.stack(self.frames).astype(np.float16).astype(np.float32)
         ready = time.perf_counter()
-        return Window(self.generation, timestamps, amplitudes, chart_values, received, ready,
+        return Window(self.generation, timestamps, amplitudes, tuple(self.chart_values), received, ready,
                       parse_ms + (ready - received) * 1000)
+
+    def emit_trace(self, kind, timestamps, values) -> None:
+        points = [{"timestamp_ms": ts, "value": value} for ts, value in zip(timestamps, values)]
+        self.emit(kind, timestamp_ms=points[-1]["timestamp_ms"], quantity=AMPLITUDE_QUANTITY, points=points)
 
     async def inference_worker(self, model) -> None:
         while True:
-            await self.predict(model, await self.pending.get())
+            window = await self.pending.get()
+            try:
+                await self.predict(model, window)
+            except asyncio.CancelledError:
+                self.counts["dropped_windows"] += 1
+                raise
+            finally:
+                self.pending.task_done()
 
     async def predict(self, model, window: Window) -> None:
         started = time.perf_counter()
@@ -471,6 +512,7 @@ class Session:
             coordinate_system = result["coordinate_system"]
             confidence_method = result["confidence_method"]
             pose_reason = result.get("pose_reason") if present else None
+            pose_calibration = result.get("pose_calibration") if pose_reason else None
             # Upstream repeats presence probability on each joint. Send it
             # once at frame level so it cannot be read as joint confidence.
             keypoints = [
@@ -509,14 +551,13 @@ class Session:
         if self.metrics is not None:
             self.metrics.record_prediction(timing_ms, completed)
         self.set_state("ready")
-        self.emit("chart", timestamp_ms=target, quantity="mean_raw_csi_amplitude",
-                  points=[{"timestamp_ms": ts, "value": value}
-                          for ts, value in zip(window.timestamps, window.chart_values)])
+        self.emit_trace("chart", window.timestamps, window.chart_values)
         motion_score = float(window.amplitudes.std(axis=0).mean())
         self.emit(
             "pose", timestamp_ms=target, status="ready", person_present=self.person_present,
             presence_probability=probability, confidence_method=confidence_method,
             coordinate_system=coordinate_system, keypoints=keypoints, pose_reason=pose_reason,
+            pose_calibration=pose_calibration,
             motion={"score": round(motion_score, 3), "level": "high" if motion_score >= MOTION_STD_THRESHOLD else "low"},
             timing_ms=timing_ms,
         )

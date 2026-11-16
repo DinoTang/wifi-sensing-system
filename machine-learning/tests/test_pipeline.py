@@ -8,10 +8,38 @@ import pytest
 import torch
 
 from src.dataset import CSINormalizer, CSIPoseDataset
+from src.evaluate_smn import evaluate_round
 from src.losses import MaskedPoseLoss
 from src.metrics import compute_mpjpe, compute_pck, compute_presence_metrics
 from src.models import CSIPoseNet, LinearMLPBaseline, MeanPoseBaseline, load_checkpoint, save_checkpoint
 from src.predict import CSIPosePredictor, CSIStreamBuffer
+
+
+def test_video_evaluation_scores_seated_and_unstructured_motion():
+    poses = np.full((4, 33, 2), .5, dtype=np.float32)
+    poses[:, (15, 16), 1] = .2
+    keypoints = [{"x_norm": x, "y_norm": y} for x, y in poses[0]]
+    predictions = iter((
+        {"person_present": True, "keypoints": keypoints},
+        {"person_present": True, "keypoints": keypoints},
+        {"person_present": True, "keypoints": []},
+        {"person_present": False, "keypoints": []},
+    ))
+
+    class Predictor:
+        def predict_window(self, window):
+            return {"status": "success", **next(predictions)}
+
+    scores = evaluate_round({
+        "activity": np.array(["empty", "seated", "free_motion", "free_motion"]),
+        "amplitudes": np.zeros((4, 20, 224), dtype=np.float32),
+        "poses": poses, "mask": np.ones((4, 33), dtype=bool),
+        "valid": np.array([False, True, True, True]), "frame_size": np.array([1920, 1080]),
+    }, Predictor())
+    assert scores["empty"]["false_positives"] == 1
+    assert scores["seated"]["both_raised"]["correct"] == 1
+    assert scores["free_motion"]["false_negatives"] == 1
+    assert scores["free_motion"]["pck_05"] == {"correct": 0, "total": 66, "fraction": 0.0}
 
 
 class TestDatasetAndNormalizer:

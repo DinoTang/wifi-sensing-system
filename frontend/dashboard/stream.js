@@ -10,6 +10,7 @@ const STATES = new Set([
   'idle', 'starting', 'warming_up', 'ready', 'insufficient_data', 'incompatible',
   'disconnected', 'model_error', 'source_error', 'ended', 'stopped',
 ]);
+const SIGNAL_STATES = new Set(['warming_up', 'ready', 'insufficient_data', 'model_error']);
 const MAX_PENDING_POSES = 8;
 const MAX_WINDOW_POINTS = 300;
 
@@ -49,12 +50,15 @@ function readPose(message) {
     }
   }
   const motion = message.motion;
+  const calibration = message.pose_calibration;
   return {
     present: message.person_present,
     probability: inUnitInterval(message.presence_probability) ? message.presence_probability : null,
     frame,
     joints,
     reason: message.pose_reason === 'CSI_OUTSIDE_POSE_CALIBRATION' ? message.pose_reason : null,
+    calibration: Number.isFinite(calibration?.distance) && calibration.distance >= 0
+      && Number.isFinite(calibration?.limit) && calibration.limit > 0 ? calibration : null,
     motion: Number.isFinite(motion?.score) && motion.score >= 0 && ['low', 'high'].includes(motion.level)
       ? {score: motion.score, level: motion.level} : null,
     processingMs: Number.isFinite(message.timing_ms?.backend) && message.timing_ms.backend >= 0
@@ -76,10 +80,12 @@ export class CsiStream {
     this.clearWindow();
   }
 
-  clearWindow(keepHistory = false) {
+  clearWindow(keepHistory = false, keepSignal = false) {
     this.chart = null;
     this.poses = new Map();
     this.lastPoseTimestamp = -1;
+    if (keepSignal) return;
+    this.signal = null;
     this.chartArrivals = [];
     this.segment += 1;
     if (!keepHistory) this.points = [];
@@ -96,16 +102,22 @@ export class CsiStream {
         && this.status.source === message.source;
       if (!sameSession || message.status !== 'ready') {
         const retain = sameSession && message.reason !== 'CSI_TIMESTAMP_ORDER';
-        this.clearWindow(retain);
+        const keepSignal = retain && this.signal !== null && SIGNAL_STATES.has(message.status)
+          && message.reason !== 'CSI_GAP';
+        this.clearWindow(retain, keepSignal);
       }
       this.status = message;
       this.statusReceivedAt = receivedAt;
     } else {
-      if (this.status?.status !== 'ready' || !message.session_id
-        || message.session_id !== this.status.session_id || message.source !== this.status.source
+      if (!message.session_id || message.session_id !== this.status?.session_id
+        || message.source !== this.status.source
         || !isTimestamp(message.timestamp_ms)) return false;
 
-      if (message.type === 'chart') {
+      if (message.type === 'signal') {
+        if (!SIGNAL_STATES.has(this.status.status) || !this.acceptSignal(message, receivedAt)) return false;
+      } else if (this.status.status !== 'ready') {
+        return false;
+      } else if (message.type === 'chart') {
         if (!this.acceptChart(message, receivedAt)) return false;
       } else if (message.type === 'pose') {
         if (!this.acceptPose(message, receivedAt)) return false;
@@ -123,19 +135,33 @@ export class CsiStream {
     const points = chartPoints(message);
     if (!points) return false;
 
+    this.chart = {timestamp, receivedAt, points};
+    if (!this.signal) this.recordTrace(this.chart);
+    for (const time of this.poses.keys()) {
+      if (time < timestamp) this.poses.delete(time);
+    }
+    return true;
+  }
+
+  acceptSignal(message, receivedAt) {
+    const timestamp = message.timestamp_ms;
+    if (timestamp <= (this.signal?.timestamp ?? -1)) return false;
+    const points = chartPoints(message);
+    if (!points) return false;
+    this.signal = {timestamp, receivedAt, points};
+    this.recordTrace(this.signal);
+    return true;
+  }
+
+  recordTrace({timestamp, receivedAt, points}) {
     const previous = this.points.at(-1)?.timestamp_ms ?? -1;
     for (const point of points) {
       if (point.timestamp_ms > previous) this.points.push({...point, segment: this.segment});
     }
     this.points = this.points.filter(point => point.timestamp_ms >= timestamp - MAX_HISTORY_MS)
       .slice(-MAX_POINTS);
-    this.chart = {timestamp, receivedAt, points};
     this.chartArrivals = this.chartArrivals.filter(time => receivedAt - time < 5000).slice(-24);
     this.chartArrivals.push(receivedAt);
-    for (const time of this.poses.keys()) {
-      if (time < timestamp) this.poses.delete(time);
-    }
-    return true;
   }
 
   acceptPose(message, receivedAt) {
@@ -155,7 +181,10 @@ export class CsiStream {
     const chart = stale ? null : this.chart;
     const match = chart ? this.poses.get(chart.timestamp) : null;
     const pose = match && now - match.receivedAt < STALE_MS ? match : null;
-    return {stale, chart, pose};
+    const trace = this.signal ?? this.chart;
+    const signalStale = trace !== null && now - trace.receivedAt >= STALE_MS;
+    const signal = signalStale ? null : trace;
+    return {stale, chart, pose, signal, signalStale};
   }
 }
 

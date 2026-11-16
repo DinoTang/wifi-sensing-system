@@ -7,7 +7,10 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from predict import CSIPosePredictor
+if __package__:
+    from .predict import CSIPosePredictor
+else:
+    from predict import CSIPosePredictor
 
 ARTIFACTS = Path(__file__).resolve().parents[1] / "models" / "checkpoints"
 ACTIVITIES = ("empty", "standing", "left_arm", "right_arm", "walking", "mixed")
@@ -33,8 +36,10 @@ def score_activity(activity, expected, visible, predicted, present, frame_size):
     drawn = np.isfinite(predicted).all(axis=(1, 2))
     result = {"windows": len(expected), "present": int(present.sum()), "drawn": int(drawn.sum())}
     if activity == "empty":
+        result["false_positives"] = result["present"]
         return result
 
+    result["false_negatives"] = result["windows"] - result["present"]
     distance = np.linalg.norm((predicted - expected) * frame_size, axis=-1)
     result["pck_05"] = rate(distance <= .05 * np.linalg.norm(frame_size), visible)
     for side, wrist in zip(("left", "right"), WRISTS):
@@ -50,16 +55,15 @@ def score_activity(activity, expected, visible, predicted, present, frame_size):
         up = rate(correct[:, i], labeled[:, i] & raised[:, i])
         down = rate(correct[:, i], labeled[:, i] & ~raised[:, i])
         result[f"{side}_arm"] = {"raised": up, "lowered": down}
-    if activity == "mixed":
-        result["arm_pair"] = rate(correct.all(axis=1), labeled.all(axis=1))
-        result["both_raised"] = rate(correct.all(axis=1), labeled.all(axis=1) & raised.all(axis=1))
+    result["arm_pair"] = rate(correct.all(axis=1), labeled.all(axis=1))
+    result["both_raised"] = rate(correct.all(axis=1), labeled.all(axis=1) & raised.all(axis=1))
 
     hip_frames = visible[:, HIPS].all(axis=1) & drawn
     actual_x = expected[hip_frames][:, HIPS, 0].mean(axis=1) * frame_size[0]
     estimate_x = predicted[hip_frames][:, HIPS, 0].mean(axis=1) * frame_size[0]
     if len(estimate_x) >= 2:
         result["hip_x_span_px"] = float(np.diff(np.percentile(estimate_x, (5, 95)))[0])
-        if activity in ("walking", "mixed") and np.std(actual_x) > 0 and np.std(estimate_x) > 0:
+        if np.std(actual_x) > 0 and np.std(estimate_x) > 0:
             result["hip_x_correlation"] = float(np.corrcoef(actual_x, estimate_x)[0, 1])
     return result
 
@@ -77,9 +81,10 @@ def evaluate_round(dataset, model):
         if prediction["keypoints"]:
             predicted[i] = [(joint["x_norm"], joint["y_norm"]) for joint in prediction["keypoints"]]
 
+    activities = dataset["activity"]
     result = {}
-    for activity in ACTIVITIES:
-        keep = dataset["activity"] == activity
+    for activity in dict.fromkeys((*ACTIVITIES, *activities.tolist())):
+        keep = activities == activity
         if keep.any():
             result[activity] = score_activity(activity, expected[keep], visible[keep], predicted[keep],
                                               present[keep], dataset["frame_size"])

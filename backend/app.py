@@ -74,7 +74,7 @@ def create_app(settings: Settings) -> FastAPI:
         return sent(session.status())
 
     @app.websocket("/ws")
-    async def stream(websocket: WebSocket):
+    async def stream(websocket: WebSocket, include_signal: bool = False):
         # Browser clients use the same origin as the preview. Clients running
         # on a frontend server can connect from that server (no Origin header).
         origin = websocket.headers.get("origin")
@@ -83,7 +83,7 @@ def create_app(settings: Settings) -> FastAPI:
             await websocket.close(code=1008)
             return
         await websocket.accept()
-        subscriber = session.subscribe()
+        subscriber = session.subscribe(include_signal=include_signal)
 
         async def send_updates():
             while True:

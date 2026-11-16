@@ -65,9 +65,13 @@ test('clears results on data loss, stale receipt, stop, and reconnect', () => {
   stream.accept(chart(10, T), 20);
   stream.accept(pose(11, T), 25);
   assert.equal(stream.snapshot(19 + STALE_MS).pose.present, true);
-  assert.deepEqual(stream.snapshot(20 + STALE_MS), {stale: true, chart: null, pose: null});
+  assert.deepEqual(stream.snapshot(20 + STALE_MS), {
+    stale: true, chart: null, pose: null, signal: null, signalStale: true,
+  });
   stream.accept(status(12, 'model_error'), 30);
-  assert.deepEqual(stream.snapshot(32), {stale: false, chart: null, pose: null});
+  assert.deepEqual(stream.snapshot(32), {
+    stale: false, chart: null, pose: null, signal: null, signalStale: false,
+  });
   assert.equal(stream.accept(pose(13, T + 200), 40), false);
   stream.accept(status(14, 'stopped'), 50);
   assert.equal(stream.points.length, 2);
@@ -75,6 +79,40 @@ test('clears results on data loss, stale receipt, stop, and reconnect', () => {
   stream.accept(status(0, 'ready', {session_id: 'session-b'}), 60);
   assert.equal(stream.accept(chart(15, T), 62), false);
   assert.equal(stream.snapshot(63).pose, null);
+  assert.equal(stream.points.length, 0);
+});
+
+test('keeps the live trace independent of matched poses and clears it on a new session', () => {
+  const stream = new CsiStream();
+  const live = {source: 'live'};
+  stream.accept(status(1, 'warming_up', live), 0);
+  stream.accept(chart(2, T, {...live, type: 'signal'}), 5);
+  assert.equal(stream.snapshot(6).signal.timestamp, T);
+  assert.equal(stream.snapshot(6).pose, null);
+
+  stream.accept(status(3, 'ready', live), 100);
+  stream.accept(chart(4, T + 100, {...live, type: 'signal'}), 100);
+  stream.accept(chart(5, T, live), 101);
+  stream.accept(pose(6, T, live), 102);
+  assert.equal(stream.snapshot(103).pose.timestamp, T);
+  assert.equal(stream.snapshot(103).signal.timestamp, T + 100);
+
+  stream.accept(chart(7, T + 100, live), 110);
+  stream.accept(pose(8, T + 100, {...live, person_present: false}), 111);
+  assert.equal(stream.snapshot(112).pose.present, false);
+  assert.equal(stream.snapshot(112).pose.joints.size, 0);
+
+  stream.accept(status(9, 'model_error', live), 120);
+  assert.equal(stream.snapshot(121).signal.timestamp, T + 100);
+  stream.accept(chart(10, T + 200, {...live, type: 'signal'}), 125);
+  assert.equal(stream.snapshot(126).signal.timestamp, T + 200);
+  assert.equal(stream.snapshot(126).pose, null);
+  assert.equal(stream.points.length, 4);
+  assert.equal(segmentSeries(stream.points).length, 1);
+
+  stream.accept(status(11, 'starting', {...live, session_id: 'session-b'}), 130);
+  assert.equal(stream.accept(chart(12, T + 300, {...live, type: 'signal'}), 131), false);
+  assert.equal(stream.snapshot(133).signal, null);
   assert.equal(stream.points.length, 0);
 });
 

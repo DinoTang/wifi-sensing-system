@@ -94,6 +94,8 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             assert pose["person_present"] == (capture == WALKING)
             assert pose["pose_reason"] == offline["pose_reason"]
             assert pose["presence_probability"] == offline["presence_probability"]
+            assert pose["confidence_method"] == "csi_presence_logistic_probability"
+            assert pose["pose_calibration"] == offline["pose_calibration"]
             assert pose["keypoints"] == [
                 {key: value for key, value in joint.items() if key != "confidence"}
                 for joint in offline["keypoints"]
@@ -212,6 +214,65 @@ def test_live_app_times_out_recovers_and_stops(tmp_path, monkeypatch, model):
             assert "CSI_TIMEOUT" in {transition["reason"] for transition in report["transitions"]}
 
 
+def test_live_signal_continues_before_and_without_pose(tmp_path, monkeypatch, model):
+    def fail(*args, **kwargs):
+        raise RuntimeError("Injected model failure")
+
+    monkeypatch.setattr("backend.session.load_model", lambda *_: model)
+    monkeypatch.setattr(model, "predict_window", fail)
+    raw_path, log_path = tmp_path / "raw.csi", tmp_path / "recorder.log"
+    raw_path.touch()
+    log_path.touch()
+    raw, log = (WALKING / "raw.csi").read_bytes(), (WALKING / "recorder.log").read_bytes()
+    probe = Session(Settings(WALKING, "replay"))
+    first = None
+    with CaptureReader(WALKING, live=False) as reader:
+        while (record := reader.read()) is not None:
+            if record.compatible and first is None:
+                first = record
+                raw_start, log_start = reader.raw.tell(), reader.log.tell()
+            if (window := probe.ingest(record, 0)) is not None:
+                break
+        assert first is not None and window is not None
+        raw_middle, log_middle = reader.raw.tell(), reader.log.tell()
+
+    async def run():
+        session = Session(Settings(tmp_path, "live"))
+        subscriber = session.subscribe(include_signal=True)
+
+        async def receive(condition):
+            for _ in range(100):
+                event = await asyncio.wait_for(subscriber.get(), timeout=2)
+                if condition(event):
+                    return event
+            pytest.fail("Expected CSI event was not received")
+
+        try:
+            assert await session.start()
+            await receive(lambda item: item.get("status") == "warming_up")
+            raw_path.write_bytes(raw[:raw_start])
+            log_path.write_bytes(log[:log_start])
+            signal = await receive(lambda item: item["type"] == "signal")
+            assert signal["session_id"] == session.session_id and signal["source"] == "live"
+            assert signal["points"] == [{"timestamp_ms": first.timestamp_ns // 1_000_000,
+                                         "value": round(float(first.amplitude().mean()), 4)}]
+            assert session.status()["counts"]["predictions"] == 0
+
+            for path, data in ((raw_path, raw[raw_start:raw_middle]), (log_path, log[log_start:log_middle])):
+                with path.open("ab") as handle:
+                    handle.write(data)
+            failed = await receive(lambda item: item.get("reason") == "MODEL_INFERENCE_FAILED")
+            assert failed["person_present"] is None and not failed["keypoints"]
+            for path, data in ((raw_path, raw[raw_middle:]), (log_path, log[log_middle:])):
+                with path.open("ab") as handle:
+                    handle.write(data)
+            await receive(lambda item: item["type"] == "signal" and item["timestamp_ms"] > window.timestamps[-1])
+        finally:
+            await session.stop()
+
+    asyncio.run(run())
+
+
 @pytest.fixture
 def automatic_capture(tmp_path, monkeypatch):
     iax = tmp_path / "iax"
@@ -307,6 +368,47 @@ sys.exit(124)
         assert recorder_durations == ["60s", "30s", "120s"]
         assert ping_deadlines == [66, 36, 126]
         assert first_raw.stat().st_size == (WALKING / "raw.csi").stat().st_size
+
+
+def test_automatic_capture_waits_for_the_final_inference(automatic_capture, monkeypatch, model):
+    ingest = Session(Settings(WALKING, "replay"))
+    with CaptureReader(WALKING, live=False) as reader:
+        while not ingest.ingest(reader.read(), 0):
+            pass
+        raw_end, log_end = reader.raw.tell(), reader.log.tell()
+
+    class CompletedCapture:
+        def __init__(self, settings, directory):
+            self.directory = directory
+
+        async def __aenter__(self):
+            self.directory.mkdir(parents=True)
+            for file, length in (("raw.csi", raw_end), ("recorder.log", log_end)):
+                (self.directory / file).write_bytes((WALKING / file).read_bytes()[:length])
+            self.started_ms = time.time_ns() // 1_000_000
+            return self
+
+        async def __aexit__(self, *exc):
+            pass
+
+        def finished(self):
+            return True
+
+    def predict_late(amplitudes, timestamp):
+        time.sleep(.1)
+        return model.predict_window(amplitudes, timestamp=timestamp)
+
+    monkeypatch.setattr("backend.session.IntelCapture", CompletedCapture)
+    monkeypatch.setattr("backend.session.load_model", lambda *_: SimpleNamespace(
+        version=model.version, predict_window=predict_late,
+    ))
+    with TestClient(create_app(automatic_capture)) as client:
+        client.post("/api/session/start", params={"duration_s": 30}).raise_for_status()
+        completed = wait_for_status(client, "ended")
+        assert completed["reason"] == "CAPTURE_COMPLETE"
+        assert completed["counts"]["window_candidates"] == completed["counts"]["predictions"] == 1
+        assert completed["counts"]["dropped_windows"] == 0
+        assert client.get("/api/session/report").json()["finished_ms"] is not None
 
 
 def test_automatic_capture_reports_recorder_failure(automatic_capture, monkeypatch, model):

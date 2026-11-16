@@ -49,12 +49,17 @@
             <p id="page-description">Biên độ Channel State Information theo thời gian.</p>
           </div>
           <div class="actions" id="session-actions">
-            <label class="capture-duration" id="capture-duration-control" for="capture-duration" hidden>Thời lượng thu
-              <select id="capture-duration"></select>
+            <label class="capture-duration" id="capture-duration-control" for="capture-duration">Thời lượng thu
+              <select id="capture-duration" aria-describedby="capture-duration-note" disabled>
+                <option value="30">30 giây</option>
+                <option value="60" selected>1 phút</option>
+                <option value="120">2 phút</option>
+              </select>
             </label>
             <button class="primary" type="button" id="start" disabled>Bắt đầu phiên</button>
             <button class="secondary" type="button" id="stop" disabled>Dừng phiên</button>
             <output class="mono capture-clock" id="capture-clock" aria-label="Thời gian thu còn lại" aria-live="off" hidden></output>
+            <p class="capture-duration-note" id="capture-duration-note" hidden></p>
           </div>
         </div>
         <div class="notice demo-controls" id="demo-controls" hidden>

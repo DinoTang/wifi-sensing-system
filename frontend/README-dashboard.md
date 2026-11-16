@@ -21,6 +21,8 @@ empty="signal-processing/csi-data/labeled/test_2026110302522810528_20261103-0252
 
 Trên Ubuntu có Intel IAX, bật chế độ thu tự động. Mở dashboard, chọn thời lượng **30 giây**, **1 phút** hoặc **2 phút**, rồi bấm **Bắt đầu phiên**. Bấm **Dừng phiên** để kết thúc sớm.
 
+Ô **Thời lượng thu** nằm cạnh nút **Bắt đầu phiên** trong chế độ **Kết nối backend**. Dashboard cho chọn khi backend báo **Thu tự động**. Nếu đang phát lại hoặc backend chạy bộ thu ngoài, ô vẫn hiện kèm lý do chưa chọn được.
+
 ```bash
 sudo -v && .venv/bin/python -m backend \
   --source live --auto-capture --session "$HOME/csi-data/live"

@@ -68,6 +68,10 @@ function setText(id, value) {
   if (target.textContent !== value) target.textContent = value;
 }
 
+function captureDurations(capture) {
+  return capture?.automatic && Array.isArray(capture.duration_options_s) ? capture.duration_options_s : [];
+}
+
 function scheduleRender() {
   if (!animationFrame) animationFrame = requestAnimationFrame(render);
 }
@@ -149,8 +153,9 @@ async function controlSession(action) {
   try {
     const url = new URL(`/api/session/${action}`, location.href);
     if (action === 'stop' && stream.status?.session_id) url.searchParams.set('session_id', stream.status.session_id);
-    if (action === 'start' && !element('capture-duration-control').hidden) {
-      url.searchParams.set('duration_s', element('capture-duration').value);
+    const duration = Number(element('capture-duration').value);
+    if (action === 'start' && captureDurations(stream.status?.capture).includes(duration)) {
+      url.searchParams.set('duration_s', duration);
     }
     const response = await fetch(url, {method: 'POST', signal: controller.signal});
     if (!response.ok) {
@@ -221,17 +226,25 @@ function updateHeader(phase) {
   const startable = STARTABLE.has(state?.status)
     || (state?.status === 'model_error' && state.reason === 'MODEL_LOAD_FAILED');
   const controlsEnabled = transport === 'open' && !pendingAction && Boolean(state);
-  const durations = capture?.duration_options_s;
+  const durations = captureDurations(capture);
   const durationSelect = element('capture-duration');
-  const canSelectDuration = Boolean(capture?.automatic && durations?.length);
-  element('capture-duration-control').hidden = !canSelectDuration;
-  durationSelect.disabled = !controlsEnabled || !startable;
-  if (canSelectDuration && durationOptions !== durations.join(',')) {
-    durationOptions = durations.join(',');
+  const canSelectDuration = durations.length > 0;
+  const optionsKey = [capture?.default_duration_s, ...durations].join(',');
+  durationSelect.disabled = !canSelectDuration || !controlsEnabled || !startable;
+  if (canSelectDuration && durationOptions !== optionsKey) {
+    durationOptions = optionsKey;
     durationSelect.replaceChildren(...durations.map(seconds => new Option(durationLabel(seconds), seconds)));
     durationSelect.value = capture.default_duration_s;
   }
   if (canSelectDuration && state.session_id && !startable) durationSelect.value = capture.duration_s;
+  let durationNote = '';
+  if (source === 'replay') durationNote = 'Phát lại theo thời lượng của bản ghi.';
+  if (source === 'live' && !canSelectDuration) {
+    durationNote = capture?.automatic ? 'Cập nhật backend để chọn thời lượng thu.'
+      : 'Mở backend với --source live --auto-capture để chọn thời lượng.';
+  }
+  setText('capture-duration-note', durationNote);
+  element('capture-duration-note').hidden = !durationNote;
   element('start').disabled = !controlsEnabled || !startable;
   element('stop').disabled = !controlsEnabled || startable;
   setText('stream-status', phase[0]);

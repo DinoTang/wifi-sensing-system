@@ -105,6 +105,7 @@ h2 { font-size: 1.1rem; font-weight: 690; letter-spacing: -.014em; }
 .page-heading p, .panel-head p { margin-top: 6px; color: var(--muted); font-size: .9rem; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: end; gap: 8px; }
 .capture-duration { display: inline-flex; align-items: center; gap: 7px; font-size: .83rem; color: var(--muted); }
+.page-heading .capture-duration-note { flex-basis: 100%; margin: 0; text-align: end; font-size: .8rem; }
 .capture-clock { color: var(--accent); font-size: .82rem; white-space: nowrap; }
 .actions button { border: 1px solid var(--border); border-radius: 9px; padding: 8px 13px; font-weight: 680; }
 .actions .primary { background: var(--accent); color: #102820; border-color: var(--accent); }
@@ -209,6 +210,7 @@ meter::-moz-meter-bar { background: var(--accent); }
 @media (max-width: 640px) {
   .page-heading { align-items: start; flex-direction: column; gap: 10px; margin-bottom: 15px; }
   .actions { justify-content: start; }
+  .page-heading .capture-duration-note { text-align: start; }
   main { padding-top: 19px; }
   .metric { padding: 8px 9px; }
   .metrics { gap: 7px; }

@@ -91,6 +91,7 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             ], dtype=np.float16).astype(np.float32)
             offline = model.predict_window(window, timestamp=pose["timestamp_ms"])
             assert pose["person_present"] == offline["person_present"]
+            assert pose["person_present"] == (capture == WALKING)
             assert pose["pose_reason"] == offline["pose_reason"]
             assert pose["presence_probability"] == offline["presence_probability"]
             assert pose["keypoints"] == [
@@ -114,17 +115,19 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             assert report["model"]["artifact_sha256"]["checkpoint"] == sha256(DEFAULT_CHECKPOINT.read_bytes()).hexdigest()
             counts = report["counts"]
             assert counts["predictions"] == counts["present_predictions"] + counts["empty_predictions"]
+            assert counts["present_predictions"] == counts["pose_predictions"] + counts["pose_suppressed"]
             assert report["timing_ms"]["backend"]["samples"] == counts["predictions"]
             assert report["websocket"]["sent"] >= 3
             with client.websocket_connect("/ws") as reconnected:
                 assert reconnected.receive_json()["status"] == "stopped"
 
 
-@pytest.mark.parametrize("capture,minimum_positions,maximum_positions", [
-    (SMN_WALKING, 250, 610),
-    (SMN_STANDING, 0, 65),
-])
-def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_positions, model):
+@pytest.mark.parametrize("capture,minimum_positions,maximum_positions,zero_fill", [
+    (SMN_WALKING, 250, 610, False),
+    (SMN_STANDING, 0, 65, False),
+    (SMN_WALKING, 250, 610, True),
+], ids=["walking", "standing", "walking-zero-fill"])
+def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_positions, zero_fill, model):
     session = Session(Settings(capture, "replay"))
     hips = []
     with CaptureReader(capture, live=False) as reader:
@@ -132,11 +135,13 @@ def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_p
             window = session.ingest(record, 0)
             if window is None:
                 continue
+            if zero_fill:
+                window.amplitudes[:, model.pose_reference_tones] = 0
             prediction = model.predict_window(window.amplitudes)
             if prediction["person_present"] and prediction["pose_reason"] is None:
                 assert len(prediction["keypoints"]) == 33
                 hips.append(sum(prediction["keypoints"][index]["x_pixel"] for index in (23, 24)) / 2)
-    assert model.version == "smn-csiposenet-1.2"
+    assert model.version == "smn-csiposenet-1.3"
     assert len(hips) >= 160
     spread = np.percentile(hips, 95) - np.percentile(hips, 5)
     assert minimum_positions <= spread <= maximum_positions

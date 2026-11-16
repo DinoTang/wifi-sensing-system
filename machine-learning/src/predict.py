@@ -129,10 +129,12 @@ class CSIPosePredictor:
 
         # 2. Preprocess & Normalize
         csi_norm = self.normalizer.transform(csi_window[None, :, :])  # (1, 20, 224)
+        # These tones were constant in the pose training data. Recorder fill
+        # values on them can differ, so always supply the training mean there.
+        csi_norm[:, :, self.pose_reference_tones] = 0
         mean_offset = np.abs(csi_norm[0].mean(axis=0))
         pose_outside_calibration = (
-            (self.pose_max_distance is not None and mean_offset.mean() > self.pose_max_distance)
-            or np.any(mean_offset[self.pose_reference_tones] > 2.5)
+            self.pose_max_distance is not None and mean_offset.mean() > self.pose_max_distance
         )
         if self.normalized_input_clip is not None:
             np.clip(csi_norm, -self.normalized_input_clip, self.normalized_input_clip, out=csi_norm)

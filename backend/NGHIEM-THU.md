@@ -6,7 +6,7 @@ Backend nhận `raw.csi` và `recorder.log` từ cùng một tiến trình Intel
 
 Chạy từ gốc repo sau khi cài môi trường Python theo [README backend](README.md).
 
-1. Mở terminal thứ nhất và chạy backend với bản ghi đi bộ Lần 3. Bản ghi này nằm trong dữ liệu huấn luyện SMN 1.2 và dùng để kiểm tra đường truyền đến dashboard.
+1. Mở terminal thứ nhất và chạy backend với bản ghi đi bộ Lần 3. Bản ghi này nằm trong dữ liệu huấn luyện tư thế SMN và dùng để kiểm tra đường truyền đến dashboard.
 
    ```powershell
    $round = 'signal-processing/SMN-20261105T143709Z-1-001/SMN/csi-data-lan3'
@@ -41,10 +41,17 @@ Trong một phiên live 2 phút, lần lượt đứng yên, giơ và hạ tay t
   "$HOME/smn-windows/Lan2_windows.npz" "$HOME/smn-windows/Lan3_windows.npz"
 ```
 
+## Đối chiếu hai phiên thu Ubuntu
+
+Hai phiên thu 60 giây trên kênh 36, độ rộng 20 MHz cho thấy SMN 1.2 báo có người ở 192/192 dự đoán phòng trống và chặn tọa độ ở cả 201 dự đoán đi lại. Giá trị điền ở các sóng mang cố định của recorder khác giá trị trong tập huấn luyện. Bản 1.3 chuẩn hóa các vị trí này theo trung bình huấn luyện và học lại bộ phân loại hiện diện từ dữ liệu thu mới.
+
+- Phát lại qua WebSocket với SMN 1.3 cho kết quả 193/193 cửa sổ phòng trống và 201/201 cửa sổ đi lại có đủ 33 khớp. Vị trí hông theo chiều ngang thay đổi 122 px từ phân vị 5 đến 95 trong bản ghi đi lại.
+- Kiểm tra hiện diện trên hai đoạn thời gian chừa riêng, cách dữ liệu huấn luyện ít nhất 3 giây, cho kết quả 142/142 cửa sổ phòng trống và 144/144 cửa sổ đi lại. Các đoạn này thuộc cùng hai phiên thu. Đánh giá độ chính xác tọa độ trên máy đó cần video tham chiếu đồng bộ.
+
 ## Đọc báo cáo
 
 - `model.artifact_sha256` định danh tệp checkpoint, bộ chuẩn hóa và parser. Có thể đối chiếu từng giá trị trên Windows bằng `Get-FileHash -Algorithm SHA256 <tệp>`.
-- `counts.records`, `accepted`, `filtered` và `backlog` mô tả đầu vào. `window_candidates`, `rejected_cadence`, `dropped_windows`, `model_failures` và `predictions` mô tả quá trình dựng cửa sổ và suy luận. `present_predictions` và `empty_predictions` là số đầu ra mô hình theo hai trạng thái. `gaps` gồm khoảng cách vượt ngưỡng hoặc timestamp không tăng. `timestamp_order_errors` đếm riêng lỗi thứ tự.
+- `counts.records`, `accepted`, `filtered` và `backlog` mô tả đầu vào. `window_candidates`, `rejected_cadence`, `dropped_windows`, `model_failures` và `predictions` mô tả quá trình dựng cửa sổ và suy luận. `present_predictions` và `empty_predictions` đếm kết quả hiện diện. Trong số `present_predictions`, `pose_predictions` đếm các kết quả có đủ 33 khớp và `pose_suppressed` đếm các cửa sổ bị chặn tọa độ do tín hiệu nằm ngoài dải kiểm tra. `gaps` gồm khoảng cách vượt ngưỡng hoặc timestamp không tăng. `timestamp_order_errors` đếm riêng lỗi thứ tự.
 - `prediction_rate_hz` lấy số khoảng giữa dự đoán chia thời gian đơn điệu từ dự đoán đầu đến cuối. Thời gian này bao gồm giai đoạn chờ dữ liệu giữa các dự đoán. `transitions` giữ tối đa 64 lần đổi trạng thái gần nhất và `transition_count` ghi tổng số lần đổi.
 - `timing_ms` có số mẫu, p50, p95 và tối đa trên 1.024 mẫu gần nhất cho mỗi giai đoạn. `backend` tính ghép bản ghi mục tiêu, dựng cửa sổ, chờ và suy luận. `ws_send` đo lời gọi gửi ASGI theo từng client. Số đo này chưa bao gồm truyền mạng tới trình duyệt, vẽ giao diện, hoặc thời gian Intel recorder đợi ghi đủ cửa sổ.
 - `websocket.discarded` đếm thông điệp bị thay thế trong hộp thư client hoặc bị loại khi trạng thái mất hiệu lực. `counts.dropped_windows` là cửa sổ bị bỏ ở hàng đợi suy luận. Hai loại số đếm có phạm vi khác nhau.

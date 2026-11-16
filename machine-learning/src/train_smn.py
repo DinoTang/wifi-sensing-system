@@ -14,7 +14,7 @@ from losses import MaskedPoseLoss
 from models import CSIPoseNet, save_checkpoint
 from presence import presence_features
 
-MODEL_VERSION = "smn-csiposenet-1.2"
+MODEL_VERSION = "smn-csiposenet-1.3"
 STD_FLOOR = 12
 INPUT_CLIP = 6
 EPOCHS = 30

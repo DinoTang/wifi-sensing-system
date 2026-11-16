@@ -114,7 +114,8 @@ class Session:
         self.counts = dict(records=0, accepted=0, filtered=0, backlog=0, gaps=0,
                            timestamp_order_errors=0, incompatible_records=0, window_candidates=0,
                            rejected_cadence=0, dropped_windows=0, predictions=0,
-                           present_predictions=0, empty_predictions=0, model_failures=0)
+                           present_predictions=0, empty_predictions=0, pose_predictions=0,
+                           pose_suppressed=0, model_failures=0)
         self.latest: dict[str, dict] = {}
         self.pending: asyncio.Queue[Window] = asyncio.Queue(maxsize=PENDING_WINDOWS)
 
@@ -497,6 +498,8 @@ class Session:
         self.last_result_received = window.received
         self.counts["predictions"] += 1
         self.counts["present_predictions" if present else "empty_predictions"] += 1
+        if present:
+            self.counts["pose_predictions" if keypoints else "pose_suppressed"] += 1
         timing_ms = {
             "preprocess": round(window.preprocess_ms, 3),
             "queue": round((started - window.ready) * 1000, 3),

@@ -26,6 +26,8 @@ LOGGER = logging.getLogger("uvicorn.error")
 POLL_SECONDS = 0.025
 READ_BATCH = 64
 PENDING_WINDOWS = 1
+PRESENCE_CONFIRM_WINDOWS = 3
+PRESENCE_MAX_GAP_MS = STRIDE * MAX_GAP_MS
 SIGNAL_STATES = {"warming_up", "ready", "insufficient_data", "model_error"}
 AMPLITUDE_QUANTITY = "mean_raw_csi_amplitude"
 # Exploratory threshold from signal-processing/docs/report_nguoi2.md.
@@ -108,6 +110,8 @@ class Session:
         self.model_version: str | None = None
         self.metrics: SessionMetrics | None = None
         self.person_present: bool | None = None
+        self.presence_streak = 0
+        self.presence_timestamp: int | None = None
         self.frames = deque(maxlen=WINDOW_SIZE)
         self.timestamps = deque(maxlen=WINDOW_SIZE)
         self.chart_values = deque(maxlen=WINDOW_SIZE)
@@ -124,7 +128,7 @@ class Session:
         self.counts = dict(records=0, accepted=0, filtered=0, backlog=0, gaps=0,
                            timestamp_order_errors=0, incompatible_records=0, window_candidates=0,
                            rejected_cadence=0, dropped_windows=0, predictions=0,
-                           present_predictions=0, empty_predictions=0, pose_predictions=0,
+                           present_predictions=0, empty_predictions=0, confirming_predictions=0, pose_predictions=0,
                            pose_suppressed=0, model_failures=0)
         self.latest: dict[str, dict] = {}
         self.pending: asyncio.Queue[Window] = asyncio.Queue(maxsize=PENDING_WINDOWS)
@@ -173,6 +177,8 @@ class Session:
                 "window_shape": [WINDOW_SIZE, FEATURES], "stride": STRIDE,
                 "maximum_gap_ms": MAX_GAP_MS, "cadence_median_ms": CADENCE_MEDIAN_MS,
                 "window_span_ms": WINDOW_SPAN_MS, "landmarks": LANDMARK_COUNT,
+                "presence_confirm_windows": PRESENCE_CONFIRM_WINDOWS,
+                "presence_max_gap_ms": PRESENCE_MAX_GAP_MS,
                 "pending_windows": PENDING_WINDOWS if self.settings.source == "live" else 0,
                 "replay_speed": self.settings.speed if self.settings.source == "replay" else None,
                 "live_timeout_s": self.settings.timeout if self.settings.source == "live" else None,
@@ -210,6 +216,8 @@ class Session:
             self.metrics.transition(status, reason, self.target_ms)
         if status != "ready":
             self.person_present = None
+            self.presence_streak = 0
+            self.presence_timestamp = None
             self.latest.pop("pose", None)
             self.latest.pop("chart", None)
         self.emit("status")
@@ -492,6 +500,15 @@ class Session:
             finally:
                 self.pending.task_done()
 
+    def confirm_presence(self, candidate: bool, target: int) -> bool:
+        previous = self.presence_timestamp
+        self.presence_timestamp = target
+        if not candidate or previous is None or not 0 < target - previous <= PRESENCE_MAX_GAP_MS:
+            self.presence_streak = 0
+        if candidate:
+            self.presence_streak = min(self.presence_streak + 1, PRESENCE_CONFIRM_WINDOWS)
+        return self.presence_streak >= PRESENCE_CONFIRM_WINDOWS
+
     async def predict(self, model, window: Window) -> None:
         started = time.perf_counter()
         live = self.settings.source == "live"
@@ -536,12 +553,21 @@ class Session:
         if window.generation != self.generation or (live and completed - window.received >= self.settings.timeout):
             self.counts["dropped_windows"] += 1
             return
-        self.person_present = present
+        confirmed = self.confirm_presence(present, target)
+        presence_pending = present and not confirmed
+        self.person_present = None if presence_pending else confirmed
+        if not confirmed:
+            keypoints = []
+            pose_reason = pose_calibration = None
         self.last_result_received = window.received
         self.counts["predictions"] += 1
-        self.counts["present_predictions" if present else "empty_predictions"] += 1
-        if present:
+        if confirmed:
+            self.counts["present_predictions"] += 1
             self.counts["pose_predictions" if keypoints else "pose_suppressed"] += 1
+        elif presence_pending:
+            self.counts["confirming_predictions"] += 1
+        else:
+            self.counts["empty_predictions"] += 1
         timing_ms = {
             "preprocess": round(window.preprocess_ms, 3),
             "queue": round((started - window.ready) * 1000, 3),
@@ -554,7 +580,7 @@ class Session:
         self.emit_trace("chart", window.timestamps, window.chart_values)
         motion_score = float(window.amplitudes.std(axis=0).mean())
         self.emit(
-            "pose", timestamp_ms=target, status="ready", person_present=self.person_present,
+            "pose", timestamp_ms=target, status="ready", person_present=confirmed, presence_pending=presence_pending,
             presence_probability=probability, confidence_method=confidence_method,
             coordinate_system=coordinate_system, keypoints=keypoints, pose_reason=pose_reason,
             pose_calibration=pose_calibration,

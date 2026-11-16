@@ -16,7 +16,7 @@ from backend import intel_capture
 from backend.intel_capture import IntelCaptureSettings
 from backend.model import DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, load_model
 from backend.report import SessionMetrics, TIMING_SAMPLE_LIMIT
-from backend.session import MOTION_STD_THRESHOLD, Session, Settings, Subscriber
+from backend.session import MOTION_STD_THRESHOLD, Session, Settings, Subscriber, Window
 from backend.source import CaptureError, CaptureReader, ROOT
 from parse_intel_csi import convert_session
 
@@ -76,7 +76,8 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
                 nonlocal chart
                 if item["type"] == "chart":
                     chart = item
-                return item["type"] == "pose" and chart is not None and item["timestamp_ms"] == chart["timestamp_ms"]
+                return (item["type"] == "pose" and not item.get("presence_pending") and chart is not None
+                        and item["timestamp_ms"] == chart["timestamp_ms"])
 
             pose = receive_until(socket, matches_chart)
             assert len(chart["points"]) == 20
@@ -116,7 +117,9 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             assert report["finished_ms"] >= report["started_ms"]
             assert report["model"]["artifact_sha256"]["checkpoint"] == sha256(DEFAULT_CHECKPOINT.read_bytes()).hexdigest()
             counts = report["counts"]
-            assert counts["predictions"] == counts["present_predictions"] + counts["empty_predictions"]
+            assert counts["predictions"] == (
+                counts["present_predictions"] + counts["empty_predictions"] + counts["confirming_predictions"]
+            )
             assert counts["present_predictions"] == counts["pose_predictions"] + counts["pose_suppressed"]
             assert report["timing_ms"]["backend"]["samples"] == counts["predictions"]
             assert report["websocket"]["sent"] >= 3
@@ -143,7 +146,7 @@ def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_p
             if prediction["person_present"] and prediction["pose_reason"] is None:
                 assert len(prediction["keypoints"]) == 33
                 hips.append(sum(prediction["keypoints"][index]["x_pixel"] for index in (23, 24)) / 2)
-    assert model.version == "smn-csiposenet-1.3"
+    assert model.version == "smn-csiposenet-1.4"
     assert len(hips) >= 160
     spread = np.percentile(hips, 95) - np.percentile(hips, 5)
     assert minimum_positions <= spread <= maximum_positions
@@ -503,6 +506,59 @@ def test_empty_prediction_suppresses_keypoints():
         await session.predict(EmptyPredictor(), window)
         assert session.latest["pose"]["person_present"] is False
         assert session.latest["pose"]["keypoints"] == []
+
+    asyncio.run(run())
+
+
+def test_isolated_packet_spike_does_not_report_presence_in_empty_capture(model):
+    session = Session(Settings(EMPTY, "replay"))
+    with CaptureReader(EMPTY, live=False) as reader:
+        while (record := reader.read()) is not None:
+            window = session.ingest(record, 0)
+            if window is not None:
+                break
+    assert window is not None
+    noisy = window.amplitudes.copy()
+    noisy[9] *= 1.8
+    assert model.presence_classifier.logit(noisy) > 0
+    assert model.predict_window(noisy)["person_present"] is False
+
+
+def test_presence_needs_fresh_consecutive_windows_and_hides_joints(tmp_path):
+    async def run():
+        session = Session(Settings(tmp_path, "live"))
+        keypoints = [{"id": i, "x_norm": .5, "y_norm": .3} for i in range(33)]
+        candidate = False
+
+        def predict_window(amplitudes, timestamp):
+            return {
+                "status": "success", "person_present": candidate,
+                "presence_probability": .95 if candidate else .05,
+                "confidence_method": "test", "coordinate_system": {}, "keypoints": keypoints,
+            }
+
+        model = SimpleNamespace(predict_window=predict_window)
+        amplitudes = np.full((20, 224), 100, dtype=np.float32)
+        # Two isolated positives, three sustained ones, a long gap and an empty result.
+        cases = [
+            (0, True, True, False), (200, True, True, False), (400, False, False, False),
+            (600, True, True, False), (800, True, True, False), (1000, True, False, True),
+            (2000, True, True, False), (2200, False, False, False),
+        ]
+        for offset, candidate, confirming, present in cases:
+            target = 1_790_000_000_000 + offset
+            now = time.perf_counter()
+            window = Window(session.generation, tuple(range(target - 1900, target + 1, 100)),
+                            amplitudes, (100.,) * 20, now, now, 0.)
+            await session.predict(model, window)
+            event = session.latest["pose"]
+            assert event["timestamp_ms"] == session.latest["chart"]["timestamp_ms"] == target
+            assert event["presence_pending"] is confirming and event["person_present"] is present
+            assert event["keypoints"] == (keypoints if present else [])
+            assert session.status()["person_present"] is (None if confirming else present)
+        assert session.counts["confirming_predictions"] == 5
+        assert session.counts["present_predictions"] == 1
+        assert session.counts["empty_predictions"] == 2
 
     asyncio.run(run())
 

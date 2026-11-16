@@ -59,6 +59,17 @@ test('recognizes empty predictions and never fills missing joints', () => {
   assert.equal(stream.snapshot(202).pose.joints.size, 0);
 });
 
+test('identifies confirmation without drawing a joint or declaring an empty room', () => {
+  const stream = new CsiStream();
+  stream.accept(status(1, 'ready'), 0);
+  stream.accept(chart(2, T), 5);
+  stream.accept(pose(3, T, {person_present: false, presence_pending: true}), 6);
+  const result = stream.snapshot(7).pose;
+  assert.equal(result.pending, true);
+  assert.equal(result.present, false);
+  assert.equal(result.joints.size, 0);
+});
+
 test('clears results on data loss, stale receipt, stop, and reconnect', () => {
   const stream = new CsiStream();
   stream.accept(status(9, 'ready'), 10);

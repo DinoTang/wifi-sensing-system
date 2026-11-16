@@ -20,7 +20,7 @@ def http_json(base_url: str, route: str, method: str = "GET") -> dict:
 
 
 async def observe(websocket, session_id: str) -> dict:
-    received = dict(status=0, chart=0, pose=0, matched_windows=0, present=0, empty=0)
+    received = dict(status=0, chart=0, pose=0, matched_windows=0, present=0, empty=0, confirming=0)
     previous_sequence = -1
     chart_timestamp = None
     while True:
@@ -57,12 +57,15 @@ async def observe(websocket, session_id: str) -> dict:
             chart_timestamp = times[-1]
         elif kind == "pose":
             present = message["person_present"]
+            pending = message.get("presence_pending", False)
             reason = message.get("pose_reason")
             count = LANDMARK_COUNT if present and reason is None else 0
-            if (not isinstance(present, bool) or reason not in (None, "CSI_OUTSIDE_POSE_CALIBRATION")
+            if (not isinstance(present, bool) or not isinstance(pending, bool) or (present and pending)
+                    or reason not in (None, "CSI_OUTSIDE_POSE_CALIBRATION")
                     or (reason is not None and not present) or len(message["keypoints"]) != count):
                 raise ValueError("Invalid presence and keypoint combination")
-            received["present" if present else "empty"] += 1
+            outcome = "confirming" if pending else "present" if present else "empty"
+            received[outcome] += 1
             if message["timestamp_ms"] == chart_timestamp:
                 received["matched_windows"] += 1
                 chart_timestamp = None

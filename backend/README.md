@@ -1,6 +1,6 @@
 # Backend CSI cho người thứ 4
 
-Backend dùng mô hình `smn-csiposenet-1.3` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
+Backend dùng mô hình `smn-csiposenet-1.4` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
 
 ## Cài đặt và phát lại
 
@@ -69,7 +69,7 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 - Dashboard mở `/ws?include_signal=true` để nhận thêm `signal` trong phiên live. Thông điệp có cùng `quantity` và `points` như `chart`, phát từ các gói VHT20 hợp lệ kể cả lúc tích lũy mẫu hoặc suy luận gặp lỗi. `chart` vẫn đi cùng `pose` theo đúng timestamp của cửa sổ suy luận. Khi hết thời lượng thu tự động, backend dừng bộ thu rồi chờ tối đa theo `--timeout` để xử lý cửa sổ cuối còn chờ.
 - Tài liệu HTTP tự sinh tại <http://127.0.0.1:8000/docs>.
 
-Mỗi thông điệp có `type`, `schema_version`, `session_id`, `sequence`, `source` (`replay` hoặc `live`), `timestamp_ms`, `server_sent_ms` và `model_version`. Timestamp của `pose` và `chart` cùng cửa sổ giống nhau. `server_sent_ms` là đồng hồ hệ điều hành trên máy backend lúc gửi. Khi nhận `status`, `person_present: null` nghĩa là chưa có kết quả hợp lệ. Trạng thái `ready` trên `pose` với `person_present: false` là dự đoán phòng trống và có `keypoints: []`.
+Mỗi thông điệp có `type`, `schema_version`, `session_id`, `sequence`, `source` (`replay` hoặc `live`), `timestamp_ms`, `server_sent_ms` và `model_version`. Timestamp của `pose` và `chart` cùng cửa sổ giống nhau. `server_sent_ms` là đồng hồ hệ điều hành trên máy backend lúc gửi. Backend đợi ba cửa sổ liên tiếp có tín hiệu hiện diện rồi mới báo có người. Trong lúc xác nhận, `status` có `person_present: null`, còn `pose` có `presence_pending: true`, `person_present: false` và `keypoints: []`. Một dự đoán âm tính trở về phòng trống và xóa bộ xương ngay.
 
 Ví dụ một thông điệp `pose` cho phòng trống:
 
@@ -77,7 +77,7 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 {
   "type": "pose", "schema_version": 1, "session_id": "demo", "sequence": 20,
   "source": "replay", "timestamp_ms": 1792920264420, "server_sent_ms": 1794463200123,
-  "model_version": "smn-csiposenet-1.3", "status": "ready", "person_present": false,
+  "model_version": "smn-csiposenet-1.4", "status": "ready", "person_present": false,
   "presence_probability": 0.02, "confidence_method": "csi_presence_logistic_probability",
   "coordinate_system": {"type": "2D_pixel", "reference_width": 1920, "reference_height": 1080, "origin": "top_left"},
   "keypoints": [], "motion": {"score": 3.46, "level": "low"},

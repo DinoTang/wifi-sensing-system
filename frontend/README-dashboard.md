@@ -41,6 +41,8 @@ Xem [cấu hình và nhật ký thu trên Ubuntu](../backend/README.md#thu-trự
 
 Nhãn **Trực tiếp**, **Phát lại** và **Giả lập** mô tả nguồn. Nút bắt đầu và dừng gọi API phiên của backend và chỉ có trong chế độ kết nối backend. Khi lỗi nguồn, lỗi mô hình hoặc mất WebSocket, dashboard báo **Chưa có kết quả** và xóa khớp. Mất WebSocket kích hoạt kết nối lại. Trong phiên live, biểu đồ bắt đầu khi nhận gói hợp lệ đầu tiên và tiếp tục cập nhật nếu bộ thu còn ghi trong lúc mô hình chưa có kết quả. Khi mất mẫu, đường biểu đồ tách đoạn ở khoảng thiếu. Khung trạng thái ở cuối màn hình giải thích các tình huống đang kết nối, đang tích lũy, đang nhận, dữ liệu cũ, lỗi và dừng.
 
+Trong bước **Đang xác nhận**, giao diện đợi đủ ba cửa sổ hiện diện liên tiếp rồi mới hiển thị **Có người** và tọa độ khớp.
+
 ## Đồng bộ và ánh xạ
 
 - WebSocket `/ws` dùng `schema_version: 1` với ba loại thông điệp `status`, `chart` và `pose`. Dashboard xin thêm `signal` qua `?include_signal=true` để vẽ biểu đồ live. Dashboard hiển thị một dự đoán khi có `chart` cùng `session_id` và `timestamp_ms`. Timestamp là mẫu CSI cuối cửa sổ, tính bằng mili giây trên đồng hồ bộ thu. Luồng bỏ sequence trùng hoặc thấp hơn và dữ liệu của phiên khác.

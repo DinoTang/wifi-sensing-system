@@ -43,6 +43,11 @@ const REASONS = {
   MODEL_INFERENCE_FAILED: 'Backend gặp lỗi khi chạy suy luận.',
 };
 const SOURCE_LABELS = {live: 'Trực tiếp', replay: 'Phát lại', mock: 'Giả lập'};
+const POSE_DESCRIPTIONS = {
+  live: 'Tọa độ ước lượng từ CSI của phiên đang thu',
+  replay: 'Tọa độ ước lượng từ bản ghi CSI',
+  mock: 'Tọa độ mẫu · BlazePose',
+};
 const STARTABLE = new Set(['idle', 'ended', 'stopped', 'source_error']);
 const MAX_RECONNECT_MS = 5000;
 const durationLabel = seconds => seconds % 60 === 0 ? format.format(seconds / 60) + ' phút' : format.format(seconds) + ' giây';
@@ -331,24 +336,25 @@ function renderSignal(chart, phase) {
 }
 
 function renderPresence(chart, pose, phase) {
-  const label = pose ? (pose.present ? 'Có người' : 'Phòng trống') : 'Chưa có kết quả';
+  const pending = pose?.pending === true;
+  const label = pending ? 'Đang xác nhận' : pose ? (pose.present ? 'Có người' : 'Phòng trống') : 'Chưa có kết quả';
   const motion = pose?.motion;
-  const note = pose
+  const note = pending ? 'Đợi thêm cửa sổ CSI liên tiếp để xác nhận có người.' : pose
     ? (mode === 'mock' ? 'Trạng thái mẫu' : 'Dự đoán của mô hình từ CSI')
     : (chart ? 'Chờ kết quả cùng timestamp với biểu đồ.' : phase[1]);
   const joints = pose?.joints.size ?? 0;
   const probability = pose?.probability ?? null;
   setText('presence-state', label);
   setText('presence-note', note);
-  element('verdict').dataset.tone = pose ? (pose.present ? 'ok' : 'neutral') : phase[2];
-  setText('joint-count', pose ? `${joints}/${LANDMARK_COUNT}` : '—');
+  element('verdict').dataset.tone = pending ? 'warn' : pose ? (pose.present ? 'ok' : 'neutral') : phase[2];
+  setText('joint-count', pose && !pending ? `${joints}/${LANDMARK_COUNT}` : '—');
   setText('model-version', pose?.model ?? stream.status?.model_version ?? '—');
   setText('backend-latency', pose?.processingMs != null ? `${format.format(pose.processingMs)} ms` : '—');
   setText('motion-level', motion ? `${motion.level === 'high' ? 'Cao' : 'Thấp'} · ${format.format(motion.score)}` : '—');
   element('probability-group').hidden = probability === null;
   element('probability').value = probability ?? 0;
   setText('probability-value', probability === null ? '—' : `${format.format(probability * 100)}%`);
-  setText('pose-description', mode === 'mock' ? 'Tọa độ mẫu · BlazePose' : 'Tọa độ ước lượng thử nghiệm từ CSI');
+  setText('pose-description', POSE_DESCRIPTIONS[stream.status?.source] ?? 'Đang đợi dữ liệu CSI');
   setText('frame-size', pose?.frame ? `${pose.frame.width} × ${pose.frame.height}` : '—');
   showTimestamp('pose-time', pose?.timestamp ?? null);
 
@@ -361,7 +367,7 @@ function renderPresence(chart, pose, phase) {
       : 'Tín hiệu CSI khác dữ liệu dùng để học tư thế 2D.');
   } else {
     setText('pose-empty-title', pose?.present && !joints ? 'Thiếu tọa độ khớp' : label);
-    setText('pose-empty-note', pose && !pose.present ? 'Không có bộ xương ở cửa sổ này.' : note);
+    setText('pose-empty-note', pose && !pending && !pose.present ? 'Không có bộ xương ở cửa sổ này.' : note);
   }
   const canvas = element('skeleton');
   paintSkeleton(canvas, pose);

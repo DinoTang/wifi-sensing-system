@@ -4,6 +4,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
+SPIKE_STEP_RATIO = 4.0
+SPIKE_STEP_FLOOR = .025
+
 
 def presence_features(windows: np.ndarray) -> np.ndarray:
     """Summarize pose-independent variations and the per-link spectrum."""
@@ -31,6 +34,23 @@ def presence_features(windows: np.ndarray) -> np.ndarray:
     ))
 
 
+def interpolate_isolated_spike(window: np.ndarray) -> np.ndarray | None:
+    """Replace one large excursion whose two neighbours agree."""
+    window = np.asarray(window, dtype=np.float32)
+    log_amplitude = np.log1p(window)
+    steps = np.abs(np.diff(log_amplitude, axis=0)).mean(axis=1)
+    excursion = np.minimum(steps[:-1], steps[1:])
+    neighbours = np.abs(log_amplitude[2:] - log_amplitude[:-2]).mean(axis=1)
+    threshold = max(SPIKE_STEP_FLOOR, SPIKE_STEP_RATIO * float(np.median(steps)))
+    isolated = (excursion > threshold) & (neighbours < .5 * excursion)
+    if not isolated.any():
+        return None
+    index = int(np.argmax(np.where(isolated, excursion, 0))) + 1
+    corrected = window.copy()
+    corrected[index] = (window[index - 1] + window[index + 1]) / 2
+    return corrected
+
+
 @dataclass(frozen=True)
 class PresenceClassifier:
     center: np.ndarray
@@ -50,7 +70,14 @@ class PresenceClassifier:
             raise ValueError("Invalid CSI presence classifier parameters")
         return cls(center, scale, weights, intercept)
 
-    def probability(self, window: np.ndarray) -> float:
+    def logit(self, window: np.ndarray) -> float:
         features = presence_features(window[None, :, :])[0]
-        logit = (features - self.center) @ (self.weights / self.scale) + self.intercept
+        return float((features - self.center) @ (self.weights / self.scale) + self.intercept)
+
+    def probability(self, window: np.ndarray) -> float:
+        logit = self.logit(window)
+        if logit >= 0:
+            corrected = interpolate_isolated_spike(window)
+            if corrected is not None:
+                logit = min(logit, self.logit(corrected))
         return float(1 / (1 + np.exp(-np.clip(logit, -60, 60))))

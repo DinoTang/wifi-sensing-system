@@ -8,7 +8,7 @@ import pytest
 import torch
 
 from src.dataset import CSINormalizer, CSIPoseDataset
-from src.evaluate_smn import evaluate_round
+from src.evaluate_smn import evaluate_round, score_activity, video_translation
 from src.losses import MaskedPoseLoss
 from src.metrics import compute_mpjpe, compute_pck, compute_presence_metrics
 from src.models import CSIPoseNet, LinearMLPBaseline, MeanPoseBaseline, load_checkpoint, save_checkpoint
@@ -41,6 +41,21 @@ def test_video_evaluation_scores_seated_and_unstructured_motion():
     assert scores["seated"]["both_raised"]["correct"] == 1
     assert scores["free_motion"]["false_negatives"] == 1
     assert scores["free_motion"]["pck_05"] == {"correct": 0, "total": 33, "fraction": 0.0}
+
+
+def test_video_evaluation_separates_arm_lifts_while_moving():
+    actual = np.full((8, 33, 2), .5, dtype=np.float32)
+    actual[:, (23, 24), 0] = np.arange(8)[:, None] * .05
+    actual[:4, (15, 16), 1] = .2
+    actual[4:, (15, 16), 1] = .8
+    visible = np.ones((8, 33), dtype=bool)
+    moving = video_translation(actual, visible, np.arange(8) * .2)
+    predicted = actual.copy()
+    predicted[3, 16, 1] = .8
+    predicted[5, 15, 1] = .2
+    scores = score_activity("mixed", actual, visible, predicted, np.ones(8, bool), (1920, 1080), moving=moving)
+    assert scores["both_raised_while_moving"] == {"correct": 1, "total": 2, "fraction": .5}
+    assert scores["both_lowered_while_moving"] == {"correct": 1, "total": 2, "fraction": .5}
 
 
 class TestDatasetAndNormalizer:

@@ -18,6 +18,7 @@ SHOULDERS = (11, 12)
 WRISTS = (15, 16)
 HIPS = (23, 24)
 RAISE_MARGIN = .015  # Fraction of the reference image height.
+HIP_SPEED_MIN = .025  # Fraction of the reference image width per second.
 
 
 def wrist_lift(poses):
@@ -31,7 +32,22 @@ def rate(correct, selected):
     return {"correct": hits, "total": total, "fraction": hits / total if total else None}
 
 
-def score_activity(activity, expected, visible, predicted, present, frame_size):
+def video_translation(poses, visible, timestamps):
+    """Flag lateral translation around a target frame using video labels."""
+    moving = np.zeros(len(poses), dtype=bool)
+    if len(poses) < 5:
+        return moving
+    hip_x = poses[:, HIPS, 0].mean(axis=1)
+    hip_visible = visible[:, HIPS].all(axis=1)
+    elapsed = timestamps[4:] - timestamps[:-4]
+    # Two observations on either side of the target at the nominal 5 Hz cadence.
+    valid_span = (elapsed > .5) & (elapsed < 1.3)
+    moving[2:-2] = (hip_visible[:-4] & hip_visible[2:-2] & hip_visible[4:] & valid_span
+                     & (np.abs(hip_x[4:] - hip_x[:-4]) >= HIP_SPEED_MIN * elapsed))
+    return moving
+
+
+def score_activity(activity, expected, visible, predicted, present, frame_size, *, moving=None):
     # A suppressed or missing skeleton counts as a miss for every visible joint.
     drawn = np.isfinite(predicted).all(axis=(1, 2))
     result = {"windows": len(expected), "present": int(present.sum()), "drawn": int(drawn.sum())}
@@ -57,6 +73,10 @@ def score_activity(activity, expected, visible, predicted, present, frame_size):
         result[f"{side}_arm"] = {"raised": up, "lowered": down}
     result["arm_pair"] = rate(correct.all(axis=1), labeled.all(axis=1))
     result["both_raised"] = rate(correct.all(axis=1), labeled.all(axis=1) & raised.all(axis=1))
+    if moving is not None:
+        translated = moving & labeled.all(axis=1)
+        result["both_raised_while_moving"] = rate(correct.all(axis=1), translated & raised.all(axis=1))
+        result["both_lowered_while_moving"] = rate(correct.all(axis=1), translated & ~raised.any(axis=1))
 
     hip_frames = visible[:, HIPS].all(axis=1) & drawn
     actual_x = expected[hip_frames][:, HIPS, 0].mean(axis=1) * frame_size[0]
@@ -85,12 +105,14 @@ def evaluate_round(dataset, model):
             predicted[i] = [(joint["x_norm"], joint["y_norm"]) for joint in prediction["keypoints"]]
 
     activities = dataset["activity"]
+    timestamps = dataset["timestamps"] if "timestamps" in dataset else None
     result = {}
     for activity in dict.fromkeys((*ACTIVITIES, *activities.tolist())):
         keep = activities == activity
         if keep.any():
+            moving = None if timestamps is None else video_translation(expected[keep], visible[keep], timestamps[keep])
             result[activity] = score_activity(activity, expected[keep], visible[keep], predicted[keep],
-                                              present[keep], dataset["frame_size"])
+                                              present[keep], dataset["frame_size"], moving=moving)
     return result
 
 

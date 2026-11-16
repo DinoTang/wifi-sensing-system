@@ -70,7 +70,10 @@ def score_activity(activity, expected, visible, predicted, present, frame_size):
 
 def evaluate_round(dataset, model):
     expected = dataset["poses"]
-    visible = dataset["mask"] & dataset["valid"][:, None] & np.isfinite(expected).all(axis=-1)
+    valid = dataset["valid"].astype(bool)
+    if "sync_ok" in dataset:
+        valid &= np.broadcast_to(np.asarray(dataset["sync_ok"], dtype=bool), valid.shape)
+    visible = dataset["mask"] & valid[:, None] & np.isfinite(expected).all(axis=-1)
     predicted = np.full_like(expected, np.nan, dtype=np.float32)
     present = np.zeros(len(expected), dtype=bool)
     for i, window in enumerate(dataset["amplitudes"]):

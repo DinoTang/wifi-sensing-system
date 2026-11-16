@@ -35,11 +35,12 @@ def test_video_evaluation_scores_seated_and_unstructured_motion():
         "amplitudes": np.zeros((4, 20, 224), dtype=np.float32),
         "poses": poses, "mask": np.ones((4, 33), dtype=bool),
         "valid": np.array([False, True, True, True]), "frame_size": np.array([1920, 1080]),
+        "sync_ok": np.array([True, True, True, False]),
     }, Predictor())
     assert scores["empty"]["false_positives"] == 1
     assert scores["seated"]["both_raised"]["correct"] == 1
     assert scores["free_motion"]["false_negatives"] == 1
-    assert scores["free_motion"]["pck_05"] == {"correct": 0, "total": 66, "fraction": 0.0}
+    assert scores["free_motion"]["pck_05"] == {"correct": 0, "total": 33, "fraction": 0.0}
 
 
 class TestDatasetAndNormalizer:

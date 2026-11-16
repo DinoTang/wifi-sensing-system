@@ -35,12 +35,21 @@ Trong phiên thu trực tiếp có người, để người thử tự chọn đ
 - Khi huấn luyện trên một đợt và kiểm tra trên đợt kia, kết quả phối hợp hai tay là 86/137 và 83/125. Riêng ca giơ cùng lúc đạt 40/50 và 1/35. Hai đợt có cùng người và bố trí thiết bị, nên cần kiểm thử tiếp trên phiên thu Intel mới. Bộ video đồng bộ hiện thiếu phiên ngồi có nhãn.
 - Để chấm sai số trước buổi thi, dùng một phiên cử động tự do độc lập ở bố trí sẽ thi. Video đồng bộ cung cấp tọa độ tham chiếu khi đánh giá. Backend thu trực tiếp suy luận từ các cửa sổ CSI. Lần 1 có video và mốc bắt đầu do người thu ghi nhận, với sai số đồng bộ từng khung hình chưa được xác minh.
 
-Để tính lại điểm với NPZ đã đồng bộ, chạy từ gốc repo. Mỗi tệp chứa `amplitudes`, `activity`, `poses`, `mask`, `valid` và `frame_size`. Công cụ chấm các nhãn có trong tệp, gồm cả ngồi yên và chuyển động tự do nếu phiên có nhãn tương ứng. Gán `empty` cho cửa sổ tham chiếu phòng trống. Cửa sổ có người nhưng khớp bị chặn vẫn nằm trong mẫu số của PCK và các chỉ số giơ tay khi video thấy khớp.
+Để tính lại điểm với NPZ đã đồng bộ, chạy từ gốc repo. Mỗi tệp chứa `amplitudes`, `activity`, `poses`, `mask`, `valid` và `frame_size`. Công cụ chấm các nhãn có trong tệp, gồm cả ngồi yên và chuyển động tự do nếu phiên có nhãn tương ứng. Gán `empty` cho cửa sổ tham chiếu phòng trống. Khi tệp có cờ `sync_ok=0`, cửa sổ tương ứng chỉ được đếm theo nhãn hoạt động, không dùng để chấm sai số khớp. Cửa sổ đồng bộ có người nhưng khớp bị chặn vẫn nằm trong mẫu số của PCK và các chỉ số giơ tay khi video thấy khớp.
 
 ```bash
 .venv/bin/python machine-learning/src/evaluate_smn.py \
   "$HOME/smn-windows/Lan2_windows.npz" "$HOME/smn-windows/Lan3_windows.npz"
 ```
+
+## Đối chiếu với nhánh Khanh trên ba lần thu
+
+Đã phát lại 18 ca từ ba lần thu trong nhóm, gồm phòng trống, đứng yên, giơ từng tay, đi lại và phối hợp. Cả 3.389 cửa sổ suy luận ghép được `chart` và `pose` theo timestamp và mã phiên. Từng gói VHT20 hợp lệ khớp timestamp và 224 biên độ với kết quả parser ngoại tuyến của `Khanh@5769e40`.
+
+- Checkpoint `1.0.0` của Khanh báo có người trong cả 381 cửa sổ phòng trống của Lần 2 và Lần 3. Checkpoint SMN 1.3 của Jayson báo phòng trống ở cả 568 cửa sổ gắn nhãn trống của ba lần. Trong các ca có người, SMN 1.3 xuất 2.813/2.821 bộ khớp. Tám lượt bỏ sót gồm hai cửa sổ đi lại Lần 1, một cửa sổ hỗn hợp Lần 2 và năm cửa sổ đứng yên Lần 3.
+- Ở hai video đồng bộ Lần 2 và Lần 3, SMN 1.3 đạt PCK@0,05 đường chéo ảnh là 10.734/11.136 khớp đi lại. Checkpoint Khanh đạt 3.267/11.136 khớp trên cùng bộ nhãn. Hai video này đã dùng để huấn luyện tư thế SMN 1.3. Kết quả kiểm tra giữ riêng theo đợt được ghi ở mục giơ tay và chuyển động hỗn hợp.
+- Sáu clip Lần 1 dùng để kiểm tra hoạt động. Mốc ghép từng khung hình còn chưa xác minh. Độ trải hông theo chiều ngang từ phân vị 5 đến 95 khi đứng yên là khoảng 4 px trên video và 93 px trên CSI 1.3. Khi đi lại, các giá trị tương ứng là khoảng 497 px và 91 px. Đây là thống kê theo ca. Cần phiên thu mới với video đồng bộ để chấm sai lệch từng khớp trong bố trí thi.
+- Gói nghiên cứu `main@e94e396` chọn `training_mean` cho tọa độ 17 khớp. Chạy hàm tọa độ trên 185 cửa sổ đi lại của Lần 2 cho cùng một bộ tọa độ ở cả 185 cửa sổ. Bản chạy trực tiếp trên Jayson dùng CSIPoseNet với 33 khớp dự đoán từ CSI.
 
 ## Đối chiếu hai phiên thu Ubuntu
 

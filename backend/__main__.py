@@ -24,8 +24,6 @@ def main() -> None:
     parser.add_argument("--timeout", type=float, default=2.0, help="Live CSI inactivity timeout in seconds")
     parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     parser.add_argument("--normalizer", type=Path)
-    parser.add_argument("--empty-room-reference", type=Path,
-                        help="Saved room reference, also usable to verify replay against the same room")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--autostart", action="store_true")
@@ -63,7 +61,6 @@ def main() -> None:
         session_dir=args.session.resolve(), source=args.source,
         speed=args.speed, timeout=args.timeout, checkpoint=args.checkpoint,
         normalizer=args.normalizer or paired_normalizer, autostart=args.autostart, intel_capture=intel_capture,
-        empty_reference=args.empty_room_reference.expanduser().resolve() if args.empty_room_reference else None,
     )), host=args.host, port=args.port)
 
 

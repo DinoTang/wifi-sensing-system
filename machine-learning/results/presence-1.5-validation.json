@@ -1,0 +1,237 @@
+{
+  "model_version": "smn-csiposenet-1.5",
+  "checkpoint_sha256": "79a8897421c9b83f1f8e0f53121cad59e1d98c2bac166421569a6319063b60da",
+  "train_fraction": 0.65,
+  "purge_windows": 20,
+  "training_windows": 3410,
+  "sources": [
+    {
+      "name": "Lan2_windows.npz",
+      "sha256": "56cddc6cfb6a95b641756e2c276815fa2b64cfbac36d3190f4f98be6a936b2b1",
+      "entirely_held_out": false,
+      "training_windows": 728,
+      "validation_windows": 276,
+      "validation": {
+        "windows": 276,
+        "activities": {
+          "empty": {
+            "correct": 47,
+            "windows": 47
+          },
+          "left_arm": {
+            "correct": 46,
+            "windows": 46
+          },
+          "mixed": {
+            "correct": 46,
+            "windows": 46
+          },
+          "right_arm": {
+            "correct": 46,
+            "windows": 46
+          },
+          "standing": {
+            "correct": 46,
+            "windows": 46
+          },
+          "walking": {
+            "correct": 45,
+            "windows": 45
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    },
+    {
+      "name": "Lan3_windows.npz",
+      "sha256": "ecc4b1dc1e49ee751121d05de4c38e5be7412313979e98b01cbf78f4f0ebc38d",
+      "entirely_held_out": false,
+      "training_windows": 720,
+      "validation_windows": 273,
+      "validation": {
+        "windows": 273,
+        "activities": {
+          "empty": {
+            "correct": 47,
+            "windows": 47
+          },
+          "left_arm": {
+            "correct": 46,
+            "windows": 46
+          },
+          "mixed": {
+            "correct": 43,
+            "windows": 43
+          },
+          "right_arm": {
+            "correct": 45,
+            "windows": 45
+          },
+          "standing": {
+            "correct": 44,
+            "windows": 44
+          },
+          "walking": {
+            "correct": 48,
+            "windows": 48
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    },
+    {
+      "name": "Oct1_windows.npz",
+      "sha256": "e1031393fca80008a46816120d44ab32e8efdd0f54108c2bd6891bb4bf3cd637",
+      "entirely_held_out": false,
+      "training_windows": 362,
+      "validation_windows": 138,
+      "validation": {
+        "windows": 138,
+        "activities": {
+          "empty": {
+            "correct": 44,
+            "windows": 44
+          },
+          "seated": {
+            "correct": 48,
+            "windows": 48
+          },
+          "walking": {
+            "correct": 46,
+            "windows": 46
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    },
+    {
+      "name": "Oct2_windows.npz",
+      "sha256": "e5a8e3ebb1924cb356b369522edf3d8b6412df912a76b58429d163e4a5bc6405",
+      "entirely_held_out": false,
+      "training_windows": 353,
+      "validation_windows": 132,
+      "validation": {
+        "windows": 132,
+        "activities": {
+          "empty": {
+            "correct": 45,
+            "windows": 45
+          },
+          "seated": {
+            "correct": 45,
+            "windows": 45
+          },
+          "walking": {
+            "correct": 42,
+            "windows": 42
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    },
+    {
+      "name": "Lan1_windows.npz",
+      "sha256": "1f852341e092bbc762c9c09088c948dc19b53ca270f40d7a9fd8cde46b5f2e19",
+      "entirely_held_out": false,
+      "training_windows": 747,
+      "validation_windows": 285,
+      "validation": {
+        "windows": 285,
+        "activities": {
+          "empty": {
+            "correct": 46,
+            "windows": 46
+          },
+          "left_arm": {
+            "correct": 48,
+            "windows": 48
+          },
+          "mixed": {
+            "correct": 48,
+            "windows": 48
+          },
+          "right_arm": {
+            "correct": 48,
+            "windows": 48
+          },
+          "standing": {
+            "correct": 50,
+            "windows": 50
+          },
+          "walking": {
+            "correct": 45,
+            "windows": 45
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    },
+    {
+      "name": "Ubuntu16_windows.npz",
+      "sha256": "6ba3f43f27c174d3c3a5ed6b2a5b54074914573ed4dc046bbe5dc1f0bf99712e",
+      "entirely_held_out": false,
+      "training_windows": 255,
+      "validation_windows": 99,
+      "validation": {
+        "windows": 99,
+        "activities": {
+          "empty": {
+            "correct": 48,
+            "windows": 48
+          },
+          "walking": {
+            "correct": 51,
+            "windows": 51
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    },
+    {
+      "name": "Ubuntu17_windows.npz",
+      "sha256": "ae99fcde3a53d8cd75272cc8f6dee24ca15458c9b6735c03b0e7ff23dd16a75f",
+      "entirely_held_out": false,
+      "training_windows": 245,
+      "validation_windows": 93,
+      "validation": {
+        "windows": 93,
+        "activities": {
+          "empty": {
+            "correct": 47,
+            "windows": 47
+          },
+          "walking": {
+            "correct": 46,
+            "windows": 46
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    },
+    {
+      "name": "Oct3_windows.npz",
+      "sha256": "967c2ea3a4b2c30db96067434e4731b7c3246caef6add6922b30b6e5865c9169",
+      "entirely_held_out": true,
+      "training_windows": 0,
+      "validation_windows": 529,
+      "validation": {
+        "windows": 529,
+        "activities": {
+          "empty": {
+            "correct": 162,
+            "windows": 162
+          },
+          "seated": {
+            "correct": 187,
+            "windows": 187
+          },
+          "walking": {
+            "correct": 180,
+            "windows": 180
+          }
+        },
+        "max_gain_and_fill_score_change": 0.0
+      }
+    }
+  ]
+}

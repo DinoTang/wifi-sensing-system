@@ -21,9 +21,9 @@ empty="signal-processing/csi-data/labeled/test_2026110302522810528_20261103-0252
 
 Trên Ubuntu có Intel IAX, bật chế độ thu tự động. Mở dashboard, chọn thời lượng **30 giây**, **1 phút** hoặc **2 phút**, rồi bấm **Bắt đầu phiên**. Bấm **Dừng phiên** để kết thúc sớm.
 
-Ô **Thời lượng thu** nằm cạnh nút **Bắt đầu phiên** trong chế độ **Kết nối backend**. Dashboard cho chọn khi backend báo **Thu tự động**. Nếu đang phát lại hoặc backend chạy bộ thu ngoài, ô vẫn hiện kèm lý do chưa chọn được.
+Luồng này tự thu và phân tích CSI sau một lần bấm bắt đầu, không yêu cầu hiệu chuẩn phòng trống. Đợi khoảng 2 giây CSI hợp lệ để có kết quả đầu. Phòng trống có 0 khớp. Chỉ số phần trăm là **Điểm hiện diện của mô hình**. Khi dừng hoặc hết giờ, backend tự lưu `session-report.json` trong thư mục của phiên thu.
 
-Ở chế độ **Thu tự động**, để vùng thu trống rồi bấm **Hiệu chuẩn phòng trống** trước lần kiểm tra hiện diện đầu tiên. Đợi 30 giây và thông báo **Đã lưu nền phòng trống**, sau đó chọn thời lượng và bấm **Bắt đầu phiên**. Mẫu nền được lưu để dùng lại khi mở backend. Hiệu chuẩn lại khi đổi vị trí thiết bị hoặc bố trí phòng. Nếu chưa có nền, CSI vẫn cập nhật và màn hình Hiện diện báo **Cần hiệu chuẩn phòng trống**.
+Ô **Thời lượng thu** nằm cạnh nút **Bắt đầu phiên** trong chế độ **Kết nối backend**. Dashboard cho chọn khi backend báo **Thu tự động**. Nếu đang phát lại hoặc backend chạy bộ thu ngoài, ô vẫn hiện kèm lý do chưa chọn được.
 
 ```bash
 sudo -v && .venv/bin/python -m backend \

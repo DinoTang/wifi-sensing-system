@@ -1,0 +1,21 @@
+{
+  "note": "Separate refits with each Ubuntu capture group entirely excluded. Oct3 remains excluded. These are generalization tests of the method, not scores from the shipped model trained on temporal blocks of both Ubuntu groups.",
+  "train_fraction": 0.65,
+  "purge_windows": 20,
+  "results": [
+    {
+      "entire_group_left_out": "Ubuntu16",
+      "empty_windows": 193,
+      "false_present": 193,
+      "occupied_windows": 201,
+      "false_empty": 0
+    },
+    {
+      "entire_group_left_out": "Ubuntu17",
+      "empty_windows": 191,
+      "false_present": 191,
+      "occupied_windows": 187,
+      "false_empty": 0
+    }
+  ]
+}

@@ -2,6 +2,34 @@
 
 Module của **Thành viên 3 (Người thứ 3)** trong hệ thống Wi-Fi Sensing: tiếp nhận tập cửa sổ CSI–Pose đồng bộ từ Người 2, huấn luyện mô hình dự đoán trạng thái có người (`person_present`) và tọa độ 33 khớp 2D (`keypoints`), đánh giá trên phiên độc lập và cung cấp engine suy luận chuẩn hóa cho Backend/Frontend (Người 4).
 
+## Checkpoint đang dùng trên backend Jayson
+
+Backend mặc định nạp `models/checkpoints/smn_pose.pt` và `smn_normalization.json`, phiên bản `smn-csiposenet-1.5`. Hiện diện dùng 76 đặc trưng hình dạng/biến thiên tương đối CSI, bỏ 16 vị trí điền cố định và chuẩn hóa RMS từng gói, từng liên kết anten. Extra Trees 128 cây được lưu vào checkpoint dưới dạng các mảng; `src/presence.py` suy luận bằng NumPy. Ngưỡng điểm là 0,5. Backend cần ba kết quả dương liên tiếp trước khi báo có người, và xóa khớp ngay khi có dự đoán phòng trống.
+
+Để học lại phần hiện diện và giữ trọng số tư thế, tạo các NPZ theo nhóm phiên với `amplitudes` có shape `(N, 20, 224)` và `activity` chứa `empty` hoặc tên hoạt động có người. Giữ thứ tự thời gian trong từng hoạt động. Ví dụ sau khi chuẩn bị các tệp cửa sổ đã gắn nhãn:
+
+```bash
+.venv/bin/python machine-learning/src/train_presence.py \
+  --train "$HOME/smn-windows/Lan2_windows.npz" \
+  --train "$HOME/smn-windows/Lan3_windows.npz" \
+  --train "$HOME/smn-windows/Oct1_windows.npz" \
+  --train "$HOME/smn-windows/Oct2_windows.npz" \
+  --train "$HOME/smn-windows/Lan1_windows.npz" \
+  --train "$HOME/smn-windows/Ubuntu16_windows.npz" \
+  --train "$HOME/smn-windows/Ubuntu17_windows.npz" \
+  --holdout "$HOME/smn-windows/Oct3_windows.npz" \
+  --train-fraction 0.65 --purge-windows 20 \
+  --checkpoint machine-learning/models/checkpoints/smn_pose.pt \
+  --output "$HOME/smn-windows/smn_pose_candidate.pt" \
+  --report "$HOME/smn-windows/presence-validation.json"
+```
+
+Công cụ dùng 65% đầu mỗi hoạt động để học và bỏ 20 cửa sổ ở ranh giới. `--holdout` giữ cả tệp ngoài tập học. Báo cáo ghi SHA-256 tệp, số mẫu từng nhóm/hoạt động, đối chiếu bộ suy luận NumPy với scikit-learn và thử biến đổi mức khuếch đại/giá trị điền. Chạy công cụ cần các thư viện huấn luyện trong `requirements.txt`; chạy backend live không cần cài thêm scikit-learn. Bản phân chia thực tế và số liệu checkpoint 1.5 nằm trong [báo cáo JSON](results/presence-1.5-validation.json) và [nghiệm thu](../backend/NGHIEM-THU.md#nghiệm-thu-smn-15-với-luồng-một-nút).
+
+`Ubuntu17_windows.npz` ghép hai phiên `1c7cb0d9ecee49c290d0d787255b5779` (phòng trống 11:47) và `7005d27a0bd84b67923d1cf9df0d7f0c` (đi, giơ tay 11:49) theo nhãn người thu xác nhận. `Ubuntu16_windows.npz` ghép hai bản ghi ZIP phòng trống/đi lại trước đó. `Oct1–3` ghép các phiên `empty`, `seated`, `walking` cùng số thứ tự trong `hardware/csi_extracted/labeled`; `Lan1–3` là ba đợt thu của nhóm. Các NPZ chỉ phục vụ học và kiểm tra offline; backend live đọc gói mới của phiên đang thu.
+
+Điểm hiện diện chưa được hiệu chỉnh thành xác suất đúng ở môi trường mới. Kết quả chia đoạn cùng phiên không thay thế kiểm tra bằng một đợt thu độc lập trên máy Ubuntu. Trọng số tọa độ vẫn có giới hạn khi giơ tay tự do ở phiên mới; xem số liệu giữ riêng theo đợt trong nghiệm thu.
+
 ---
 
 ## 1. Phạm vi bài toán & Quy ước dữ liệu (Bước 1–2)

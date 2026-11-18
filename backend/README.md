@@ -1,6 +1,6 @@
 # Backend CSI cho người thứ 4
 
-Backend dùng mô hình `smn-csiposenet-1.4` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
+Backend dùng mô hình `smn-csiposenet-1.5` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
 
 ## Cài đặt và phát lại
 
@@ -30,11 +30,9 @@ sudo -v && .venv/bin/python -m backend \
 
 Giữ terminal này mở. Vào <http://127.0.0.1:8000/dashboard/>, chọn **30 giây**, **1 phút** hoặc **2 phút**, rồi bấm **Bắt đầu phiên**. Backend chuẩn bị Wi-Fi và bật IAX, sau đó bắt đầu tính thời lượng khi khởi chạy bộ thu. Backend ping router mỗi 100 ms với tải 56 byte trong lúc thu. **Dừng phiên** kết thúc sớm. `--duration` đặt thời lượng mặc định (60 giây nếu bỏ qua). Dùng `--iax-dir`, `--interface`, `--router`, `--channel` và `--ssid` khi máy hoặc mạng dùng cấu hình khác.
 
-Trước lần nhận diện đầu tiên, để vùng thu trống rồi bấm **Hiệu chuẩn phòng trống**. Phiên này tự thu trong 30 giây. Backend bỏ qua 5 giây đầu và các cửa sổ còn chứa mẫu trong khoảng đó để người thao tác rời vùng thu. Khi báo **Đã lưu nền phòng trống**, bấm **Bắt đầu phiên** để kiểm tra phòng trống và có người. Phiên thu thông thường vẫn hiển thị CSI khi chưa có nền, còn màn hình hiện diện báo **Cần hiệu chuẩn phòng trống**.
+Một lần bấm **Bắt đầu phiên** tự thu CSI mới và chạy bộ phân loại hiện diện. Không có bước hiệu chuẩn phòng trống bắt buộc. Backend tích lũy khoảng 2 giây CSI hợp lệ trước kết quả đầu tiên; trạng thái đợi dữ liệu được hiển thị trong thời gian đó. Khi mô hình nhận là phòng trống, dashboard báo **Phòng trống** và xóa bộ xương.
 
-Nền được lưu ở `~/csi-data/live/empty-room-reference.json` và được nạp lại khi mở backend. Hiệu chuẩn lại khi đổi vị trí thiết bị, bố trí phòng hoặc mạng Wi-Fi. Backend đối chiếu kênh, router, card, SSID cấu hình và điểm truy cập Wi-Fi đang kết nối trước khi dùng lại nền. File nền chứa đặc trưng phổ của 224 giá trị CSI và mức dao động đã đo trong phòng trống. Một thay đổi biên độ chung của card được giảm ảnh hưởng bằng chuẩn hóa theo từng liên kết. Cửa sổ gần nền được kết luận phòng trống, kể cả khi bộ phân loại cũ báo xác suất có người cao.
-
-Mỗi lần bấm bắt đầu tạo thư mục `~/csi-data/live/<session_id>`. Lấy ID đầy đủ ở mục Phiên trên dashboard hoặc qua `GET /api/status`. Dùng `setup.log` để kiểm tra Wi-Fi và kích hoạt, `recorder.log` để kiểm tra bộ thu, và `ping.log` để xem lưu lượng tới router. `raw.csi` tăng kích thước trong lúc thu nếu driver gửi khung CSI. Backend tự lưu `session-report.json` trong thư mục đó khi phiên kết thúc hoặc được dừng. Khi báo `CAPTURE_SUDO`, dừng backend bằng Ctrl+C rồi chạy lại lệnh trên trong terminal Ubuntu để gia hạn quyền sudo.
+Mỗi lần bấm bắt đầu tạo thư mục `~/csi-data/live/<session_id>`. Lấy ID đầy đủ ở mục Phiên trên dashboard hoặc qua `GET /api/status`. Dùng `setup.log` để kiểm tra Wi-Fi và kích hoạt, `recorder.log` để kiểm tra bộ thu, và `ping.log` để xem lưu lượng tới router. `raw.csi` tăng kích thước trong lúc thu nếu driver gửi khung CSI. Khi phiên dừng hoặc hết giờ, backend tự lưu `session-report.json` cạnh hai tệp thu; tệp có mã phiên, phiên bản mô hình, SHA-256 và thống kê dự đoán. Khi báo `CAPTURE_SUDO`, dừng backend bằng Ctrl+C rồi chạy lại lệnh trên trong terminal Ubuntu để gia hạn quyền sudo.
 
 ### Đọc từ bộ thu do nhóm chạy riêng
 
@@ -47,8 +45,6 @@ Mỗi lần bấm bắt đầu tạo thư mục `~/csi-data/live/<session_id>`. 
 2. Chạy lệnh Intel recorder mà nhóm đang dùng trong tiến trình riêng. Cấu hình recorder ghi `raw.csi` và chuyển nhật ký của **cùng tiến trình** vào `recorder.log` trong thư mục trên. Kiểm tra cả hai tệp tăng kích thước khi đang thu. Nếu recorder dùng stdout dạng stdio có bộ đệm, có thể chạy dưới `stdbuf -oL -eL` trên Linux để log được ghi theo dòng. Nếu recorder chỉ flush tệp nhị phân khi thoát, cần bật flush ở chương trình thu để có luồng trực tiếp.
 3. Kiểm tra `GET /api/status` hoặc mở trang kiểm thử. `--timeout 2` là thời gian chờ mẫu hợp lệ mặc định. Dừng phiên từ UI/API chỉ dừng backend đọc CSI. Dừng tiến trình recorder riêng theo quy trình thu của nhóm.
 
-Chế độ live dùng bộ thu ngoài cũng cần mẫu nền để kết luận hiện diện. Dùng `--empty-room-reference "$HOME/csi-data/live/empty-room-reference.json"` để nạp mẫu nền đã thu ở cùng bố trí. Khi chưa có nền, giao diện yêu cầu mở backend với `--auto-capture` và lấy nền phòng trống. `GET /api/status` có `presence_decision` để đối chiếu điểm mô hình gốc, kết quả sau xử lý và ID của mẫu nền. Báo cáo phiên giữ quyết định cuối kèm timestamp.
-
 `backend/source.py` là bộ chuyển tiếp từ hai tệp đang được ghi vào bộ đệm backend. Adapter đợi đủ byte và đủ các dòng metadata, ghép theo thứ tự, rồi kiểm tra kích thước và timestamp nhúng trong header. Nếu một tệp bị thay thế, thu nhỏ hoặc lệch cặp, bắt đầu lại bằng thư mục phiên mới. Khi mở tệp ở chế độ live, các bản ghi có từ trước lúc mở được đọc để căn vị trí và đếm vào `backlog`. Chỉ bản ghi mới sau mốc đó đi vào mô hình. Dùng thư mục mới khi chuyển phiên để nhận ngay từ đầu.
 
 Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong gói bàn giao dùng CSI Intel VHT20. Phiên thu ESP32 cần parser và mô hình tương thích riêng.
@@ -57,7 +53,7 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 
 - Nền tích hợp là `Khanh@5769e40`. Dùng layout và `decode_points` của `signal-processing/src/parse_intel_csi.py`. Bản ghi hợp lệ có `VHT,20,VHT20`, `2×2×56`, payload 896 byte. Bản ghi NOHT xen kẽ được bỏ qua.
 - Cửa sổ dùng 20 mẫu × 224 biên độ I/Q theo thứ tự gốc của parser, bước 2 mẫu, nhịp danh định khoảng 101 ms. Biên độ làm tròn 4 chữ số như CSV và qua float16 → float32 như NPZ huấn luyện. Giữ các vị trí zero và không chạy pipeline lọc/đặc trưng dành cho bài toán phân loại hoạt động.
-- Mặc định `machine-learning/src/predict.py` nạp cặp `smn_pose.pt` và `smn_normalization.json`. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. Bản 1.3 dùng dữ liệu thu trên Ubuntu để huấn luyện lại bộ phân loại hiện diện, với ngưỡng xác suất 0,5.
+- Mặc định `machine-learning/src/predict.py` nạp cặp `smn_pose.pt` và `smn_normalization.json`. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. Bản 1.5 dùng bộ phân loại hiện diện Extra Trees 128 cây, độ sâu tối đa 7, ngưỡng điểm 0,5. Đặc trưng loại 16 vị trí điền cố định của recorder, chuẩn hóa RMS riêng từng gói và từng liên kết anten, rồi mô tả biến thiên tương đối và hình dạng phổ. Backend chạy phần suy luận này bằng NumPy từ tham số trong checkpoint; không cần cài scikit-learn để chạy live.
 - Mô hình tư thế ưu tiên bốn gói mới nhất trong cửa sổ. Lúc chuẩn hóa đầu vào, các sóng mang cố định trong dữ liệu huấn luyện được đưa về giá trị chuẩn hóa 0. Bộ kiểm tra độ lệch tín hiệu dựa vào các sóng mang còn lại, do giá trị điền của recorder ở vị trí cố định có thể khác lúc huấn luyện.
 - Đầu vào là CSI. Timestamp mục tiêu là timestamp của mẫu CSI cuối cửa sổ, giữ nguyên cơ sở thời gian của recorder và đổi từ ns sang ms bằng phép chia nguyên. Mẫu lùi/trùng timestamp, gap trên 300 ms hoặc cấu hình sai làm mất hiệu lực tư thế cũ. Cửa sổ còn phải có trung vị khoảng mẫu 80–120 ms và thời gian từ mẫu đầu đến mẫu cuối 1.500–2.300 ms để chặn nhịp sai hoặc thiếu mẫu kéo dài. Khi gặp gap, hệ thống tích lũy lại 20 mẫu nên vị trí stride sau gap có thể khác batch offline.
 - Replay đọc theo thứ tự và lập lịch theo timestamp của bản ghi đầu. Khi lịch phát gặp khoảng trống quá 300 ms theo thời gian bản ghi, backend xóa kết quả đã lưu trước khi chờ đến gói tiếp theo. Live dùng một cửa sổ đang suy luận và tối đa một cửa sổ chờ. Cửa sổ mới nhất thay thế cửa sổ chờ khi quá tải. Mẫu quá cũ hoặc cửa sổ đã bị vô hiệu hóa sẽ bị loại. Mỗi client chỉ giữ tối đa một thông điệp chờ cho mỗi loại.
@@ -68,17 +64,14 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 ## HTTP và WebSocket
 
 - `GET /api/status` trả trạng thái, lý do, số bản ghi đọc/nhận/lọc/bỏ, số gap, số cửa sổ suy luận, cấu hình và timestamp nhận gần nhất.
-- `GET /api/session/report` trả báo cáo JSON của phiên đang chạy hoặc phiên gần nhất. Báo cáo có cấu hình đầu vào, SHA-256 của checkpoint, bộ chuẩn hóa và parser, thống kê cửa sổ, chuyển trạng thái, nhịp suy luận và độ trễ từng giai đoạn. API trả 404 trước phiên đầu tiên. Xuất JSON trước khi bắt đầu phiên mới.
+- `GET /api/session/report` trả báo cáo JSON của phiên đang chạy hoặc phiên gần nhất. Báo cáo có cấu hình đầu vào, SHA-256 của checkpoint, bộ chuẩn hóa và parser, thống kê cửa sổ, chuyển trạng thái, nhịp suy luận và độ trễ từng giai đoạn. API trả 404 trước phiên đầu tiên. Nếu tải qua API, tải trước khi bắt đầu phiên mới. Thu tự động còn tự lưu báo cáo vào thư mục của đúng phiên khi kết thúc.
 - `POST /api/session/start` trả HTTP 202 và ID phiên. Thu tự động nhận `?duration_s=30`, `60` hoặc `120`. Giá trị ngoài các lựa chọn hoặc truyền thời lượng cho phiên phát lại bị từ chối với 422. Khi đã có phiên đang chạy, API trả 409. `capture.started_ms` là mốc bắt đầu của bộ thu để dashboard tính thời gian còn lại.
 - `POST /api/session/stop` dừng phiên và trả trạng thái hiện tại. Gọi lại sau khi phiên đã kết thúc sẽ trả trạng thái kết thúc đã ghi nhận. Có thể gửi `?session_id=<id>` để chỉ dừng đúng phiên đó. API trả 409 nếu phiên đã đổi.
-- `POST /api/session/calibrate-empty` bắt đầu một phiên thu tự động 30 giây để lấy nền phòng trống. Trạng thái `empty_room` có tiến độ, ID phiên nền và cấu hình. Phiên thiếu 30 cửa sổ hợp lệ trải trên ít nhất 10 giây báo `EMPTY_REFERENCE_INSUFFICIENT`. Nền mới chỉ thay nền đã lưu khi thu và kiểm tra thành công.
 - `WS /ws` gửi snapshot hiện tại lúc kết nối, rồi cập nhật theo thời gian thực. `sequence` tăng trong vòng đời của tiến trình server. Client có thể thấy khoảng nhảy khi bỏ thông điệp chờ. Khi đổi `session_id`, nhận trạng thái khác `ready` hoặc mất WebSocket, xóa ngay tư thế cũ.
 - Dashboard mở `/ws?include_signal=true` để nhận thêm `signal` trong phiên live. Thông điệp có cùng `quantity` và `points` như `chart`, phát từ các gói VHT20 hợp lệ kể cả lúc tích lũy mẫu hoặc suy luận gặp lỗi. `chart` vẫn đi cùng `pose` theo đúng timestamp của cửa sổ suy luận. Khi hết thời lượng thu tự động, backend dừng bộ thu rồi chờ tối đa theo `--timeout` để xử lý cửa sổ cuối còn chờ.
 - Tài liệu HTTP tự sinh tại <http://127.0.0.1:8000/docs>.
 
 Mỗi thông điệp có `type`, `schema_version`, `session_id`, `sequence`, `source` (`replay` hoặc `live`), `timestamp_ms`, `server_sent_ms` và `model_version`. Timestamp của `pose` và `chart` cùng cửa sổ giống nhau. `server_sent_ms` là đồng hồ hệ điều hành trên máy backend lúc gửi. Backend đợi ba cửa sổ liên tiếp có tín hiệu hiện diện rồi mới báo có người. Trong lúc xác nhận, `status` có `person_present: null`, còn `pose` có `presence_pending: true`, `person_present: false` và `keypoints: []`. Một dự đoán âm tính trở về phòng trống và xóa bộ xương ngay.
-
-Khi `pose.empty_room.matched` bằng `true`, `distance` và `threshold` giải thích phép đối chiếu với nền. `presence_probability` bằng `null` vì quyết định này dùng độ lệch phổ. `model_presence_probability` giữ xác suất gốc của bộ phân loại để chẩn đoán. Khi thiếu nền cho chế độ thu tự động, `presence_reason` là `EMPTY_REFERENCE_REQUIRED`, `presence_pending` là `true` và danh sách khớp rỗng. Tham số `--empty-room-reference <file>` cho phép kiểm tra cùng nền với một phiên phát lại độc lập.
 
 Ví dụ một thông điệp `pose` cho phòng trống:
 
@@ -86,8 +79,8 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 {
   "type": "pose", "schema_version": 1, "session_id": "demo", "sequence": 20,
   "source": "replay", "timestamp_ms": 1792920264420, "server_sent_ms": 1794463200123,
-  "model_version": "smn-csiposenet-1.4", "status": "ready", "person_present": false,
-  "presence_probability": 0.02, "confidence_method": "csi_presence_logistic_probability",
+  "model_version": "smn-csiposenet-1.5", "status": "ready", "person_present": false,
+  "presence_probability": 0.02, "confidence_method": "csi_presence_forest_probability",
   "coordinate_system": {"type": "2D_pixel", "reference_width": 1920, "reference_height": 1080, "origin": "top_left"},
   "keypoints": [], "motion": {"score": 3.46, "level": "low"},
   "timing_ms": {"preprocess": 0.4, "queue": 0.1, "inference": 4.5, "backend": 5.0}
@@ -95,6 +88,8 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 ```
 
 `chart` có `quantity: "mean_raw_csi_amplitude"` và tối đa 20 `points` dạng `{"timestamp_ms": 1792920264420, "value": 125.4}`. Đây là biên độ trung bình của 224 vị trí ở mỗi mẫu, trước chuẩn hóa. Khi mô hình có kết quả tư thế, mỗi khớp có `id`, `name`, `x_pixel`, `y_pixel`, `x_norm` và `y_norm`. [Dashboard hai màn hình](../frontend/README-dashboard.md) đọc hợp đồng này tại `/dashboard/`.
+
+`presence_probability` là điểm do bộ phân loại xuất ra. Phần trăm trên dashboard mang nhãn **Điểm hiện diện của mô hình**; điểm cao chưa chứng minh mô hình đúng trên một phòng hoặc phiên thu chưa kiểm tra. Xem cách chia tập và giới hạn trong [nghiệm thu SMN 1.5](NGHIEM-THU.md#nghiệm-thu-smn-15-với-luồng-một-nút).
 
 ### Trạng thái và lỗi
 

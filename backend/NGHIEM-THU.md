@@ -2,6 +2,22 @@
 
 Backend nhận `raw.csi` và `recorder.log` từ cùng một tiến trình Intel recorder, ghép đủ một bản ghi, giữ các mẫu VHT20 phù hợp, dựng cửa sổ 20 × 224 và đưa vào CSIPoseNet. Dashboard nhận `status`, `chart` và `pose` qua WebSocket. Đối chiếu `session_id` và `timestamp_ms` của biểu đồ và tư thế để xác định chúng thuộc cùng cửa sổ.
 
+## Nghiệm thu SMN 1.5 với luồng một nút
+
+Yêu cầu người dùng xác nhận: chọn thời lượng rồi bấm **Bắt đầu phiên** phải tự thu CSI trực tiếp và phân tích, bao gồm nhận ra phòng trống. Bản 1.5 bỏ bước hiệu chuẩn bắt buộc đã thêm trước đó. Hệ thống tích lũy 20 mẫu hợp lệ rồi suy luận bằng bộ phân loại trong checkpoint; không dùng tên phiên, nhãn kiểm thử hoặc video làm đầu vào live.
+
+Bộ phân loại mới loại các vị trí điền cố định của recorder và chuẩn hóa RMS theo từng gói, từng liên kết anten trước khi tính 76 đặc trưng. Cách này giảm phụ thuộc vào mức khuếch đại biên độ. Trọng số dự đoán tọa độ của bản trước được giữ nguyên; kết quả hiện diện mới không xác nhận độ chính xác của các khớp.
+
+- **Kiểm tra giữ riêng theo thời gian:** dùng 65% đầu mỗi hoạt động để học, bỏ tiếp 20 cửa sổ ở ranh giới, dùng phần sau để kiểm tra. Dữ liệu học có 3.410 cửa sổ. Riêng cả nhóm Oct3 gồm ba phiên phòng trống, ngồi và đi lại ngày 25/10 được giữ ngoài tập học. Các nhóm còn lại có đoạn học và kiểm tra thuộc cùng phiên. Khoảng bỏ 20 cửa sổ dài hơn độ chồng lấn 20 mẫu với bước trượt 2 mẫu.
+- **Kết quả:** nhận đúng 486/486 cửa sổ phòng trống và 1.339/1.339 cửa sổ có người trong phần kiểm tra trên. Đây là các cửa sổ có chồng lấn với nhau trong cùng tập kiểm tra, không phải 1.825 lần thu độc lập. Số liệu, số mẫu từng hoạt động, SHA-256 dữ liệu NPZ và checkpoint nằm trong [JSON nghiệm thu](../machine-learning/results/presence-1.5-validation.json).
+- **Kiểm tra biến đổi biên độ:** nhân riêng từng gói/liên kết với hệ số ngẫu nhiên 0,45–2 và đặt 16 vị trí điền thành 32.700. Cả 1.825 quyết định giữ nguyên. Đầu ra bộ suy luận NumPy khớp `predict_proba` của mô hình huấn luyện với sai số tuyệt đối tối đa được cho phép là 1e-12.
+- **Kiểm tra luồng ứng dụng:** 39 test Python và 8 test frontend đã chạy qua. Hai ca mở Chrome ở độ rộng 390 và 1.280 px bấm bắt đầu trực tiếp, đưa byte CSI của phiên `1c7cb0d9...` và `7005d27a...` vào tiến trình thu thay thế; dashboard lần lượt hiển thị **Phòng trống**, 0/33 khớp và **Có người**, 33/33 khớp. Biểu đồ cập nhật và nút dừng kết thúc phiên. Đây là kiểm tra trên các bản ghi thực qua bộ thu thay thế, chưa phải thử lại Intel IAX trên Ubuntu sau bản sửa.
+- **Phát lại đủ hai phiên Ubuntu:** phiên phòng trống `1c7cb0d9...` có 191/191 dự đoán phòng trống, 0 bộ xương; phiên `7005d27a...` có 165 dự đoán hiện diện kèm đủ khớp và 22 cửa sổ đang xác nhận sau khi tích lũy lại, không có dự đoán phòng trống. Xem [thống kê và SHA-256 tệp nguồn](../machine-learning/results/presence-1.5-replay.json). Hai phiên này có đoạn đã dùng học, nên replay là kiểm tra hồi quy và đường truyền.
+- **Chưa đạt tổng quát hóa theo đợt thu:** khi học lại cùng cấu trúc nhưng bỏ hẳn Ubuntu16, cả 193/193 cửa sổ trống của nhóm đó bị báo có người. Bỏ hẳn Ubuntu17 cho kết quả tương tự ở 191/191 cửa sổ trống. Đây là hai mô hình kiểm tra riêng, không phải điểm của checkpoint đã học đoạn đầu hai nhóm. Xem [kết quả giữ riêng cả đợt](../machine-learning/results/presence-1.5-group-holdout.json). Dữ liệu hiện có chưa đủ chứng minh nhận diện phòng trống tin cậy khi điều kiện thu thay đổi.
+- **Giới hạn tại hiện trường:** chưa có phiên thu mới trên Ubuntu sau bản 1.5 để xác nhận tại hiện trường. Mức điểm phần trăm cao là đầu ra mô hình và chưa được hiệu chỉnh để phản ánh độ chính xác ngoài tập dữ liệu. Giơ tay tự do vẫn cần video đồng bộ của đúng phiên để chấm.
+
+Các mục dưới đây ghi cả kết quả lịch sử, với phiên bản checkpoint được nêu ở từng mục.
+
 ## Phát lại và xuất bằng chứng
 
 Chạy từ gốc repo sau khi cài môi trường Python theo [README backend](README.md).
@@ -20,7 +36,7 @@ Chạy từ gốc repo sau khi cài môi trường Python theo [README backend](
    ```
 
 3. Quan sát hai màn hình trong lúc lệnh chạy. Khi kết thúc, kiểm tra `websocket_client.matched_windows` lớn hơn 0 và `session.status` bằng `ended`. Đọc báo cáo ngay trên server bằng `GET /api/session/report` hoặc mở tệp JSON đã lưu.
-4. Dừng backend và chạy lại với `signal-processing/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE` để trình diễn phòng trống. Dùng một tên JSON mới. Phiên 03/11 này đã xuất hiện trong tập huấn luyện. Lặp lại với `hardware/csi_extracted/labeled/empty_01_20261025-052422_4eki` để kiểm tra riêng khả năng tổng quát hóa.
+4. Dừng backend và chạy lại với `signal-processing/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE` để trình diễn phòng trống. Dùng một tên JSON mới. Phiên 03/11 này đã xuất hiện trong tập huấn luyện. Lặp lại với `hardware/csi_extracted/labeled/empty_03_20261025-052627_Yatl` để kiểm tra một phiên giữ ngoài tập học hiện diện 1.5.
 
 `backend.verify` yêu cầu backend chạy ở chế độ replay và chưa có phiên hoạt động. Nếu đổi cổng hoặc chạy chậm, dùng `--base-url http://127.0.0.1:8015` hoặc `--timeout 180`. Tốc độ mặc định là 1×. Ghi rõ `--speed` khi đưa số liệu vào báo cáo.
 
@@ -69,12 +85,6 @@ Hai phiên VHT20 trên máy Ubuntu thu quanh 11:47 và 11:49 dùng kênh 36, đ�
 
 ## Đọc báo cáo
 
-Bản hiệu chuẩn theo phòng bổ sung API `POST /api/session/calibrate-empty` và nút **Hiệu chuẩn phòng trống** trên dashboard. Trước lần nhận diện đầu tiên ở chế độ thu tự động, thu một phiên nền trống 30 giây. Sau 5 giây đầu, các cửa sổ hợp lệ được dùng để ước lượng phổ nền và mức biến thiên. Nền được lưu cùng cấu hình card, kênh, router và điểm truy cập. Khi thiếu nền hoặc cấu hình Wi-Fi đã thay đổi, backend trả `EMPTY_REFERENCE_REQUIRED`, danh sách khớp rỗng và trạng thái đang chờ hiệu chuẩn.
-
-Kiểm tra trên dữ liệu đã lưu có 82/82 cửa sổ phòng trống ở đoạn thời gian chừa riêng khớp nền lấy từ phần đầu phiên 11:47. Phiên đi lại 11:49 có 187/187 cửa sổ khác nền này. Lấy nền từ phiên trống `empty_01` ngày 25/10 rồi đối chiếu hai phiên độc lập `empty_02` và `empty_03` có 346/346 cửa sổ khớp nền. Các phiên độc lập ngồi yên và đi lại có lần lượt 192/192 và 187/187 cửa sổ khác nền. Đây là kiểm tra khả năng đối chiếu nền trên bản ghi. Nghiệm thu tại máy Ubuntu cần thu một phiên nền mới rồi kiểm tra riêng phòng trống và có người.
-
-Backend tự lưu `session-report.json` cạnh `raw.csi` và `recorder.log` khi phiên thu tự động kết thúc. `empty_room` ghi nguồn nền, cấu hình và tiến độ hiệu chuẩn. `counts.empty_reference_matches` đếm các cửa sổ được đối chiếu là nền trống. Khi khớp nền, `presence_probability` bằng `null` và `model_presence_probability` ghi xác suất gốc của bộ phân loại.
-
 - `model.artifact_sha256` định danh tệp checkpoint, bộ chuẩn hóa và parser. Có thể đối chiếu từng giá trị trên Windows bằng `Get-FileHash -Algorithm SHA256 <tệp>`.
 - `counts.records`, `accepted`, `filtered` và `backlog` mô tả đầu vào. `window_candidates`, `rejected_cadence`, `dropped_windows`, `model_failures` và `predictions` mô tả quá trình dựng cửa sổ và suy luận. Kết quả hiện diện gồm `present_predictions`, `empty_predictions` và `confirming_predictions`. Trong số `present_predictions`, `pose_predictions` đếm các kết quả có đủ 33 khớp và `pose_suppressed` đếm các cửa sổ bị chặn tọa độ do tín hiệu nằm ngoài dải kiểm tra. `gaps` gồm khoảng cách vượt ngưỡng hoặc timestamp không tăng. `timestamp_order_errors` đếm riêng lỗi thứ tự.
 - `prediction_rate_hz` lấy số khoảng giữa dự đoán chia thời gian đơn điệu từ dự đoán đầu đến cuối. Thời gian này bao gồm giai đoạn chờ dữ liệu giữa các dự đoán. `transitions` giữ tối đa 64 lần đổi trạng thái gần nhất và `transition_count` ghi tổng số lần đổi.
@@ -90,7 +100,27 @@ python -m pytest -q backend/test_backend.py
 
 Các ca tích hợp kiểm tra bản ghi nhị phân ghi dở, log chưa đủ dòng, lệch timestamp giữa hai tệp, mất mẫu, ghi trở lại sau timeout, lỗi mô hình, kết nối lại và dừng. Ca live trong bộ kiểm thử dùng byte Intel thật được ghi thêm vào thư mục tạm để thử bộ đọc tệp. Khi nguồn mất, client kết nối lại chỉ nhận trạng thái hiện tại. Cửa sổ hợp lệ mới được dựng sau khi nguồn phục hồi.
 
-Để nghiệm thu với thiết bị, chạy backend với `--source live --auto-capture` theo [hướng dẫn thu trực tiếp](README.md#thu-trực-tiếp-bằng-nút-bắt-đầu-phiên). Lần lượt chọn 30 giây, 1 phút và 2 phút, rồi kiểm tra đồng hồ đếm ngược. Xác nhận hai tệp trong thư mục phiên mới tăng kích thước, biểu đồ hiện mẫu đầu khi backend còn tích lũy và trạng thái chuyển từ `warming_up` sang `ready` khi có dự đoán. Kiểm tra biểu đồ sau khi phiên kết thúc và xuất JSON trước khi bắt đầu phiên khác.
+Để nghiệm thu với thiết bị, chạy backend với `--source live --auto-capture` theo [hướng dẫn thu trực tiếp](README.md#thu-trực-tiếp-bằng-nút-bắt-đầu-phiên). Lần lượt chọn 30 giây, 1 phút và 2 phút, rồi kiểm tra đồng hồ đếm ngược. Xác nhận hai tệp trong thư mục phiên mới tăng kích thước, biểu đồ hiện mẫu đầu khi backend còn tích lũy và trạng thái chuyển từ `warming_up` sang `ready` khi có dự đoán. Kiểm tra biểu đồ sau khi phiên kết thúc và tệp `session-report.json` tự lưu trong thư mục phiên.
+
+Trên Ubuntu, dừng backend cũ bằng Ctrl+C, cập nhật rồi chạy lại:
+
+```bash
+git switch Jayson
+git pull --ff-only origin Jayson
+iw dev wlp0s20f3 info | grep -F 'width:'
+sudo -v && .venv/bin/python -m backend \
+  --source live --auto-capture --session "$HOME/csi-data/live"
+```
+
+Mở `/dashboard/`, tải lại bằng Ctrl+Shift+R và kiểm tra mô hình `smn-csiposenet-1.5`. Chạy lần lượt ba thời lượng trong phòng trống: đủ CSI phải báo **Phòng trống** và không có khớp; hết giờ phải kết thúc thu. Chạy thêm một phiên 60 giây có một người tự đi, đứng, giơ tay và rời phòng. Kiểm tra **Có người** trong đoạn có người và xóa khớp khi người rời đi. Đối chiếu tọa độ với video đồng bộ trước khi xác nhận các khớp đúng. Mỗi lần bắt đầu phải có mã phiên và thư mục mới.
+
+Nếu muốn tải báo cáo qua API sau khi phiên kết thúc, trước khi bấm phiên tiếp theo, chạy:
+
+```bash
+curl -fsS http://127.0.0.1:8000/api/session/report -o session-report.json
+```
+
+Tệp tải theo cách này nằm trong thư mục terminal hiện tại. Bản tự lưu nằm ở `~/csi-data/live/<session_id>/session-report.json`, cùng `raw.csi` và `recorder.log`.
 
 Ghi model máy thu, cấu hình Wi-Fi, hệ điều hành, phiên bản PyTorch và tốc độ thu vào biên bản. Nếu đo độ trễ từ thời điểm thu tới hiển thị, ghi cách xác minh đồng hồ và sai số đồng bộ. Dùng số đo từng giai đoạn riêng khi chưa xác minh đồng hồ.
 

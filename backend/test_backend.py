@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import replace
 from hashlib import sha256
+import json
 import sys
 import time
 from types import SimpleNamespace
@@ -12,7 +13,6 @@ import numpy as np
 import pytest
 
 from backend.app import create_app
-from backend.empty_room import EmptyRoomReference, room_features
 from backend import intel_capture
 from backend.intel_capture import IntelCaptureSettings
 from backend.model import DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, load_model
@@ -96,7 +96,7 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             assert pose["person_present"] == (capture == WALKING)
             assert pose["pose_reason"] == offline["pose_reason"]
             assert pose["presence_probability"] == offline["presence_probability"]
-            assert pose["confidence_method"] == "csi_presence_logistic_probability"
+            assert pose["confidence_method"] == "csi_presence_forest_probability"
             assert pose["pose_calibration"] == offline["pose_calibration"]
             assert pose["keypoints"] == [
                 {key: value for key, value in joint.items() if key != "confidence"}
@@ -147,7 +147,7 @@ def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_p
             if prediction["person_present"] and prediction["pose_reason"] is None:
                 assert len(prediction["keypoints"]) == 33
                 hips.append(sum(prediction["keypoints"][index]["x_pixel"] for index in (23, 24)) / 2)
-    assert model.version == "smn-csiposenet-1.4"
+    assert model.version == "smn-csiposenet-1.5"
     assert len(hips) >= 160
     spread = np.percentile(hips, 95) - np.percentile(hips, 5)
     assert minimum_positions <= spread <= maximum_positions
@@ -349,8 +349,6 @@ sys.exit(124)
         ready = wait_for_status(client, "ready")
         assert ready["capture"]["automatic"]
         assert ready["capture"]["duration_s"] == 60
-        assert ready["person_present"] is None and ready["empty_room"]["available"] is False
-        assert ready["counts"]["present_predictions"] == 0
         assert 0 < ready["capture"]["started_ms"] <= ready["server_sent_ms"]
         assert ready["counts"]["backlog"] == 0
         assert ready["counts"]["predictions"] > 0
@@ -358,6 +356,9 @@ sys.exit(124)
         assert all(process.returncode is not None for process in children)
         first_raw = automatic_capture.session_dir / first / "raw.csi"
         assert first_raw.stat().st_size > 0
+        saved = json.loads(first_raw.with_name("session-report.json").read_text(encoding="utf-8"))
+        assert saved["session_id"] == first and saved["status"] == "stopped"
+        assert saved["model"]["artifact_sha256"]["checkpoint"] == sha256(DEFAULT_CHECKPOINT.read_bytes()).hexdigest()
 
         for duration in (30, 120):
             response = client.post("/api/session/start", params={"duration_s": duration})
@@ -370,6 +371,13 @@ sys.exit(124)
             (automatic_capture.session_dir / session_id / "writer-finished").touch()
             assert wait_for_status(client, "ended")["reason"] == "CAPTURE_COMPLETE"
             assert client.get("/api/session/report").json()["configuration"]["automatic_capture_s"] == duration
+            deadline = time.monotonic() + 5
+            report_file = automatic_capture.session_dir / session_id / "session-report.json"
+            while not report_file.exists() and time.monotonic() < deadline:
+                time.sleep(.01)
+            saved = json.loads(report_file.read_text(encoding="utf-8"))
+            assert saved["session_id"] == session_id and saved["reason"] == "CAPTURE_COMPLETE"
+            assert saved["finished_ms"] is not None
             assert all(process.returncode is not None for process in children)
         assert recorder_durations == ["60s", "30s", "120s"]
         assert ping_deadlines == [66, 36, 126]
@@ -436,6 +444,62 @@ def test_automatic_capture_reports_recorder_failure(automatic_capture, monkeypat
         assert wait_for_status(client, "source_error")["reason"] == "CAPTURE_SUDO"
         assert all(process.returncode is not None for process in children)
         assert (automatic_capture.session_dir / started / "raw.csi").stat().st_size == 0
+
+
+@pytest.mark.parametrize("fixture,present", [(EMPTY, False), (WALKING, True)], ids=["empty", "walking"])
+def test_live_start_detects_presence_without_calibration(automatic_capture, monkeypatch, model, fixture, present):
+    monkeypatch.setattr("backend.session.load_model", lambda *_: model)
+
+    class RecordedPackets:
+        def __init__(self, settings, directory):
+            self.directory = directory
+
+        async def __aenter__(self):
+            self.directory.mkdir(parents=True)
+            (self.directory / "raw.csi").touch()
+            (self.directory / "recorder.log").touch()
+            self.started_ms = time.time_ns() // 1_000_000
+            self.writer = asyncio.create_task(self.write_packets())
+            return self
+
+        async def write_packets(self):
+            raw, log = (fixture / "raw.csi").read_bytes(), (fixture / "recorder.log").read_bytes()
+            raw_start = log_start = 0
+            with CaptureReader(fixture, live=False) as source:
+                while True:
+                    count = 0
+                    for _ in range(6):
+                        if source.read() is None:
+                            break
+                        count += 1
+                    if not count:
+                        break
+                    raw_end, log_end = source.raw.tell(), source.log.tell()
+                    for name, block in (("raw.csi", raw[raw_start:raw_end]), ("recorder.log", log[log_start:log_end])):
+                        with (self.directory / name).open("ab") as destination:
+                            destination.write(block)
+                    raw_start, log_start = raw_end, log_end
+                    await asyncio.sleep(.06)
+
+        def finished(self):
+            return self.writer.done()
+
+        async def __aexit__(self, *exc):
+            self.writer.cancel()
+            await asyncio.gather(self.writer, return_exceptions=True)
+
+    monkeypatch.setattr("backend.session.IntelCapture", RecordedPackets)
+    with TestClient(create_app(automatic_capture)) as client:
+        with client.websocket_connect("/ws") as websocket:
+            assert websocket.receive_json()["status"] == "idle"
+            accepted = client.post("/api/session/start", params={"duration_s": 30})
+            assert accepted.status_code == 202
+            detected = receive_until(websocket, lambda event: event["type"] == "pose"
+                                     and not event.get("presence_pending") and event["person_present"] is present)
+            assert detected["source"] == "live" and detected["session_id"] == accepted.json()["session_id"]
+            assert len(detected["keypoints"]) == (33 if present else 0)
+            assert detected.get("presence_reason") != "EMPTY_REFERENCE_REQUIRED"
+            assert client.post("/api/session/stop").json()["status"] == "stopped"
 
 
 def test_model_load_failure_is_distinct_from_empty(tmp_path):
@@ -513,137 +577,6 @@ def test_empty_prediction_suppresses_keypoints():
     asyncio.run(run())
 
 
-def test_room_reference_handles_empty_drift_and_preserves_real_people(tmp_path):
-    def windows(folder):
-        session = Session(Settings(folder, "replay"))
-        values = []
-        with CaptureReader(folder, live=False) as reader:
-            while (record := reader.read()) is not None:
-                window = session.ingest(record, 0)
-                if window is not None:
-                    values.append(window)
-        return values
-
-    empty = windows(EMPTY)
-    training = empty[:70]
-    reference = EmptyRoomReference.fit(
-        [room_features(w.amplitudes) for w in training], [w.timestamps[-1] for w in training],
-        session_id="known-empty-session", created_ms=1000, configuration={"rate": "VHT,20,VHT20"},
-    )
-    path = tmp_path / "empty-room-reference.json"
-    reference.save(path)
-    loaded = EmptyRoomReference.load(path, configuration=reference.configuration)
-    # Leave the beginning and an intervening time block out of this evaluation.
-    heldout = empty[100:]
-    assert all(loaded.compare(w.amplitudes)["matched"] for w in heldout)
-    assert all(loaded.compare(w.amplitudes * 1.08)["matched"] for w in heldout)
-    moving = windows(WALKING)
-    seated = windows(CAPTURES / "seated_01_20261025-053147_5Ct9")
-    assert all(not loaded.compare(w.amplitudes)["matched"] for w in moving + seated)
-    with pytest.raises(ValueError, match="configuration"):
-        EmptyRoomReference.load(path, configuration={"rate": "other"})
-    with pytest.raises(ValueError):
-        EmptyRoomReference.fit([], [], session_id="failed", created_ms=0, configuration={})
-    assert EmptyRoomReference.load(path).session_id == "known-empty-session"
-
-    async def run():
-        session = Session(Settings(EMPTY, "replay", empty_reference=path))
-        # Reproduce a model confidently misclassifying every empty window.
-        def predict_window(amplitudes, timestamp):
-            return {"status": "success", "person_present": True, "presence_probability": .99,
-                    "confidence_method": "injected_failure", "coordinate_system": {},
-                    "keypoints": [{"id": i, "x_norm": .5, "y_norm": .3} for i in range(33)]}
-
-        for window in heldout[:8]:
-            await session.predict(SimpleNamespace(predict_window=predict_window), replace(window, generation=session.generation))
-            pose = session.latest["pose"]
-            assert pose["person_present"] is False and pose["keypoints"] == []
-            assert pose["presence_pending"] is False and pose["presence_probability"] is None
-            assert pose["model_presence_probability"] == .99 and pose["empty_room"]["matched"]
-        assert session.counts["empty_reference_matches"] == 8
-
-    asyncio.run(run())
-    path.write_text("[]", encoding="utf-8")
-    invalid = Session(Settings(EMPTY, "replay", empty_reference=path))
-    assert invalid.empty_room is None and invalid.reference_error == "EMPTY_REFERENCE_INVALID"
-
-
-def test_automatic_empty_room_calibration_saves_only_a_complete_capture(automatic_capture, monkeypatch, model):
-    monkeypatch.setattr("backend.session.load_model", lambda *_: model)
-
-    class Recorder:
-        network = {"ssid": "test-network", "access_point": "11:22:33:44:55:66"}
-
-        def __init__(self, settings, directory):
-            self.directory = directory
-            self.settings = settings
-
-        async def __aenter__(self):
-            assert self.settings.duration in (30, 60)
-            self.directory.mkdir(parents=True)
-            for name in ("raw.csi", "recorder.log"):
-                (self.directory / name).write_bytes((EMPTY / name).read_bytes())
-            self.started_ms = time.time_ns() // 1_000_000
-            return self
-
-        async def __aexit__(self, *exc):
-            pass
-
-        def finished(self):
-            return True
-
-    # Feed calibration windows without a slow, simulated wall-clock recorder.
-    async def consume(session, reader, model, capture):
-        while (record := reader.read()) is not None:
-            session.counts["records"] += 1
-            window = session.ingest(record, 0)
-            if window is not None:
-                await session.predict(model, window)
-
-    monkeypatch.setattr("backend.session.IntelCapture", Recorder)
-    monkeypatch.setattr(Session, "consume", consume)
-    app = create_app(automatic_capture)
-    with TestClient(app) as client:
-        assert client.post("/api/session/calibrate-empty", headers={"Origin": "http://elsewhere"}).status_code == 403
-        accepted = client.post("/api/session/calibrate-empty")
-        assert accepted.status_code == 202 and accepted.json()["capture"]["duration_s"] == 30
-        completed = wait_for_status(client, "ended")
-        assert completed["reason"] == "EMPTY_REFERENCE_SAVED"
-        assert completed["empty_room"]["available"] is True
-        path = automatic_capture.session_dir / "empty-room-reference.json"
-        saved = EmptyRoomReference.load(path)
-        assert saved.session_id == accepted.json()["session_id"] and saved.windows >= 30
-        assert saved.configuration["network"] == Recorder.network
-        before = path.read_bytes()
-
-        async def insufficient_capture(session, reader, model, capture):
-            for _ in range(90):
-                record = reader.read()
-                if record is None:
-                    break
-                session.counts["records"] += 1
-                window = session.ingest(record, 0)
-                if window is not None:
-                    await session.predict(model, window)
-
-        monkeypatch.setattr(Session, "consume", insufficient_capture)
-        assert client.post("/api/session/calibrate-empty").status_code == 202
-        assert wait_for_status(client, "source_error")["reason"] == "EMPTY_REFERENCE_INSUFFICIENT"
-        assert path.read_bytes() == before
-        Recorder.network = {"ssid": "other-network", "access_point": "aa:bb:cc:dd:ee:ff"}
-        monkeypatch.setattr(Session, "consume", consume)
-        assert client.post("/api/session/start").status_code == 202
-        changed = wait_for_status(client, "ended")
-        assert changed["empty_room"]["available"] is False
-        assert changed["empty_room"]["error"] == "EMPTY_REFERENCE_NETWORK_CHANGED"
-        assert changed["counts"]["present_predictions"] == 0
-    # A new backend instance reloads the saved reference.
-    reloaded = Session(automatic_capture)
-    assert reloaded.empty_room.session_id == saved.session_id
-    with TestClient(create_app(Settings(EMPTY, "replay"))) as client:
-        assert client.post("/api/session/calibrate-empty").status_code == 422
-
-
 def test_isolated_packet_spike_does_not_report_presence_in_empty_capture(model):
     session = Session(Settings(EMPTY, "replay"))
     with CaptureReader(EMPTY, live=False) as reader:
@@ -654,14 +587,17 @@ def test_isolated_packet_spike_does_not_report_presence_in_empty_capture(model):
     assert window is not None
     noisy = window.amplitudes.copy()
     noisy[9] *= 1.8
-    assert model.presence_classifier.logit(noisy) > 0
     assert model.predict_window(noisy)["person_present"] is False
+    shifted = window.amplitudes.reshape(20, 4, 56).copy()
+    shifted *= np.linspace(.5, 2, 80).reshape(20, 4, 1)
+    shifted = shifted.reshape(20, 224)
+    shifted[:, model.pose_reference_tones] = 32700
+    assert model.predict_window(shifted)["person_present"] is False
 
 
 def test_presence_needs_fresh_consecutive_windows_and_hides_joints(tmp_path):
     async def run():
         session = Session(Settings(tmp_path, "live"))
-        session.empty_room = SimpleNamespace(compare=lambda _: {"matched": False}, summary=lambda: {})
         keypoints = [{"id": i, "x_norm": .5, "y_norm": .3} for i in range(33)]
         candidate = False
 
@@ -694,38 +630,6 @@ def test_presence_needs_fresh_consecutive_windows_and_hides_joints(tmp_path):
         assert session.counts["confirming_predictions"] == 5
         assert session.counts["present_predictions"] == 1
         assert session.counts["empty_predictions"] == 2
-
-    asyncio.run(run())
-
-
-@pytest.mark.parametrize("automatic", [False, True], ids=["external-recorder", "automatic-recorder"])
-def test_live_high_model_score_waits_for_room_reference(tmp_path, automatic):
-    async def run():
-        capture = IntelCaptureSettings(tmp_path / "iax") if automatic else None
-        session = Session(Settings(tmp_path, "live", intel_capture=capture))
-
-        def predict_window(amplitudes, timestamp):
-            return {"status": "success", "person_present": True, "presence_probability": .999,
-                    "confidence_method": "test", "coordinate_system": {},
-                    "keypoints": [{"id": i, "x_norm": .5, "y_norm": .3} for i in range(33)]}
-
-        model = SimpleNamespace(predict_window=predict_window)
-        for n in range(8):
-            target = 1_790_000_000_000 + n * 200
-            now = time.perf_counter()
-            window = Window(session.generation, tuple(range(target - 1900, target + 1, 100)),
-                            np.full((20, 224), 100, np.float32), (100.,) * 20, now, now, 0.)
-            await session.predict(model, window)
-            result = session.latest["pose"]
-            assert result["person_present"] is False and result["keypoints"] == []
-            assert result["presence_probability"] is None and result["presence_pending"] is True
-            assert result["presence_reason"] == "EMPTY_REFERENCE_REQUIRED"
-            diagnostic = session.status()["presence_decision"]
-            assert diagnostic["model_presence_probability"] == .999
-            assert diagnostic["person_present"] is None
-        assert session.counts["present_predictions"] == 0
-        session.invalidate_window("disconnected", "CSI_TIMEOUT")
-        assert session.status()["presence_decision"] is None
 
     asyncio.run(run())
 

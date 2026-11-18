@@ -1,0 +1,76 @@
+[
+  {
+    "capture_id": "1c7cb0d9ecee49c290d0d787255b5779",
+    "source": "replay",
+    "replay_speed": 8,
+    "input_sha256": {
+      "raw.csi": "0c95eacfd49468a85be62bd5011cd42551a42204f47b32356dc89d2ae2ff4e20",
+      "recorder.log": "e75faa92ac1e9c673fc17c1c1c4eb1bd360d7ddc0e558dac68f18c4f6aa39e4e"
+    },
+    "checkpoint_sha256": "79a8897421c9b83f1f8e0f53121cad59e1d98c2bac166421569a6319063b60da",
+    "model_version": "smn-csiposenet-1.5",
+    "counts": {
+      "records": 1096,
+      "accepted": 584,
+      "filtered": 512,
+      "backlog": 0,
+      "gaps": 15,
+      "timestamp_order_errors": 2,
+      "incompatible_records": 0,
+      "window_candidates": 194,
+      "rejected_cadence": 3,
+      "dropped_windows": 0,
+      "predictions": 191,
+      "present_predictions": 0,
+      "empty_predictions": 191,
+      "confirming_predictions": 0,
+      "pose_predictions": 0,
+      "pose_suppressed": 0,
+      "model_failures": 0
+    },
+    "websocket": {
+      "sent": 408,
+      "discarded": 0,
+      "send_timeouts": 0
+    },
+    "websocket_received_poses": 191,
+    "asserted_matched_predictions": 191
+  },
+  {
+    "capture_id": "7005d27a0bd84b67923d1cf9df0d7f0c",
+    "source": "replay",
+    "replay_speed": 8,
+    "input_sha256": {
+      "raw.csi": "c64a1191a3d1b4d391ec1bce7f8e045dbee3cb219285d3d66a84effb55855b07",
+      "recorder.log": "da3ed579e3673a739e6168319c3140260035439dd7cae1bee24a39b6f1ab2b6b"
+    },
+    "checkpoint_sha256": "79a8897421c9b83f1f8e0f53121cad59e1d98c2bac166421569a6319063b60da",
+    "model_version": "smn-csiposenet-1.5",
+    "counts": {
+      "records": 1092,
+      "accepted": 583,
+      "filtered": 509,
+      "backlog": 0,
+      "gaps": 10,
+      "timestamp_order_errors": 0,
+      "incompatible_records": 0,
+      "window_candidates": 193,
+      "rejected_cadence": 6,
+      "dropped_windows": 0,
+      "predictions": 187,
+      "present_predictions": 165,
+      "empty_predictions": 0,
+      "confirming_predictions": 22,
+      "pose_predictions": 165,
+      "pose_suppressed": 0,
+      "model_failures": 0
+    },
+    "websocket": {
+      "sent": 399,
+      "discarded": 2,
+      "send_timeouts": 0
+    },
+    "websocket_received_poses": 185,
+    "asserted_matched_predictions": 165
+  }
+]

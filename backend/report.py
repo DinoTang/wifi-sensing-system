@@ -2,7 +2,10 @@
 
 from collections import deque
 from hashlib import sha256
+import json
+import os
 from pathlib import Path
+import tempfile
 import time
 
 import numpy as np
@@ -11,6 +14,20 @@ from .source import ROOT
 
 TIMING_SAMPLE_LIMIT = 1024
 TRANSITION_LIMIT = 64
+
+
+def save_session_report(folder: Path, report: dict) -> None:
+    path = folder / "session-report.json"
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=folder,
+                                         prefix="session-report.", suffix=".tmp", delete=False) as handle:
+            temporary = Path(handle.name)
+            json.dump(report, handle, ensure_ascii=False, indent=2, allow_nan=False)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def artifact_digests(checkpoint: Path, normalizer: Path) -> dict[str, str]:

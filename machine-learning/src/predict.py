@@ -150,7 +150,7 @@ class CSIPosePredictor:
         confidence_method = "model_presence_sigmoid_probability"
         if self.presence_classifier is not None:
             pres_prob = self.presence_classifier.probability(csi_window)
-            confidence_method = "csi_presence_logistic_probability"
+            confidence_method = self.presence_classifier.confidence_method
         is_present = pres_prob >= self.presence_threshold
         t1 = time.perf_counter()
         latency_ms = (t1 - t0) * 1000.0

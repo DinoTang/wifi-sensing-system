@@ -73,15 +73,6 @@ def create_app(settings: Settings) -> FastAPI:
             raise HTTPException(409, "The session has changed")
         return sent(session.status())
 
-    @app.post("/api/session/calibrate-empty", status_code=202)
-    async def calibrate_empty(request: Request):
-        check_request_origin(request)
-        if settings.source != "live" or settings.intel_capture is None:
-            raise HTTPException(422, "Empty-room calibration needs automatic live capture")
-        if not await session.start(calibrate_empty=True):
-            raise HTTPException(409, "A session is already active")
-        return sent(session.status())
-
     @app.websocket("/ws")
     async def stream(websocket: WebSocket, include_signal: bool = False):
         # Browser clients use the same origin as the preview. Clients running

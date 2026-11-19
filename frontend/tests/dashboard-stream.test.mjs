@@ -70,6 +70,23 @@ test('identifies confirmation without drawing a joint or declaring an empty room
   assert.equal(result.joints.size, 0);
 });
 
+test('recognizes an empty-room match and a missing reference without filling joints', () => {
+  const stream = new CsiStream();
+  stream.accept(status(1, 'ready'), 0);
+  stream.accept(chart(2, T), 1);
+  stream.accept(pose(3, T, {person_present: false, presence_probability: null,
+    empty_room: {matched: true, distance: .7, threshold: 2}}), 2);
+  assert.equal(stream.snapshot(3).pose.emptyRoom.matched, true);
+  assert.equal(stream.snapshot(3).pose.probability, null);
+  assert.equal(stream.snapshot(3).pose.joints.size, 0);
+  stream.accept(chart(4, T + 200), 4);
+  stream.accept(pose(5, T + 200, {person_present: false, presence_pending: true,
+    presence_reason: 'EMPTY_REFERENCE_REQUIRED'}), 5);
+  assert.equal(stream.snapshot(6).pose.presenceReason, 'EMPTY_REFERENCE_REQUIRED');
+  assert.equal(stream.snapshot(6).pose.pending, true);
+  assert.equal(stream.snapshot(6).pose.joints.size, 0);
+});
+
 test('clears results on data loss, stale receipt, stop, and reconnect', () => {
   const stream = new CsiStream();
   stream.accept(status(9, 'ready'), 10);

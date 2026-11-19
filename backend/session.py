@@ -14,6 +14,9 @@ import uuid
 
 import numpy as np
 
+from .empty_room import (
+    CALIBRATION_SECONDS, MAX_WINDOWS, SETTLE_SECONDS, EmptyRoomReference, room_features, write_json,
+)
 from .intel_capture import IntelCapture, IntelCaptureError, IntelCaptureSettings
 from .model import (
     CADENCE_MEDIAN_MS, DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, FEATURES, LANDMARK_COUNT,
@@ -44,6 +47,7 @@ class Settings:
     normalizer: Path = DEFAULT_NORMALIZER
     autostart: bool = False
     intel_capture: IntelCaptureSettings | None = None
+    empty_reference: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -105,11 +109,27 @@ class Session:
         self.capture_dir = self.settings.session_dir
         self.capture_settings = self.settings.intel_capture
         self.capture_started_ms: int | None = None
+        self.capture_network: dict | None = None
         self.state = "idle"
         self.reason: str | None = None
         self.model_version: str | None = None
         self.metrics: SessionMetrics | None = None
         self.person_present: bool | None = None
+        self.calibrating = False
+        self.calibration_saved = False
+        self.calibration_features = deque(maxlen=MAX_WINDOWS)
+        self.calibration_timestamps = deque(maxlen=MAX_WINDOWS)
+        self.calibration_first_sample: int | None = None
+        self.empty_room: EmptyRoomReference | None = None
+        self.reference_error: str | None = None
+        path = self.reference_path()
+        if path is not None and path.is_file():
+            try:
+                configuration = self.reference_configuration() if self.settings.intel_capture else None
+                self.empty_room = EmptyRoomReference.load(path, configuration=configuration)
+            except (OSError, ValueError, KeyError, TypeError):
+                self.reference_error = "EMPTY_REFERENCE_INVALID"
+                LOGGER.warning("Cannot use empty-room reference %s", path, exc_info=True)
         self.presence_streak = 0
         self.presence_timestamp: int | None = None
         self.frames = deque(maxlen=WINDOW_SIZE)
@@ -130,8 +150,34 @@ class Session:
                            rejected_cadence=0, dropped_windows=0, predictions=0,
                            present_predictions=0, empty_predictions=0, confirming_predictions=0, pose_predictions=0,
                            pose_suppressed=0, model_failures=0)
+        self.counts["empty_reference_matches"] = 0
         self.latest: dict[str, dict] = {}
         self.pending: asyncio.Queue[Window] = asyncio.Queue(maxsize=PENDING_WINDOWS)
+
+    def reference_path(self) -> Path | None:
+        if self.settings.empty_reference is not None:
+            return self.settings.empty_reference
+        if self.settings.intel_capture is not None:
+            return self.settings.session_dir / "empty-room-reference.json"
+        return None
+
+    def reference_configuration(self) -> dict:
+        config = {"rate": VHT_RATE, "shape": [20, FEATURES]}
+        capture = self.settings.intel_capture
+        if capture is not None:
+            config.update(interface=capture.interface, router=capture.router,
+                          channel=capture.channel, ssid=capture.ssid)
+        if self.capture_network is not None:
+            config["network"] = self.capture_network
+        return config
+
+    def reference_status(self) -> dict:
+        active = self.calibrating and self.state not in {"ended", "stopped", "source_error", "model_error"}
+        return {"calibrating": active, "saved": self.calibration_saved,
+                "available": self.empty_room is not None, "error": self.reference_error,
+                "collected_windows": len(self.calibration_features),
+                "settle_seconds": SETTLE_SECONDS, "duration_s": CALIBRATION_SECONDS,
+                "reference": self.empty_room.summary() if self.empty_room else None}
 
     def envelope(self, kind: str) -> dict:
         return {
@@ -152,6 +198,7 @@ class Session:
             "status": self.state,
             "reason": self.reason,
             "person_present": self.person_present,
+            "empty_room": self.reference_status(),
             "keypoints": [],
             "capture": {"rate": VHT_RATE, "shape": [VHT["nrx"], VHT["ntx"], VHT["ntone"]], "features": FEATURES,
                         "sequence": self.capture_sequence, "automatic": defaults is not None,
@@ -172,6 +219,7 @@ class Session:
             "report_version": 1, "session_id": self.session_id, "source": self.settings.source,
             "status": self.state, "reason": self.reason,
             "model": {"version": self.model_version, "artifact_sha256": self.metrics.artifacts.copy()},
+            "empty_room": self.reference_status(),
             "configuration": {
                 "rate": VHT_RATE, "payload_bytes": VHT["csi_len"],
                 "window_shape": [WINDOW_SIZE, FEATURES], "stride": STRIDE,
@@ -252,14 +300,17 @@ class Session:
         self.subscribers.add(subscriber)
         return subscriber
 
-    async def start(self, duration_s: int | None = None) -> bool:
+    async def start(self, duration_s: int | None = None, *, calibrate_empty: bool = False) -> bool:
         async with self.lock:
             if self.task is not None and not self.task.done():
                 return False
             self.reset()
+            self.calibrating = calibrate_empty
             self.session_id = uuid.uuid4().hex
             if self.capture_settings is not None:
-                if duration_s is not None:
+                if calibrate_empty:
+                    self.capture_settings = replace(self.capture_settings, duration=CALIBRATION_SECONDS)
+                elif duration_s is not None:
                     self.capture_settings = replace(self.capture_settings, duration=duration_s)
                 self.capture_dir = self.settings.session_dir / self.session_id
             self.metrics = SessionMetrics()
@@ -291,6 +342,11 @@ class Session:
             self.invalidate_window("source_error", "SESSION_FAILED")
         finally:
             self.metrics.finish()
+            if self.capture_settings is not None and self.capture_dir.is_dir():
+                try:
+                    await asyncio.to_thread(write_json, self.capture_dir / "session-report.json", self.report())
+                except OSError:
+                    LOGGER.exception("Cannot save the CSI session report in %s", self.capture_dir)
 
     async def run_capture(self) -> None:
         live = self.settings.source == "live"
@@ -314,6 +370,11 @@ class Session:
                     self.set_state("starting", "PREPARING_CAPTURE")
                     capture = await stack.enter_async_context(IntelCapture(self.capture_settings, self.capture_dir))
                     self.capture_started_ms = capture.started_ms
+                    self.capture_network = getattr(capture, "network", None)
+                    if (self.empty_room is not None and self.capture_network is not None
+                            and self.empty_room.configuration.get("network") != self.capture_network):
+                        self.empty_room = None
+                        self.reference_error = "EMPTY_REFERENCE_NETWORK_CHANGED"
                     LOGGER.info("Intel CSI files: %s", self.capture_dir)
                 self.set_state("warming_up", "WAITING_FOR_CSI")
                 if live and capture is None:
@@ -331,7 +392,20 @@ class Session:
                     LOGGER.warning("Final CSI inference timed out for session %s", self.session_id)
                 if self.counts["records"] == 0:
                     raise IntelCaptureError("CAPTURE_NO_DATA", "Recorder finished without any CSI frames")
-                if self.counts["predictions"] == 0:
+                if self.calibrating:
+                    try:
+                        reference = EmptyRoomReference.fit(
+                            self.calibration_features, self.calibration_timestamps,
+                            session_id=self.session_id, created_ms=time.time_ns() // 1_000_000,
+                            configuration=self.reference_configuration(),
+                        )
+                    except ValueError as error:
+                        raise IntelCaptureError("EMPTY_REFERENCE_INSUFFICIENT", str(error)) from error
+                    await asyncio.to_thread(reference.save, self.reference_path())
+                    self.empty_room = reference
+                    self.calibration_saved = True
+                    self.reference_error = None
+                elif self.counts["predictions"] == 0:
                     raise IntelCaptureError("CAPTURE_NO_RESULT", "Recorder finished without a valid prediction")
                 capture_completed = True
         except IntelCaptureError as error:
@@ -348,7 +422,7 @@ class Session:
                 worker.cancel()
                 await asyncio.gather(worker, return_exceptions=True)
         if capture_completed:
-            self.invalidate_window("ended", "CAPTURE_COMPLETE")
+            self.invalidate_window("ended", "EMPTY_REFERENCE_SAVED" if self.calibration_saved else "CAPTURE_COMPLETE")
 
     async def wait_for_capture(self) -> None:
         deadline = time.perf_counter() + self.settings.timeout
@@ -436,6 +510,8 @@ class Session:
         self.last_received = received
         self.last_received_ms = time.time_ns() // 1_000_000
         self.counts["accepted"] += 1
+        if self.calibration_first_sample is None:
+            self.calibration_first_sample = ts
         if self.metrics is not None:
             if self.metrics.first_timestamp_ms is None:
                 self.metrics.first_timestamp_ms = ts
@@ -512,10 +588,24 @@ class Session:
     async def predict(self, model, window: Window) -> None:
         started = time.perf_counter()
         live = self.settings.source == "live"
-        if live and started - window.received >= self.settings.timeout:
+        if window.generation != self.generation or (live and started - window.received >= self.settings.timeout):
             self.counts["dropped_windows"] += 1
             return
         target = window.timestamps[-1]
+        if self.calibrating:
+            if window.timestamps[0] - self.calibration_first_sample >= SETTLE_SECONDS * 1000:
+                self.calibration_features.append(room_features(window.amplitudes))
+                self.calibration_timestamps.append(target)
+            self.person_present = None
+            self.last_result_received = window.received
+            self.set_state("ready")
+            self.emit_trace("chart", window.timestamps, window.chart_values)
+            self.emit("pose", timestamp_ms=target, status="ready", person_present=False,
+                      presence_pending=True, presence_probability=None, confidence_method="empty_room_calibration",
+                      keypoints=[], coordinate_system={}, pose_reason=None, calibration_active=True)
+            # Progress is bounded by the same window cadence as inference.
+            self.emit("status")
+            return
         try:
             result = await asyncio.to_thread(model.predict_window, window.amplitudes, timestamp=target)
             if result["status"] != "success":
@@ -553,8 +643,22 @@ class Session:
         if window.generation != self.generation or (live and completed - window.received >= self.settings.timeout):
             self.counts["dropped_windows"] += 1
             return
-        confirmed = self.confirm_presence(present, target)
-        presence_pending = present and not confirmed
+        reference_result = self.empty_room.compare(window.amplitudes) if self.empty_room else None
+        needs_reference = self.reference_path() is not None and self.empty_room is None
+        reported_probability = probability
+        reported_confidence = confidence_method
+        if reference_result is not None and reference_result["matched"]:
+            self.counts["empty_reference_matches"] += 1
+            present = False
+            keypoints = []
+            pose_reason = pose_calibration = None
+            reported_probability = None
+            reported_confidence = "empty_room_reference_match"
+        if needs_reference:
+            reported_probability = None
+            reported_confidence = "empty_room_reference_required"
+        confirmed = self.confirm_presence(present and not needs_reference, target)
+        presence_pending = needs_reference or (present and not confirmed)
         self.person_present = None if presence_pending else confirmed
         if not confirmed:
             keypoints = []
@@ -581,7 +685,11 @@ class Session:
         motion_score = float(window.amplitudes.std(axis=0).mean())
         self.emit(
             "pose", timestamp_ms=target, status="ready", person_present=confirmed, presence_pending=presence_pending,
-            presence_probability=probability, confidence_method=confidence_method,
+            presence_reason="EMPTY_REFERENCE_REQUIRED" if needs_reference else None,
+            presence_probability=reported_probability,
+            model_presence_probability=probability,
+            confidence_method=reported_confidence,
+            empty_room=reference_result,
             coordinate_system=coordinate_system, keypoints=keypoints, pose_reason=pose_reason,
             pose_calibration=pose_calibration,
             motion={"score": round(motion_score, 3), "level": "high" if motion_score >= MOTION_STD_THRESHOLD else "low"},

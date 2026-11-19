@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 
 from backend.app import create_app
+from backend.empty_room import EmptyRoomReference, room_features
 from backend import intel_capture
 from backend.intel_capture import IntelCaptureSettings
 from backend.model import DEFAULT_CHECKPOINT, DEFAULT_NORMALIZER, load_model
@@ -348,6 +349,8 @@ sys.exit(124)
         ready = wait_for_status(client, "ready")
         assert ready["capture"]["automatic"]
         assert ready["capture"]["duration_s"] == 60
+        assert ready["person_present"] is None and ready["empty_room"]["available"] is False
+        assert ready["counts"]["present_predictions"] == 0
         assert 0 < ready["capture"]["started_ms"] <= ready["server_sent_ms"]
         assert ready["counts"]["backlog"] == 0
         assert ready["counts"]["predictions"] > 0
@@ -508,6 +511,137 @@ def test_empty_prediction_suppresses_keypoints():
         assert session.latest["pose"]["keypoints"] == []
 
     asyncio.run(run())
+
+
+def test_room_reference_handles_empty_drift_and_preserves_real_people(tmp_path):
+    def windows(folder):
+        session = Session(Settings(folder, "replay"))
+        values = []
+        with CaptureReader(folder, live=False) as reader:
+            while (record := reader.read()) is not None:
+                window = session.ingest(record, 0)
+                if window is not None:
+                    values.append(window)
+        return values
+
+    empty = windows(EMPTY)
+    training = empty[:70]
+    reference = EmptyRoomReference.fit(
+        [room_features(w.amplitudes) for w in training], [w.timestamps[-1] for w in training],
+        session_id="known-empty-session", created_ms=1000, configuration={"rate": "VHT,20,VHT20"},
+    )
+    path = tmp_path / "empty-room-reference.json"
+    reference.save(path)
+    loaded = EmptyRoomReference.load(path, configuration=reference.configuration)
+    # Leave the beginning and an intervening time block out of this evaluation.
+    heldout = empty[100:]
+    assert all(loaded.compare(w.amplitudes)["matched"] for w in heldout)
+    assert all(loaded.compare(w.amplitudes * 1.08)["matched"] for w in heldout)
+    moving = windows(WALKING)
+    seated = windows(CAPTURES / "seated_01_20261025-053147_5Ct9")
+    assert all(not loaded.compare(w.amplitudes)["matched"] for w in moving + seated)
+    with pytest.raises(ValueError, match="configuration"):
+        EmptyRoomReference.load(path, configuration={"rate": "other"})
+    with pytest.raises(ValueError):
+        EmptyRoomReference.fit([], [], session_id="failed", created_ms=0, configuration={})
+    assert EmptyRoomReference.load(path).session_id == "known-empty-session"
+
+    async def run():
+        session = Session(Settings(EMPTY, "replay", empty_reference=path))
+        # Reproduce a model confidently misclassifying every empty window.
+        def predict_window(amplitudes, timestamp):
+            return {"status": "success", "person_present": True, "presence_probability": .99,
+                    "confidence_method": "injected_failure", "coordinate_system": {},
+                    "keypoints": [{"id": i, "x_norm": .5, "y_norm": .3} for i in range(33)]}
+
+        for window in heldout[:8]:
+            await session.predict(SimpleNamespace(predict_window=predict_window), replace(window, generation=session.generation))
+            pose = session.latest["pose"]
+            assert pose["person_present"] is False and pose["keypoints"] == []
+            assert pose["presence_pending"] is False and pose["presence_probability"] is None
+            assert pose["model_presence_probability"] == .99 and pose["empty_room"]["matched"]
+        assert session.counts["empty_reference_matches"] == 8
+
+    asyncio.run(run())
+    path.write_text("[]", encoding="utf-8")
+    invalid = Session(Settings(EMPTY, "replay", empty_reference=path))
+    assert invalid.empty_room is None and invalid.reference_error == "EMPTY_REFERENCE_INVALID"
+
+
+def test_automatic_empty_room_calibration_saves_only_a_complete_capture(automatic_capture, monkeypatch, model):
+    monkeypatch.setattr("backend.session.load_model", lambda *_: model)
+
+    class Recorder:
+        network = {"ssid": "test-network", "access_point": "11:22:33:44:55:66"}
+
+        def __init__(self, settings, directory):
+            self.directory = directory
+            self.settings = settings
+
+        async def __aenter__(self):
+            assert self.settings.duration in (30, 60)
+            self.directory.mkdir(parents=True)
+            for name in ("raw.csi", "recorder.log"):
+                (self.directory / name).write_bytes((EMPTY / name).read_bytes())
+            self.started_ms = time.time_ns() // 1_000_000
+            return self
+
+        async def __aexit__(self, *exc):
+            pass
+
+        def finished(self):
+            return True
+
+    # Feed calibration windows without a slow, simulated wall-clock recorder.
+    async def consume(session, reader, model, capture):
+        while (record := reader.read()) is not None:
+            session.counts["records"] += 1
+            window = session.ingest(record, 0)
+            if window is not None:
+                await session.predict(model, window)
+
+    monkeypatch.setattr("backend.session.IntelCapture", Recorder)
+    monkeypatch.setattr(Session, "consume", consume)
+    app = create_app(automatic_capture)
+    with TestClient(app) as client:
+        assert client.post("/api/session/calibrate-empty", headers={"Origin": "http://elsewhere"}).status_code == 403
+        accepted = client.post("/api/session/calibrate-empty")
+        assert accepted.status_code == 202 and accepted.json()["capture"]["duration_s"] == 30
+        completed = wait_for_status(client, "ended")
+        assert completed["reason"] == "EMPTY_REFERENCE_SAVED"
+        assert completed["empty_room"]["available"] is True
+        path = automatic_capture.session_dir / "empty-room-reference.json"
+        saved = EmptyRoomReference.load(path)
+        assert saved.session_id == accepted.json()["session_id"] and saved.windows >= 30
+        assert saved.configuration["network"] == Recorder.network
+        before = path.read_bytes()
+
+        async def insufficient_capture(session, reader, model, capture):
+            for _ in range(90):
+                record = reader.read()
+                if record is None:
+                    break
+                session.counts["records"] += 1
+                window = session.ingest(record, 0)
+                if window is not None:
+                    await session.predict(model, window)
+
+        monkeypatch.setattr(Session, "consume", insufficient_capture)
+        assert client.post("/api/session/calibrate-empty").status_code == 202
+        assert wait_for_status(client, "source_error")["reason"] == "EMPTY_REFERENCE_INSUFFICIENT"
+        assert path.read_bytes() == before
+        Recorder.network = {"ssid": "other-network", "access_point": "aa:bb:cc:dd:ee:ff"}
+        monkeypatch.setattr(Session, "consume", consume)
+        assert client.post("/api/session/start").status_code == 202
+        changed = wait_for_status(client, "ended")
+        assert changed["empty_room"]["available"] is False
+        assert changed["empty_room"]["error"] == "EMPTY_REFERENCE_NETWORK_CHANGED"
+        assert changed["counts"]["present_predictions"] == 0
+    # A new backend instance reloads the saved reference.
+    reloaded = Session(automatic_capture)
+    assert reloaded.empty_room.session_id == saved.session_id
+    with TestClient(create_app(Settings(EMPTY, "replay"))) as client:
+        assert client.post("/api/session/calibrate-empty").status_code == 422
 
 
 def test_isolated_packet_spike_does_not_report_presence_in_empty_capture(model):

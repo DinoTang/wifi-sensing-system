@@ -80,9 +80,16 @@
       draw('chart', 'polyline', {points: points.join(' '), fill: 'none', stroke: '#145d9c', 'stroke-width': 2});
       byId('chart-range').textContent = `${values.length} mẫu · Biên độ ${min.toFixed(1)}–${max.toFixed(1)}`;
     } else if (message.type === 'pose') {
-      byId('detail').textContent = `CSI ${new Date(message.timestamp_ms).toLocaleTimeString('vi-VN')} · Model ${message.model_version} · Backend ${message.timing_ms.backend} ms`;
-      byId('presence').textContent = message.presence_pending ? 'Đang xác nhận có người'
-        : `Mô hình dự đoán ${message.person_present ? 'có người' : 'không có người'} · Xác suất có người ${(100 * message.presence_probability).toFixed(1)}%`;
+      const timing = message.timing_ms?.backend;
+      byId('detail').textContent = `CSI ${new Date(message.timestamp_ms).toLocaleTimeString('vi-VN')} · Model ${message.model_version}`
+        + (Number.isFinite(timing) ? ` · Backend ${timing} ms` : '');
+      const probability = Number.isFinite(message.presence_probability)
+        ? ` · Xác suất có người ${(100 * message.presence_probability).toFixed(1)}%` : '';
+      byId('presence').textContent = message.calibration_active ? 'Đang lấy nền phòng trống'
+        : message.presence_reason === 'EMPTY_REFERENCE_REQUIRED'
+        ? 'Cần hiệu chuẩn phòng trống trên dashboard'
+        : message.presence_pending ? 'Đang xác nhận có người'
+        : `Kết quả ${message.person_present ? 'có người' : 'phòng trống'}${probability}`;
       byId('pose').replaceChildren();
       const joints = new Map(message.keypoints.map(joint => [joint.id, joint]));
       for (const [left, right] of edges) {

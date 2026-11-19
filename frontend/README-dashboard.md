@@ -23,6 +23,8 @@ Trên Ubuntu có Intel IAX, bật chế độ thu tự động. Mở dashboard, 
 
 Ô **Thời lượng thu** nằm cạnh nút **Bắt đầu phiên** trong chế độ **Kết nối backend**. Dashboard cho chọn khi backend báo **Thu tự động**. Nếu đang phát lại hoặc backend chạy bộ thu ngoài, ô vẫn hiện kèm lý do chưa chọn được.
 
+Ở chế độ **Thu tự động**, để vùng thu trống rồi bấm **Hiệu chuẩn phòng trống** trước lần kiểm tra hiện diện đầu tiên. Đợi 30 giây và thông báo **Đã lưu nền phòng trống**, sau đó chọn thời lượng và bấm **Bắt đầu phiên**. Mẫu nền được lưu để dùng lại khi mở backend. Hiệu chuẩn lại khi đổi vị trí thiết bị hoặc bố trí phòng. Nếu chưa có nền, CSI vẫn cập nhật và màn hình Hiện diện báo **Cần hiệu chuẩn phòng trống**.
+
 ```bash
 sudo -v && .venv/bin/python -m backend \
   --source live --auto-capture --session "$HOME/csi-data/live"

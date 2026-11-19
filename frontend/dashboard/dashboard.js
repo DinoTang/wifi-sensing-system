@@ -39,6 +39,7 @@ const REASONS = {
   CAPTURE_RECORDER_EXITED: 'Bộ thu Intel thoát sớm. Xem recorder.log của phiên.',
   CAPTURE_NO_DATA: 'Chưa ghi được khung CSI. Kiểm tra recorder.log và ping.log của phiên.',
   CAPTURE_NO_RESULT: 'Phiên chưa có kết quả. Kiểm tra nhịp gói VHT20 và log suy luận.',
+  EMPTY_REFERENCE_INSUFFICIENT: 'Chưa đủ dữ liệu nền. Để phòng trống rồi bấm Hiệu chuẩn phòng trống lại.',
   MODEL_LOAD_FAILED: 'Backend không nạp được mô hình.',
   MODEL_INFERENCE_FAILED: 'Backend gặp lỗi khi chạy suy luận.',
 };
@@ -206,6 +207,12 @@ function phaseFor(snapshot) {
   if (stream.status.reason === 'PREPARING_CAPTURE') {
     return ['Đang chuẩn bị bộ thu', 'Đang kiểm tra Wi-Fi, router và driver Intel.', 'warn'];
   }
+  if (stream.status.empty_room?.calibrating) {
+    return ['Đang hiệu chuẩn phòng trống', 'Giữ vùng thu trống đến hết 30 giây.', 'warn'];
+  }
+  if (stream.status.reason === 'EMPTY_REFERENCE_SAVED') {
+    return ['Đã lưu nền phòng trống', 'Bấm Bắt đầu phiên để nhận diện.', 'neutral'];
+  }
   if (stream.status.reason === 'CAPTURE_COMPLETE') {
     const duration = stream.status.capture?.duration_s;
     return [duration ? 'Đã thu xong ' + durationLabel(duration) : 'Đã thu xong', 'Bấm Bắt đầu phiên để thu lại.', 'neutral'];
@@ -257,6 +264,18 @@ function updateHeader(phase) {
   element('capture-duration-note').hidden = !durationNote;
   element('start').disabled = !controlsEnabled || !startable;
   element('stop').disabled = !controlsEnabled || startable;
+  element('calibrate-empty').disabled = !controlsEnabled || !startable || !capture?.automatic;
+  element('calibrate-empty').hidden = source !== 'live';
+  const reference = state?.empty_room;
+  let referenceNote = '';
+  if (source === 'live' && capture?.automatic) {
+    referenceNote = reference?.available ? 'Đã lưu nền phòng trống cho cấu hình thu này.'
+      : 'Để phòng trống và bấm Hiệu chuẩn phòng trống trong 30 giây trước khi kiểm tra hiện diện.';
+    if (reference?.error) referenceNote = 'Nền đã lưu không dùng được. Hiệu chuẩn lại khi phòng trống.';
+    if (reference?.calibrating) referenceNote = `Đang lấy nền. Giữ phòng trống · ${reference.collected_windows} cửa sổ hợp lệ.`;
+  }
+  setText('empty-room-note', referenceNote);
+  element('empty-room-note').hidden = !referenceNote;
   setText('stream-status', phase[0]);
   element('stream-status').dataset.tone = phase[2];
 }
@@ -336,10 +355,17 @@ function renderSignal(chart, phase) {
 }
 
 function renderPresence(chart, pose, phase) {
+  const calibrating = stream.status?.empty_room?.calibrating;
+  const needsReference = pose?.presenceReason === 'EMPTY_REFERENCE_REQUIRED';
   const pending = pose?.pending === true;
-  const label = pending ? 'Đang xác nhận' : pose ? (pose.present ? 'Có người' : 'Phòng trống') : 'Chưa có kết quả';
+  const label = calibrating ? 'Đang lấy nền phòng trống'
+    : needsReference ? 'Cần hiệu chuẩn phòng trống'
+    : pending ? 'Đang xác nhận' : pose ? (pose.present ? 'Có người' : 'Phòng trống') : 'Chưa có kết quả';
   const motion = pose?.motion;
-  const note = pending ? 'Đợi thêm cửa sổ CSI liên tiếp để xác nhận có người.' : pose
+  const note = calibrating ? 'Giữ vùng thu trống đến khi thông báo đã lưu nền.'
+    : needsReference ? 'Dừng phiên, để phòng trống rồi bấm Hiệu chuẩn phòng trống trong 30 giây.'
+    : pose?.emptyRoom?.matched ? 'CSI khớp với nền phòng trống đã hiệu chuẩn.'
+    : pending ? 'Đợi thêm cửa sổ CSI liên tiếp để xác nhận có người.' : pose
     ? (mode === 'mock' ? 'Trạng thái mẫu' : 'Dự đoán của mô hình từ CSI')
     : (chart ? 'Chờ kết quả cùng timestamp với biểu đồ.' : phase[1]);
   const joints = pose?.joints.size ?? 0;
@@ -417,6 +443,7 @@ element('demo-state').addEventListener('change', changeMode);
 element('range').addEventListener('change', scheduleRender);
 element('start').addEventListener('click', () => controlSession('start'));
 element('stop').addEventListener('click', () => controlSession('stop'));
+element('calibrate-empty').addEventListener('click', () => controlSession('calibrate-empty'));
 element('chart').addEventListener('pointermove', event => {
   pointer = event.clientX - element('chart').getBoundingClientRect().left;
   scheduleRender();

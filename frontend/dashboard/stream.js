@@ -53,7 +53,9 @@ function readPose(message) {
   const calibration = message.pose_calibration;
   return {
     present: message.person_present,
+    emptyRoom: message.empty_room && typeof message.empty_room.matched === 'boolean' ? message.empty_room : null,
     pending: message.presence_pending === true && !message.person_present,
+    presenceReason: message.presence_reason === 'EMPTY_REFERENCE_REQUIRED' ? message.presence_reason : null,
     probability: inUnitInterval(message.presence_probability) ? message.presence_probability : null,
     frame,
     joints,

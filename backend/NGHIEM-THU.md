@@ -69,6 +69,12 @@ Hai phiên VHT20 trên máy Ubuntu thu quanh 11:47 và 11:49 dùng kênh 36, đ�
 
 ## Đọc báo cáo
 
+Bản hiệu chuẩn theo phòng bổ sung API `POST /api/session/calibrate-empty` và nút **Hiệu chuẩn phòng trống** trên dashboard. Trước lần nhận diện đầu tiên ở chế độ thu tự động, thu một phiên nền trống 30 giây. Sau 5 giây đầu, các cửa sổ hợp lệ được dùng để ước lượng phổ nền và mức biến thiên. Nền được lưu cùng cấu hình card, kênh, router và điểm truy cập. Khi thiếu nền hoặc cấu hình Wi-Fi đã thay đổi, backend trả `EMPTY_REFERENCE_REQUIRED`, danh sách khớp rỗng và trạng thái đang chờ hiệu chuẩn.
+
+Kiểm tra trên dữ liệu đã lưu có 82/82 cửa sổ phòng trống ở đoạn thời gian chừa riêng khớp nền lấy từ phần đầu phiên 11:47. Phiên đi lại 11:49 có 187/187 cửa sổ khác nền này. Lấy nền từ phiên trống `empty_01` ngày 25/10 rồi đối chiếu hai phiên độc lập `empty_02` và `empty_03` có 346/346 cửa sổ khớp nền. Các phiên độc lập ngồi yên và đi lại có lần lượt 192/192 và 187/187 cửa sổ khác nền. Đây là kiểm tra khả năng đối chiếu nền trên bản ghi. Nghiệm thu tại máy Ubuntu cần thu một phiên nền mới rồi kiểm tra riêng phòng trống và có người.
+
+Backend tự lưu `session-report.json` cạnh `raw.csi` và `recorder.log` khi phiên thu tự động kết thúc. `empty_room` ghi nguồn nền, cấu hình và tiến độ hiệu chuẩn. `counts.empty_reference_matches` đếm các cửa sổ được đối chiếu là nền trống. Khi khớp nền, `presence_probability` bằng `null` và `model_presence_probability` ghi xác suất gốc của bộ phân loại.
+
 - `model.artifact_sha256` định danh tệp checkpoint, bộ chuẩn hóa và parser. Có thể đối chiếu từng giá trị trên Windows bằng `Get-FileHash -Algorithm SHA256 <tệp>`.
 - `counts.records`, `accepted`, `filtered` và `backlog` mô tả đầu vào. `window_candidates`, `rejected_cadence`, `dropped_windows`, `model_failures` và `predictions` mô tả quá trình dựng cửa sổ và suy luận. Kết quả hiện diện gồm `present_predictions`, `empty_predictions` và `confirming_predictions`. Trong số `present_predictions`, `pose_predictions` đếm các kết quả có đủ 33 khớp và `pose_suppressed` đếm các cửa sổ bị chặn tọa độ do tín hiệu nằm ngoài dải kiểm tra. `gaps` gồm khoảng cách vượt ngưỡng hoặc timestamp không tăng. `timestamp_order_errors` đếm riêng lỗi thứ tự.
 - `prediction_rate_hz` lấy số khoảng giữa dự đoán chia thời gian đơn điệu từ dự đoán đầu đến cuối. Thời gian này bao gồm giai đoạn chờ dữ liệu giữa các dự đoán. `transitions` giữ tối đa 64 lần đổi trạng thái gần nhất và `transition_count` ghi tổng số lần đổi.

@@ -82,6 +82,7 @@ class IntelCapture:
         self.recorder: asyncio.subprocess.Process | None = None
         self.ping: asyncio.subprocess.Process | None = None
         self.started_ms: int | None = None
+        self.network: dict | None = None
 
     async def check(self, log, reason: str, *args, allowed=(0,)) -> tuple[int, str]:
         process = await spawn(*args, stdout=asyncio.subprocess.PIPE)
@@ -143,6 +144,8 @@ class IntelCapture:
         ssid = re.search(r"^\s*SSID: (.+)$", link, re.MULTILINE)
         if ssid is None or (config.ssid is not None and ssid[1] != config.ssid):
             raise IntelCaptureError("CAPTURE_WIFI", "Connect to the configured Wi-Fi network")
+        access_point = re.search(r"Connected to ([0-9a-f:]{17})\b", link, re.IGNORECASE)
+        self.network = {"ssid": ssid[1], "access_point": access_point[1].lower() if access_point else None}
         _, info = await self.check(log, "CAPTURE_WIFI", "iw", "dev", config.interface, "info")
         channel = re.search(r"^\s*channel (\d+) .*\bwidth: (\d+) MHz\b", info, re.MULTILINE)
         if channel is None or (int(channel[1]), int(channel[2])) != (config.channel, 20):

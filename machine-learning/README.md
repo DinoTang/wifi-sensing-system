@@ -4,6 +4,25 @@ Module của **Thành viên 3 (Người thứ 3)** trong hệ thống Wi-Fi Sens
 
 ## Checkpoint đang dùng trên backend Jayson
 
+Backend nạp `models/checkpoints/smn_pose.pt` và `smn_normalization.json`, phiên bản `smn-csiposenet-1.6`. Ngưỡng hiện diện là 0,65. Hai nửa của mỗi cửa sổ CSI cung cấp mức biến đổi theo thời gian. Với tín hiệu ít biến động, mô hình còn kiểm tra mức tương đồng với phổ các ca yên tĩnh đã học. Mạng dự đoán 33 khớp từ CSI chuẩn hóa theo liên kết anten, học cả vị trí và độ dịch chuyển giữa hai khung video có nhãn.
+
+Để huấn luyện lại, đặt các bản thu từ Drive theo cột `path` của [danh mục phiên](configs/live-captures.csv) dưới `$CAPTURES`. Hai tệp `Lan2_windows.npz` và `Lan3_windows.npz` chứa nhãn khớp từ video đồng bộ của chính đợt đó. Chạy từ gốc repo với các thư viện trong `machine-learning/requirements.txt`.
+
+```bash
+.venv/bin/python machine-learning/src/train_live_presence.py \
+  --manifest machine-learning/configs/live-captures.csv --data-root "$CAPTURES" \
+  --checkpoint machine-learning/models/checkpoints/smn_pose.pt \
+  --synced-round "$CAPTURES/Lan2_windows.npz" --synced-round "$CAPTURES/Lan3_windows.npz" \
+  --output "$CAPTURES/presence.pt" --report "$CAPTURES/presence.json"
+.venv/bin/python machine-learning/src/train_live_pose.py \
+  --round "$CAPTURES/Lan2_windows.npz" --round "$CAPTURES/Lan3_windows.npz" \
+  --checkpoint "$CAPTURES/presence.pt" --output "$CAPTURES/model"
+```
+
+Các phiên cùng ngày được giữ chung khi đánh giá hiện diện. Lần 1 chỉ đóng góp nhãn hoạt động. Hai phiên Ubuntu ngày 17/11 lúc 11:47 và 11:49 có vai trò `reference` trong danh mục. Chúng chỉ dùng để xem lại hành vi phần mềm. Lệnh trên ghép timestamp CSI với khung hình đồng bộ của Lần 2 và 3 để chấm hiện diện. Bản live chỉ cần gói CSI mới của phiên. [Kết quả trên bản ghi và giới hạn](../backend/NGHIEM-THU.md)
+
+## Lịch sử bản 1.5
+
 Backend mặc định nạp `models/checkpoints/smn_pose.pt` và `smn_normalization.json`, phiên bản `smn-csiposenet-1.5`. Hiện diện dùng 76 đặc trưng hình dạng/biến thiên tương đối CSI, bỏ 16 vị trí điền cố định và chuẩn hóa RMS từng gói, từng liên kết anten. Extra Trees 128 cây được lưu vào checkpoint dưới dạng các mảng; `src/presence.py` suy luận bằng NumPy. Ngưỡng điểm là 0,5. Backend cần ba kết quả dương liên tiếp trước khi báo có người, và xóa khớp ngay khi có dự đoán phòng trống.
 
 Để học lại phần hiện diện và giữ trọng số tư thế, tạo các NPZ theo nhóm phiên với `amplitudes` có shape `(N, 20, 224)` và `activity` chứa `empty` hoặc tên hoạt động có người. Giữ thứ tự thời gian trong từng hoạt động. Ví dụ sau khi chuẩn bị các tệp cửa sổ đã gắn nhãn:

@@ -18,11 +18,11 @@ import torch
 try:
     from .dataset import CSINormalizer
     from .models import load_checkpoint
-    from .presence import PresenceClassifier
+    from .presence import PresenceClassifier, normalize_pose_links
 except ImportError:
     from dataset import CSINormalizer
     from models import load_checkpoint
-    from presence import PresenceClassifier
+    from presence import PresenceClassifier, normalize_pose_links
 
 # Standard MediaPipe 33 BlazePose landmark names
 LANDMARK_NAMES = [
@@ -44,12 +44,15 @@ class CSIPosePredictor:
         checkpoint_path: Union[str, Path] = "models/checkpoints/best_model.pt",
         normalizer_path: Union[str, Path] = "models/checkpoints/normalization_params.json",
         device: str = "cpu",
-        presence_threshold: float = 0.5,
+        presence_threshold: Optional[float] = None,
     ):
         self.device = device
-        self.presence_threshold = presence_threshold
 
         self.model, self.config = load_checkpoint(checkpoint_path, device=device)
+        self.presence_threshold = (self.config.get("presence_threshold", .5)
+                                   if presence_threshold is None else presence_threshold)
+        if not 0 <= self.presence_threshold <= 1:
+            raise ValueError("Invalid presence decision threshold")
         self.normalizer = CSINormalizer.load(normalizer_path)
 
         data_cfg = self.config.get("data", {})
@@ -61,6 +64,9 @@ class CSIPosePredictor:
         presence_config = self.config.get("presence_classifier")
         self.presence_classifier = PresenceClassifier.from_config(presence_config) if presence_config is not None else None
         self.pose_max_distance = data_cfg.get("pose_max_distance")
+        self.pose_input = data_cfg.get("pose_input", "raw_amplitude")
+        if self.pose_input not in ("raw_amplitude", "link_rms_v1"):
+            raise ValueError(f"Unknown pose input format: {self.pose_input}")
         self.pose_reference_tones = np.asarray(data_cfg.get("pose_reference_tones", []), dtype=int)
         self.normalized_input_clip = data_cfg.get("normalized_input_clip")
 
@@ -128,7 +134,10 @@ class CSIPosePredictor:
             )
 
         # 2. Preprocess & Normalize
-        csi_norm = self.normalizer.transform(csi_window[None, :, :])  # (1, 20, 224)
+        pose_input = csi_window[None, :, :]
+        if self.pose_input == "link_rms_v1":
+            pose_input = normalize_pose_links(pose_input)
+        csi_norm = self.normalizer.transform(pose_input)
         # These tones were constant in the pose training data. Recorder fill
         # values on them can differ, so always supply the training mean there.
         csi_norm[:, :, self.pose_reference_tones] = 0

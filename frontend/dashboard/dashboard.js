@@ -23,6 +23,7 @@ const PHASES = {
   stopped: ['Đã dừng phiên', 'Bắt đầu phiên mới để tiếp tục.', 'neutral'],
 };
 const REASONS = {
+  CSI_NO_ENERGY: 'Gói CSI không có tín hiệu trên các sóng mang đo được. Đang chờ gói mới.',
   CSI_GAP: 'Có khoảng trống giữa các bản ghi CSI.',
   CSI_CADENCE: 'Tần số lấy mẫu nằm ngoài khoảng chấp nhận.',
   CSI_TIMESTAMP_ORDER: 'Timestamp của bộ thu bị trùng hoặc đi lùi.',
@@ -343,7 +344,7 @@ function renderPresence(chart, pose, phase) {
     ? (mode === 'mock' ? 'Trạng thái mẫu' : 'Dự đoán của mô hình từ CSI')
     : (chart ? 'Chờ kết quả cùng timestamp với biểu đồ.' : phase[1]);
   const joints = pose?.joints.size ?? 0;
-  const probability = pose?.probability ?? null;
+  const probability = pending ? null : pose?.probability ?? null;
   setText('presence-state', label);
   setText('presence-note', note);
   element('verdict').dataset.tone = pending ? 'warn' : pose ? (pose.present ? 'ok' : 'neutral') : phase[2];

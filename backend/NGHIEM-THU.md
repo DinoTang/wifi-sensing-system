@@ -2,6 +2,30 @@
 
 Backend nhận `raw.csi` và `recorder.log` từ cùng một tiến trình Intel recorder, ghép đủ một bản ghi, giữ các mẫu VHT20 phù hợp, dựng cửa sổ 20 × 224 và đưa vào CSIPoseNet. Dashboard nhận `status`, `chart` và `pose` qua WebSocket. Đối chiếu `session_id` và `timestamp_ms` của biểu đồ và tư thế để xác định chúng thuộc cùng cửa sổ.
 
+## Bản 1.6 trên nhánh Jayson
+
+Bản này dùng parser Intel của Khanh và mô hình CSIPoseNet. Bộ hiện diện học từ 5.410 cửa sổ của 29 bản ghi. Mạng tư thế được huấn luyện lại bằng 1.842 cửa sổ có nhãn khớp nhìn thấy trong hai video, trên tổng số 2.237 cửa sổ của Lần 2 và 3. Lần 1 có nhãn hoạt động và được dùng để học hiện diện. Khi bấm **Bắt đầu phiên**, đầu vào là 20 gói CSI mới hợp lệ. Bộ thu và mô hình chạy trên Ubuntu. Hệ thống không yêu cầu thao tác hiệu chuẩn phòng trước. [Danh mục bản ghi](../machine-learning/configs/live-captures.csv)
+
+- **Đạt trên video đối chiếu cho ca trống và đi bộ.** Khi bỏ cả ngày quay Lần 2 và 3 khỏi tập học hiện diện, có 0/381 cửa sổ báo có người trong hai đoạn video trống. Có 372/372 cửa sổ đi bộ xác nhận được người trong ảnh đạt ngưỡng hiện diện. Đây là số cửa sổ trước bước xác nhận ba lần của dashboard. Các cửa sổ trong cùng bản ghi chồng lấn.
+- **Chưa đạt khi đứng yên.** Cùng phép thử trên nhận 188/188 cửa sổ đứng yên ở Lần 2 và 100/173 ở Lần 3. Đầu clip đứng yên Lần 3 có cảnh người thử đi vào. Bảy cửa sổ đầu được bỏ khỏi dữ liệu học hiện diện. Ca ngồi yên còn thiếu video đồng bộ để đánh giá khớp.
+- **Chưa đạt cho mọi động tác tự do.** Học tư thế bằng Lần 2 rồi chấm Lần 3 cho 3.640/5.705 khớp đi bộ nằm trong bán kính 110 pixel so với khớp video. Đổi chiều cho 4.505/5.431 khớp. Trong hai bộ kiểm tra tương ứng, mô hình nhận đúng tay trái giơ ở 0/88 và 9/96 trường hợp có nhãn rõ, tay phải ở 93/95 và 97/100. Khi vừa di chuyển vừa giơ cả hai tay, kết quả là 27/46 và 3/23. Số khớp được vẽ là phép kiểm tra đầu ra. Các tọa độ cần được chấm theo video.
+- **Đạt kiểm thử tích hợp.** Đã bấm bắt đầu và dừng trong Chrome ở hai kích thước màn hình, với một bộ thu thay thế ghi nối tiếp byte Intel thật vào tệp của phiên mới. Đã kiểm tra các lựa chọn 30, 60 và 120 giây, hiện biểu đồ trong ca trống, nối biểu đồ với tư thế theo mã phiên và timestamp, và xóa khớp khi mất tín hiệu hoặc khi chuyển sang cửa sổ trống. Báo cáo kiểm thử gồm 41 test Python và 8 test dashboard. **Chưa kiểm chứng trên thiết bị** thời lượng thực của IAX và độ chính xác của bản 1.6 khi thu một phiên Ubuntu mới. [Hướng dẫn chạy trên Ubuntu](README.md#thu-trực-tiếp-bằng-nút-bắt-đầu-phiên)
+
+**Hai phiên 17/11 chỉ để tham khảo.** Bạn xác nhận hai phiên 11:47 và 11:49 không có video. Chúng đã giúp khảo sát hành vi báo nhầm của bản cũ. Bản 1.6 loại cả hai khỏi tập học và mọi chỉ số độ chính xác theo video. Khi replay phiên 11:47, giao diện báo trống ở 189/191 cửa sổ. Hai cửa sổ còn lại đang xác nhận, màn hình không hiện người hoặc bộ xương lần nào. Ở phiên 11:49, 165 cửa sổ có 33 khớp và 22 cửa sổ đang xác nhận. Không có căn cứ video để chấm các cổ tay của phiên này. Quy ước chỉ tham khảo cũng áp dụng cho mọi số liệu của hai phiên này ở các mục lịch sử bên dưới.
+
+Video đối chiếu là `Lan2.MOV` và `Lan3.MOV`. Mốc đồng hồ xuất hiện trong từng video cho sai số khớp đồng hồ lớn nhất lần lượt 1,01 và 6,78 ms. Khung hình gần nhất cách thời điểm CSI tối đa 16,67 ms. Đã xem các khung hình tương ứng của hai đoạn trống. Riêng Lần 3, công cụ gắn nhãn ảnh vẫn xuất ít nhất sáu khớp thân người ở 115/190 khung trống. Mã học tư thế loại mọi nhãn khớp trong những đoạn trống này. Hai lần quay có cùng người và bố trí phòng. [Số liệu, SHA-256 và cách chia tập](../machine-learning/results/live-1.6-validation.json)
+
+### Đối chiếu với yêu cầu của nhóm
+
+Các phép thử giữ riêng theo đợt quay đã được dùng để so các phương án trong quá trình phát triển. Độ chính xác khi thi còn cần một phiên thu mới ở bố trí thực tế, có video cùng phiên và thứ tự động tác do người thử tự chọn.
+
+Ở hai phép thử đi bộ, mô hình xuất bộ xương ở 192/192 và 180/180 cửa sổ có người nhìn thấy trên video. Sai số trung bình trên các khớp nhìn thấy là 109 và 72 pixel trên ảnh 1920 × 1080. Khi thử tăng trọng số cho từng bên tay, số lần nhận đúng tay trái tăng, nhưng số lần xác định đúng trạng thái hai cổ tay trong cảnh đứng của Lần 3 giảm từ 96/172 xuống 28/172. Checkpoint bàn giao giữ phương án có kết quả tốt hơn trong cảnh đứng và khi vừa đi vừa giơ cả hai tay.
+
+- **“Chọn 30 giây, 1 phút hoặc 2 phút rồi bấm Bắt đầu phiên”.** Dashboard gửi thời lượng đến API, mỗi phiên có ID và thư mục riêng. IAX nhận thời lượng đã chọn. Đồng hồ bắt đầu khi recorder được khởi chạy. [Bộ chọn](../frontend/dashboard/dashboard.js#L78) · [API bắt đầu và dừng](app.py#L58) · [Mốc khởi chạy bộ thu](intel_capture.py#L124)
+- **“Hiển thị CSI đang thu ngay cả khi phòng trống”.** Bộ đọc ghép gói raw và metadata đầy đủ. Backend xuất biên độ và tiến hành suy luận từ cùng các gói VHT20 hợp lệ. [Đọc cặp tệp Intel](source.py#L113) · [Tiếp nhận và dựng cửa sổ](session.py#L432)
+- **“Phòng trống thì ẩn bộ xương. Có người đi thì hiện khớp người đó”.** Bộ xác nhận yêu cầu ba lần dương liên tiếp. Dashboard ghép kết quả hiện tại theo phiên và timestamp, vẽ các khớp của mô hình. Ca rời vùng đã kiểm thử bằng cách nối các đoạn CSI trống–đi bộ–trống. Độ trễ khi người thật rời phòng còn cần video cùng phiên. [Xác nhận và xuất tư thế](session.py#L517) · [Ghép tín hiệu](../frontend/dashboard/stream.js#L96) · [Hiển thị](../frontend/dashboard/dashboard.js#L339)
+- **“Lấy đúng động tác, không lấy lại video lần khác”.** Mô hình nhận CSI, học quan hệ giữa các khớp video và sự thay đổi theo thời gian. Tài liệu Word còn đề cập trình xem video đối chiếu chung con trỏ thời gian. Bản này chấm video ngoại tuyến. Trình xem so sánh trực tiếp trên dashboard chưa được triển khai. [Đường suy luận](../machine-learning/src/predict.py#L73) · [Chấm trên tập CSI–video ghép thời gian](../machine-learning/src/train_live_presence.py#L154)
+
 ## Nghiệm thu SMN 1.5 với luồng một nút
 
 Yêu cầu người dùng xác nhận: chọn thời lượng rồi bấm **Bắt đầu phiên** phải tự thu CSI trực tiếp và phân tích, bao gồm nhận ra phòng trống. Bản 1.5 bỏ bước hiệu chuẩn bắt buộc đã thêm trước đó. Hệ thống tích lũy 20 mẫu hợp lệ rồi suy luận bằng bộ phân loại trong checkpoint; không dùng tên phiên, nhãn kiểm thử hoặc video làm đầu vào live.
@@ -102,7 +126,7 @@ Các ca tích hợp kiểm tra bản ghi nhị phân ghi dở, log chưa đủ d
 
 Để nghiệm thu với thiết bị, chạy backend với `--source live --auto-capture` theo [hướng dẫn thu trực tiếp](README.md#thu-trực-tiếp-bằng-nút-bắt-đầu-phiên). Lần lượt chọn 30 giây, 1 phút và 2 phút, rồi kiểm tra đồng hồ đếm ngược. Xác nhận hai tệp trong thư mục phiên mới tăng kích thước, biểu đồ hiện mẫu đầu khi backend còn tích lũy và trạng thái chuyển từ `warming_up` sang `ready` khi có dự đoán. Kiểm tra biểu đồ sau khi phiên kết thúc và tệp `session-report.json` tự lưu trong thư mục phiên.
 
-Trên Ubuntu, dừng backend cũ bằng Ctrl+C, cập nhật rồi chạy lại:
+Trên Ubuntu, dừng backend cũ bằng Ctrl+C. Mở terminal ở thư mục repo có `.git`, `backend/` và `.venv/`, rồi chạy:
 
 ```bash
 git switch Jayson
@@ -112,7 +136,7 @@ sudo -v && .venv/bin/python -m backend \
   --source live --auto-capture --session "$HOME/csi-data/live"
 ```
 
-Mở `/dashboard/`, tải lại bằng Ctrl+Shift+R và kiểm tra mô hình `smn-csiposenet-1.5`. Chạy lần lượt ba thời lượng trong phòng trống: đủ CSI phải báo **Phòng trống** và không có khớp; hết giờ phải kết thúc thu. Chạy thêm một phiên 60 giây có một người tự đi, đứng, giơ tay và rời phòng. Kiểm tra **Có người** trong đoạn có người và xóa khớp khi người rời đi. Đối chiếu tọa độ với video đồng bộ trước khi xác nhận các khớp đúng. Mỗi lần bắt đầu phải có mã phiên và thư mục mới.
+Mở `/dashboard/`, tải lại bằng Ctrl+Shift+R và kiểm tra mô hình `smn-csiposenet-1.6`. Lần lượt chọn 30 giây, 1 phút và 2 phút. Thử ca trống, ca một người đi rồi tự chọn thời điểm giơ và hạ từng tay, và ca người rời khung hình. Để chấm, quay trọn vùng kiểm tra và ghi lại mốc đồng hồ Ubuntu trong video của từng phiên. Kiểm tra đồng hồ kết thúc, mã phiên, biểu đồ CSI, số khớp và thời điểm xóa khớp khi người rời đi. Mỗi thư mục phiên tự lưu báo cáo có `presence_trace` để so theo thời điểm.
 
 Nếu muốn tải báo cáo qua API sau khi phiên kết thúc, trước khi bấm phiên tiếp theo, chạy:
 

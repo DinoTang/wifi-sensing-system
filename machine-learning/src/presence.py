@@ -10,6 +10,77 @@ NULL_TONES = (7, 21, 34, 48, 63, 77, 90, 104, 119, 133, 146, 160, 175, 189, 202,
 SHAPE_FEATURE_COUNT = 76
 
 
+def active_link_amplitudes(windows: np.ndarray) -> np.ndarray:
+    """Four antenna links and their 52 measured tones in the Intel VHT20 layout."""
+    values = np.asarray(windows, dtype=np.float32).reshape(-1, 20, 4, 56)
+    return np.delete(values, NULL_TONES[:4], axis=3)
+
+
+def normalize_pose_links(windows: np.ndarray) -> np.ndarray:
+    """Cancel per-packet receiver gain while preserving each antenna link's spectral shape."""
+    values = np.asarray(windows, dtype=np.float32).reshape(-1, 20, 4, 56).copy()
+    values[..., NULL_TONES[:4]] = 0
+    rms = np.sqrt((values ** 2).sum(axis=-1, keepdims=True) / 52)
+    return (100 * values / np.maximum(rms, 1.)).reshape(-1, 20, 224)
+
+
+def coherence_features(windows: np.ndarray) -> np.ndarray:
+    """Measure time variation shared by neighboring tones, relative to local noise."""
+    links = active_link_amplitudes(windows)
+    count = len(links)
+    links /= np.maximum(np.sqrt(np.mean(links ** 2, axis=3, keepdims=True)), 1.)
+    residual = links - np.median(links, axis=1, keepdims=True)
+    # A transient bad packet should not dominate a complete two-second window.
+    limit = 6 * np.median(np.abs(residual), axis=1, keepdims=True) + .008
+    residual = np.clip(residual, -limit, limit)
+
+    def quantiles(values):
+        return np.quantile(values.reshape(count, -1), (.1, .5, .9), axis=1).T
+
+    features = []
+    for width in (4, 13):
+        bands = residual.reshape(count, 20, 4, 52 // width, width)
+        even = bands[..., ::2].mean(axis=-1)
+        odd = bands[..., 1::2].mean(axis=-1)
+        even -= even.mean(axis=1, keepdims=True)
+        odd -= odd.mean(axis=1, keepdims=True)
+        for lag in (0, 1, 3, 6):
+            first, second = even[:, lag:], odd[:, :20 - lag]
+            rms = np.sqrt((first ** 2).mean(axis=1) * (second ** 2).mean(axis=1))
+            features.append(quantiles((first * second).mean(axis=1) / np.maximum(rms, 1e-7)))
+
+        shared = (even + odd) / 2
+        noise = np.median(np.abs(np.diff(even - odd, axis=1)), axis=1)
+        for lag in (1, 4):
+            change = np.median(np.abs(shared[:, lag:] - shared[:, :-lag]), axis=1)
+            features.append(quantiles(change / np.maximum(noise, .0007)))
+
+        # Fraction of the temporal variance carried by the strongest shared patterns.
+        shared /= np.sqrt((shared ** 2).mean(axis=1, keepdims=True) + 1e-6)
+        matrix = shared.reshape(count, 20, -1)
+        covariance = (matrix @ matrix.transpose(0, 2, 1)) / matrix.shape[2]
+        eigenvalues = np.linalg.eigvalsh(covariance)
+        total = np.maximum(eigenvalues.sum(axis=1, keepdims=True), 1e-6)
+        for components in (1, 3):
+            features.append(eigenvalues[:, -components:].sum(axis=1, keepdims=True) / total)
+    return np.log1p(np.maximum(np.column_stack(features), -.99)).astype(np.float32)
+
+
+def motion_and_spectrum(windows):
+    """Measure sustained change in both halves, and the local normalized spectrum."""
+    links = active_link_amplitudes(windows)
+    links /= np.maximum(np.sqrt(np.mean(links ** 2, axis=-1, keepdims=True)), 1.)
+    bands = links.reshape(-1, 20, 4, 13, 4).mean(axis=-1)
+    spectrum = np.median(bands, axis=1).reshape(len(links), 52)
+    halves = bands.reshape(-1, 2, 10, 4, 13)
+    changes = []
+    for lag in (1, 3, 5):
+        displacement = np.abs(halves[:, :, lag:] - halves[:, :, :-lag]).mean(axis=-1)
+        quantiles = np.quantile(displacement, (.35, .65, .85), axis=(2, 3))
+        changes.append(quantiles.min(axis=2).T)
+    return np.log1p(32 * np.column_stack(changes)), spectrum
+
+
 def shape_presence_features(windows: np.ndarray) -> np.ndarray:
     """Summarize relative CSI shape after removing recorder fill and link gain."""
     values = np.asarray(windows, dtype=np.float32)
@@ -88,6 +159,7 @@ def interpolate_isolated_spike(window: np.ndarray) -> np.ndarray | None:
 @dataclass(frozen=True)
 class PresenceClassifier:
     confidence_method = "csi_presence_logistic_probability"
+    features = staticmethod(presence_features)
     center: np.ndarray
     scale: np.ndarray
     weights: np.ndarray
@@ -95,20 +167,27 @@ class PresenceClassifier:
 
     @classmethod
     def from_config(cls, config: dict):
-        if config.get("kind") == "gain_invariant_forest_v1":
+        kind = config.get("kind")
+        if kind == "gain_invariant_forest_v1":
             return PresenceForest.from_config(config)
+        if kind == "supported_motion_v1":
+            return SupportedMotion.from_config(config)
+        if kind == "temporal_coherence_v1":
+            cls = CoherencePresenceClassifier
+        elif kind is not None:
+            raise ValueError(f"Unknown CSI presence classifier: {kind}")
         center, scale, weights = (
             np.asarray(config[key], dtype=np.float64) for key in ("center", "scale", "weights")
         )
         intercept = float(config["intercept"])
-        feature_count = presence_features(np.zeros((1, 20, 224), dtype=np.float32)).shape[1]
+        feature_count = cls.features(np.zeros((1, 20, 224), dtype=np.float32)).shape[1]
         if any(values.shape != (feature_count,) or not np.all(np.isfinite(values))
                for values in (center, scale, weights)) or np.any(scale <= 0) or not np.isfinite(intercept):
             raise ValueError("Invalid CSI presence classifier parameters")
         return cls(center, scale, weights, intercept)
 
     def logit(self, window: np.ndarray) -> float:
-        features = presence_features(window[None, :, :])[0]
+        features = self.features(window[None, :, :])[0]
         return float((features - self.center) @ (self.weights / self.scale) + self.intercept)
 
     def probability(self, window: np.ndarray) -> float:
@@ -118,6 +197,60 @@ class PresenceClassifier:
             if corrected is not None:
                 logit = min(logit, self.logit(corrected))
         return float(1 / (1 + np.exp(-np.clip(logit, -60, 60))))
+
+
+class CoherencePresenceClassifier(PresenceClassifier):
+    confidence_method = "csi_temporal_coherence_score"
+    features = staticmethod(coherence_features)
+
+    def probability(self, window: np.ndarray) -> float:
+        return float(1 / (1 + np.exp(-np.clip(self.logit(window), -60, 60))))
+
+
+@dataclass(frozen=True)
+class SupportedMotion:
+    """Use weak temporal evidence only near a learned, distinct still-person spectrum."""
+
+    confidence_method = "csi_supported_motion_score"
+    coherence: CoherencePresenceClassifier
+    motion_weights: np.ndarray
+    motion_bias: float
+    occupied_spectra: np.ndarray
+    empty_spectra: np.ndarray
+
+    @classmethod
+    def from_config(cls, config):
+        coherence = PresenceClassifier.from_config(config["coherence"])
+        weights = np.asarray(config["motion_weights"], dtype=np.float64)
+        bias = float(config["motion_bias"])
+        spectra = [np.asarray(config[k], dtype=np.float32) for k in ("occupied_spectra", "empty_spectra")]
+        if (not isinstance(coherence, CoherencePresenceClassifier) or weights.shape != (9,)
+                or not np.isfinite(weights).all() or not np.isfinite(bias)
+                or any(s.ndim != 2 or s.shape[1] != 52 or not 1 <= len(s) <= 1024
+                       or not np.isfinite(s).all() for s in spectra)):
+            raise ValueError("Invalid motion or quiet-scene classifier")
+        return cls(coherence, weights, bias, *spectra)
+
+    def scores(self, temporal, changes, spectra):
+        logits = changes @ self.motion_weights + self.motion_bias
+        motion = 1 / (1 + np.exp(-np.clip(logits, -60, 60)))
+        logits = (temporal - self.coherence.center) @ (self.coherence.weights / self.coherence.scale)
+        coherence = 1 / (1 + np.exp(-np.clip(logits + self.coherence.intercept, -60, 60)))
+
+        def distance(templates):
+            delta = spectra[:, None, :] - templates[None, :, :]
+            return np.sqrt(np.min(np.mean(delta ** 2, axis=2), axis=1))
+
+        occupied, empty = distance(self.occupied_spectra), distance(self.empty_spectra)
+        # RMS distances use normalized link amplitudes. Outside the support of a
+        # quiet occupied scene, or near an empty one, require sustained motion.
+        support = np.clip((.12 - occupied) / .06, 0., 1.) * np.clip((empty - occupied) / .06, 0., 1.)
+        return np.maximum(motion, np.minimum(coherence, support))
+
+    def probability(self, window):
+        windows = window[None, :, :]
+        changes, spectra = motion_and_spectrum(windows)
+        return float(self.scores(coherence_features(windows), changes, spectra)[0])
 
 
 @dataclass(frozen=True)

@@ -96,7 +96,7 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             assert pose["person_present"] == (capture == WALKING)
             assert pose["pose_reason"] == offline["pose_reason"]
             assert pose["presence_probability"] == offline["presence_probability"]
-            assert pose["confidence_method"] == "csi_presence_forest_probability"
+            assert pose["confidence_method"] == "csi_supported_motion_score"
             assert pose["pose_calibration"] == offline["pose_calibration"]
             assert pose["keypoints"] == [
                 {key: value for key, value in joint.items() if key != "confidence"}
@@ -123,6 +123,11 @@ def test_real_replay_matches_offline_parser_and_model(capture, model, monkeypatc
             )
             assert counts["present_predictions"] == counts["pose_predictions"] + counts["pose_suppressed"]
             assert report["timing_ms"]["backend"]["samples"] == counts["predictions"]
+            assert report["configuration"]["presence_threshold"] == model.presence_threshold
+            trace = report["presence_trace"]
+            assert len(trace) == counts["predictions"]
+            assert sum(row["joints"] == 33 for row in trace) == counts["pose_predictions"]
+            assert all(row["joints"] == 0 for row in trace if row["decision"] != "present")
             assert report["websocket"]["sent"] >= 3
             with client.websocket_connect("/ws") as reconnected:
                 assert reconnected.receive_json()["status"] == "stopped"
@@ -147,7 +152,7 @@ def test_default_pose_varies_with_real_csi(capture, minimum_positions, maximum_p
             if prediction["person_present"] and prediction["pose_reason"] is None:
                 assert len(prediction["keypoints"]) == 33
                 hips.append(sum(prediction["keypoints"][index]["x_pixel"] for index in (23, 24)) / 2)
-    assert model.version == "smn-csiposenet-1.5"
+    assert model.version == "smn-csiposenet-1.6"
     assert len(hips) >= 160
     spread = np.percentile(hips, 95) - np.percentile(hips, 5)
     assert minimum_positions <= spread <= maximum_positions
@@ -593,6 +598,65 @@ def test_isolated_packet_spike_does_not_report_presence_in_empty_capture(model):
     shifted = shifted.reshape(20, 224)
     shifted[:, model.pose_reference_tones] = 32700
     assert model.predict_window(shifted)["person_present"] is False
+
+    # A smooth, low-amplitude drift on several adjacent tones can be highly correlated.
+    # It must not be enough on its own to declare a person in an unfamiliar channel.
+    rng = np.random.default_rng(32)
+    spectrum = rng.uniform(50, 180, (1, 4, 56)).astype(np.float32)
+    trend = np.linspace(-1, 1, 20).reshape(20, 1, 1)
+    band_shape = np.sin(np.arange(56) / 5)
+    quiet = spectrum * (1 + .012 * trend * band_shape)
+    assert model.predict_window(quiet.reshape(20, 224))["person_present"] is False
+
+
+def test_fill_only_packet_clears_previous_result_and_restarts_window():
+    session = Session(Settings(WALKING, "live"))
+    with CaptureReader(WALKING, live=False) as reader:
+        while (record := reader.read()) is not None:
+            if session.ingest(record, 0) is not None:
+                break
+        assert session.frames and record is not None
+        session.set_state("ready")
+        session.person_present = True
+        session.emit("pose", keypoints=[{"id": 0}])
+        fill = np.zeros((4, 56, 2), dtype="<i2")
+        fill[:, [7, 21, 34, 48], :] = 1000
+        assert session.ingest(replace(record, payload=fill.tobytes()), 0) is None
+        assert session.status()["reason"] == "CSI_NO_ENERGY"
+        assert session.person_present is None and not session.frames and "pose" not in session.latest
+        assert session.counts["no_signal_records"] == 1
+        assert session.ingest(record, 0) is None
+        assert len(session.frames) == 1
+
+
+def test_stitched_real_empty_walking_empty_clears_skeleton(model):
+    def first_windows(folder):
+        source = Session(Settings(folder, "replay"))
+        windows = []
+        with CaptureReader(folder, live=False) as reader:
+            while len(windows) < 6 and (packet := reader.read()) is not None:
+                window = source.ingest(packet, 0)
+                if window is not None:
+                    windows.append(window)
+        assert len(windows) == 6
+        return windows
+
+    async def run():
+        empty, walking = first_windows(EMPTY), first_windows(SMN_WALKING)
+        session = Session(Settings(EMPTY, "replay"))
+        now = 1_790_000_000_000
+        for windows, present in ((empty, False), (walking, True), (empty, False)):
+            for i, window in enumerate(windows):
+                # Stitch the recorded amplitudes onto one continuous test clock.
+                now += 200
+                timestamps = tuple(t + now - window.timestamps[-1] for t in window.timestamps)
+                await session.predict(model, replace(window, generation=session.generation, timestamps=timestamps))
+                pose = session.latest["pose"]
+                assert pose["timestamp_ms"] == session.latest["chart"]["timestamp_ms"] == now
+                assert pose["person_present"] is (present and i >= 2)
+                assert len(pose["keypoints"]) == (33 if pose["person_present"] else 0)
+                assert pose["presence_pending"] is (present and i < 2)
+    asyncio.run(run())
 
 
 def test_presence_needs_fresh_consecutive_windows_and_hides_joints(tmp_path):

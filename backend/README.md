@@ -1,6 +1,6 @@
 # Backend CSI cho người thứ 4
 
-Backend dùng mô hình `smn-csiposenet-1.5` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
+Backend dùng mô hình `smn-csiposenet-1.6` có sẵn trong nhánh `Jayson`. Một phiên đọc CSI từ Intel recorder, dựng cửa sổ, suy luận trên CPU và gửi trạng thái, biên độ và tọa độ khớp qua WebSocket.
 
 ## Cài đặt và phát lại
 
@@ -20,11 +20,12 @@ Trên Linux dùng `.venv/bin/python` thay cho `.\.venv\Scripts\python`. Backend 
 
 ## Thu trực tiếp bằng nút Bắt đầu phiên
 
-Trên Ubuntu, kết nối card Intel đã cài IAX với Wi-Fi 5 GHz ở độ rộng 20 MHz. Lệnh dưới đây dùng cấu hình của script thu gốc: card `wlp0s20f3`, kênh 36, router `192.168.0.1` và bộ thu ở `~/iax/csi/iaxcsi/cpp/iaxcsi`.
+Trên Ubuntu, kết nối card Intel đã cài IAX với Wi-Fi 5 GHz ở độ rộng 20 MHz. Hướng dẫn của nhóm đặt repo tại `~/wifi-sensing-jayson`. Nếu đã clone nơi khác, mở thư mục đó. Cấu hình thu ban đầu dùng card `wlp0s20f3`, kênh 36, router `192.168.0.1` và bộ thu ở `~/iax/csi/iaxcsi/cpp/iaxcsi`.
 
 ```bash
 iw dev wlp0s20f3 info | grep -F 'width:'
-sudo -v && .venv/bin/python -m backend \
+cd "$HOME/wifi-sensing-jayson" && git switch Jayson && git pull --ff-only origin Jayson && \
+  sudo -v && .venv/bin/python -m backend \
   --source live --auto-capture --session "$HOME/csi-data/live"
 ```
 
@@ -53,7 +54,7 @@ Mã thu ESP32 serial hiện tại xuất định dạng khác. Checkpoint trong 
 
 - Nền tích hợp là `Khanh@5769e40`. Dùng layout và `decode_points` của `signal-processing/src/parse_intel_csi.py`. Bản ghi hợp lệ có `VHT,20,VHT20`, `2×2×56`, payload 896 byte. Bản ghi NOHT xen kẽ được bỏ qua.
 - Cửa sổ dùng 20 mẫu × 224 biên độ I/Q theo thứ tự gốc của parser, bước 2 mẫu, nhịp danh định khoảng 101 ms. Biên độ làm tròn 4 chữ số như CSV và qua float16 → float32 như NPZ huấn luyện. Giữ các vị trí zero và không chạy pipeline lọc/đặc trưng dành cho bài toán phân loại hoạt động.
-- Mặc định `machine-learning/src/predict.py` nạp cặp `smn_pose.pt` và `smn_normalization.json`. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, có cả giá trị chuẩn hóa và pixel theo ảnh tham chiếu 1920 × 1080. Bản 1.5 dùng bộ phân loại hiện diện Extra Trees 128 cây, độ sâu tối đa 7, ngưỡng điểm 0,5. Đặc trưng loại 16 vị trí điền cố định của recorder, chuẩn hóa RMS riêng từng gói và từng liên kết anten, rồi mô tả biến thiên tương đối và hình dạng phổ. Backend chạy phần suy luận này bằng NumPy từ tham số trong checkpoint; không cần cài scikit-learn để chạy live.
+- Mặc định backend nạp cặp `smn_pose.pt` và `smn_normalization.json`. Tọa độ 2D theo 33 điểm BlazePose, gốc trên trái, quy chiếu theo ảnh 1920 × 1080. Bản 1.6 đo mức thay đổi của các nhóm sóng mang trên cả hai nửa cửa sổ, sau khi chuẩn hóa từng gói và từng liên kết anten. Với tín hiệu ít biến động, bộ phân loại so thêm với phổ các ca đứng, ngồi và phòng trống đã học. Ba cửa sổ liên tiếp đạt ngưỡng 0,65 mới hiện **Có người**. Khi chỉ còn các vị trí điền của recorder có giá trị, backend trả về `CSI_NO_ENERGY` và xóa tư thế cũ.
 - Mô hình tư thế ưu tiên bốn gói mới nhất trong cửa sổ. Lúc chuẩn hóa đầu vào, các sóng mang cố định trong dữ liệu huấn luyện được đưa về giá trị chuẩn hóa 0. Bộ kiểm tra độ lệch tín hiệu dựa vào các sóng mang còn lại, do giá trị điền của recorder ở vị trí cố định có thể khác lúc huấn luyện.
 - Đầu vào là CSI. Timestamp mục tiêu là timestamp của mẫu CSI cuối cửa sổ, giữ nguyên cơ sở thời gian của recorder và đổi từ ns sang ms bằng phép chia nguyên. Mẫu lùi/trùng timestamp, gap trên 300 ms hoặc cấu hình sai làm mất hiệu lực tư thế cũ. Cửa sổ còn phải có trung vị khoảng mẫu 80–120 ms và thời gian từ mẫu đầu đến mẫu cuối 1.500–2.300 ms để chặn nhịp sai hoặc thiếu mẫu kéo dài. Khi gặp gap, hệ thống tích lũy lại 20 mẫu nên vị trí stride sau gap có thể khác batch offline.
 - Replay đọc theo thứ tự và lập lịch theo timestamp của bản ghi đầu. Khi lịch phát gặp khoảng trống quá 300 ms theo thời gian bản ghi, backend xóa kết quả đã lưu trước khi chờ đến gói tiếp theo. Live dùng một cửa sổ đang suy luận và tối đa một cửa sổ chờ. Cửa sổ mới nhất thay thế cửa sổ chờ khi quá tải. Mẫu quá cũ hoặc cửa sổ đã bị vô hiệu hóa sẽ bị loại. Mỗi client chỉ giữ tối đa một thông điệp chờ cho mỗi loại.
@@ -79,8 +80,8 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 {
   "type": "pose", "schema_version": 1, "session_id": "demo", "sequence": 20,
   "source": "replay", "timestamp_ms": 1792920264420, "server_sent_ms": 1794463200123,
-  "model_version": "smn-csiposenet-1.5", "status": "ready", "person_present": false,
-  "presence_probability": 0.02, "confidence_method": "csi_presence_forest_probability",
+  "model_version": "smn-csiposenet-1.6", "status": "ready", "person_present": false,
+  "presence_probability": 0.02, "confidence_method": "csi_supported_motion_score",
   "coordinate_system": {"type": "2D_pixel", "reference_width": 1920, "reference_height": 1080, "origin": "top_left"},
   "keypoints": [], "motion": {"score": 3.46, "level": "low"},
   "timing_ms": {"preprocess": 0.4, "queue": 0.1, "inference": 4.5, "backend": 5.0}
@@ -89,7 +90,7 @@ Ví dụ một thông điệp `pose` cho phòng trống:
 
 `chart` có `quantity: "mean_raw_csi_amplitude"` và tối đa 20 `points` dạng `{"timestamp_ms": 1792920264420, "value": 125.4}`. Đây là biên độ trung bình của 224 vị trí ở mỗi mẫu, trước chuẩn hóa. Khi mô hình có kết quả tư thế, mỗi khớp có `id`, `name`, `x_pixel`, `y_pixel`, `x_norm` và `y_norm`. [Dashboard hai màn hình](../frontend/README-dashboard.md) đọc hợp đồng này tại `/dashboard/`.
 
-`presence_probability` là điểm do bộ phân loại xuất ra. Phần trăm trên dashboard mang nhãn **Điểm hiện diện của mô hình**; điểm cao chưa chứng minh mô hình đúng trên một phòng hoặc phiên thu chưa kiểm tra. Xem cách chia tập và giới hạn trong [nghiệm thu SMN 1.5](NGHIEM-THU.md#nghiệm-thu-smn-15-với-luồng-một-nút).
+`presence_probability` là điểm do bộ phân loại xuất ra. Dashboard chỉ hiện điểm sau khi có kết luận. Trong `session-report.json`, `presence_trace` giữ thời điểm CSI, điểm, kết luận, số khớp và lý do chặn tư thế của tối đa 1.024 cửa sổ gần nhất. Có thể dùng thời điểm này để tìm lại gói gốc hoặc so với video. [Kết quả nghiệm thu](NGHIEM-THU.md)
 
 ### Trạng thái và lỗi
 

@@ -21,6 +21,9 @@ TIMESTAMP_OFFSET = 212
 DATA_PREFIX_SIZE = 4
 VHT_RATE = "VHT,20,VHT20"
 VHT = GROUPS["vht"]
+# Four fill positions in each 56-tone Intel VHT20 antenna link.
+VHT_MEASURED_TONES = np.ones(56, dtype=bool)
+VHT_MEASURED_TONES[[7, 21, 34, 48]] = False
 
 
 class CaptureError(ValueError):

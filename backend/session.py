@@ -20,7 +20,7 @@ from .model import (
     MAX_GAP_MS, NOMINAL_INTERVAL_MS, STRIDE, WINDOW_SIZE, WINDOW_SPAN_MS, load_model,
 )
 from .report import SessionMetrics, artifact_digests, save_session_report
-from .source import CaptureError, CaptureReader, Record, VHT, VHT_RATE
+from .source import CaptureError, CaptureReader, Record, VHT, VHT_MEASURED_TONES, VHT_RATE
 
 LOGGER = logging.getLogger("uvicorn.error")
 POLL_SECONDS = 0.025
@@ -72,7 +72,8 @@ class Subscriber:
         discarded = 0
         if kind == "status" and message["status"] != "ready":
             invalid = ("chart", "pose")
-            if message["status"] not in SIGNAL_STATES and message["status"] not in ("ended", "stopped"):
+            if (message.get("reason") in ("CSI_NO_ENERGY", "CSI_GAP", "CSI_TIMESTAMP_ORDER")
+                    or message["status"] not in SIGNAL_STATES | {"ended", "stopped"}):
                 invalid += ("signal",)
             for old_kind in invalid:
                 if self.pending.pop(old_kind, None) is not None:
@@ -108,6 +109,7 @@ class Session:
         self.state = "idle"
         self.reason: str | None = None
         self.model_version: str | None = None
+        self.presence_threshold: float | None = None
         self.metrics: SessionMetrics | None = None
         self.person_present: bool | None = None
         self.presence_streak = 0
@@ -126,7 +128,7 @@ class Session:
         self.last_ws_send_ms: float | None = None
         self.capture_sequence: int | None = None
         self.counts = dict(records=0, accepted=0, filtered=0, backlog=0, gaps=0,
-                           timestamp_order_errors=0, incompatible_records=0, window_candidates=0,
+                           timestamp_order_errors=0, incompatible_records=0, no_signal_records=0, window_candidates=0,
                            rejected_cadence=0, dropped_windows=0, predictions=0,
                            present_predictions=0, empty_predictions=0, confirming_predictions=0, pose_predictions=0,
                            pose_suppressed=0, model_failures=0)
@@ -178,6 +180,7 @@ class Session:
                 "maximum_gap_ms": MAX_GAP_MS, "cadence_median_ms": CADENCE_MEDIAN_MS,
                 "window_span_ms": WINDOW_SPAN_MS, "landmarks": LANDMARK_COUNT,
                 "presence_confirm_windows": PRESENCE_CONFIRM_WINDOWS,
+                "presence_threshold": self.presence_threshold,
                 "presence_max_gap_ms": PRESENCE_MAX_GAP_MS,
                 "pending_windows": PENDING_WINDOWS if self.settings.source == "live" else 0,
                 "replay_speed": self.settings.speed if self.settings.source == "replay" else None,
@@ -305,6 +308,7 @@ class Session:
             )
             model = await asyncio.to_thread(load_model, self.settings.checkpoint, self.settings.normalizer)
             self.model_version = model.version
+            self.presence_threshold = getattr(model, "presence_threshold", None)
         except Exception:
             LOGGER.exception("Cannot load CSI model")
             self.set_state("model_error", "MODEL_LOAD_FAILED")
@@ -440,6 +444,12 @@ class Session:
         self.capture_sequence = record.sequence
         self.last_received = received
         self.last_received_ms = time.time_ns() // 1_000_000
+        amplitudes = record.amplitude()
+        if not amplitudes.reshape(4, 56)[:, VHT_MEASURED_TONES].any():
+            self.counts["no_signal_records"] += 1
+            self.counts["filtered"] += 1
+            self.invalidate_window("insufficient_data", "CSI_NO_ENERGY")
+            return None
         self.counts["accepted"] += 1
         if self.metrics is not None:
             if self.metrics.first_timestamp_ms is None:
@@ -457,7 +467,6 @@ class Session:
         if self.state in {"disconnected", "incompatible"}:
             self.set_state("warming_up", "WAITING_FOR_WINDOW")
 
-        amplitudes = record.amplitude()
         self.timestamps.append(ts)
         self.frames.append(amplitudes)
         self.chart_values.append(round(float(amplitudes.mean()), 4))
@@ -581,6 +590,11 @@ class Session:
         }
         if self.metrics is not None:
             self.metrics.record_prediction(timing_ms, completed)
+            self.metrics.presence_trace.append({
+                "timestamp_ms": target, "score": probability,
+                "decision": "present" if confirmed else "confirming" if presence_pending else "empty",
+                "joints": len(keypoints), "pose_reason": pose_reason,
+            })
         self.set_state("ready")
         self.emit_trace("chart", window.timestamps, window.chart_values)
         motion_score = float(window.amplitudes.std(axis=0).mean())

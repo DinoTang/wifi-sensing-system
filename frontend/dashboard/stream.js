@@ -104,7 +104,7 @@ export class CsiStream {
       if (!sameSession || message.status !== 'ready') {
         const retain = sameSession && message.reason !== 'CSI_TIMESTAMP_ORDER';
         const keepSignal = retain && this.signal !== null && SIGNAL_STATES.has(message.status)
-          && message.reason !== 'CSI_GAP';
+          && message.reason !== 'CSI_GAP' && message.reason !== 'CSI_NO_ENERGY';
         this.clearWindow(retain, keepSignal);
       }
       this.status = message;

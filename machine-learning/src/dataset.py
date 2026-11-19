@@ -52,8 +52,9 @@ class CSINormalizer:
 
     def save(self, filepath: Union[str, Path]) -> None:
         Path(filepath).parent.mkdir(parents=True, exist_ok=True)
-        with open(filepath, "w", encoding="utf-8") as f:
+        with open(filepath, "w", encoding="utf-8", newline="\n") as f:
             json.dump(self.to_dict(), f, indent=2)
+            f.write("\n")
 
     @classmethod
     def load(cls, filepath: Union[str, Path]) -> CSINormalizer:

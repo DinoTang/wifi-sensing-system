@@ -57,6 +57,9 @@ def score_activity(activity, expected, visible, predicted, present, frame_size, 
 
     result["false_negatives"] = result["windows"] - result["present"]
     distance = np.linalg.norm((predicted - expected) * frame_size, axis=-1)
+    result["pose_when_visible"] = rate(drawn, visible.any(axis=1))
+    measured = visible & drawn[:, None]
+    result["mean_visible_joint_error_px"] = float(distance[measured].mean()) if measured.any() else None
     result["pck_05"] = rate(distance <= .05 * np.linalg.norm(frame_size), visible)
     for side, wrist in zip(("left", "right"), WRISTS):
         scored = visible[:, wrist] & drawn

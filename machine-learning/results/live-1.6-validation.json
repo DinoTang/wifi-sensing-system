@@ -1,0 +1,1613 @@
+{
+  "model": "smn-csiposenet-1.6",
+  "artifact_sha256": {
+    "checkpoint": "39665c6a770d85adde58ad8f8e1ce5acb9c4a57e91baf7995af2f97a5ee50c75",
+    "normalizer": "03f4e20e0a83e82d4c397293ce44369d6e7ab3591d8628c13684dffa21962534",
+    "parser": "0c971eed02041aad2ee94ae43453c1d2ebe6592a45c1ce5f9354f385dea4ac14"
+  },
+  "configuration": {
+    "rate": "VHT,20,VHT20",
+    "payload_bytes": 896,
+    "window_shape": [
+      20,
+      224
+    ],
+    "stride": 2,
+    "maximum_gap_ms": 300,
+    "cadence_median_ms": [
+      80,
+      120
+    ],
+    "window_span_ms": [
+      1500,
+      2300
+    ],
+    "landmarks": 33,
+    "presence_confirm_windows": 3,
+    "presence_threshold": 0.65,
+    "presence_max_gap_ms": 600,
+    "pending_windows": 0,
+    "replay_speed": 8,
+    "live_timeout_s": null,
+    "automatic_capture_s": null,
+    "recorder_started_ms": null
+  },
+  "fit": {
+    "days": [
+      "Lan1",
+      "Lan2+3",
+      "Oct25",
+      "Ubuntu16"
+    ],
+    "capture_count": 29,
+    "presence_windows": 5410,
+    "pose_rounds": [
+      "Lan2",
+      "Lan3"
+    ],
+    "pose_input_windows": 2237,
+    "pose_windows_with_visible_training_targets": 1842,
+    "overlap_check": "No duplicate raw SHA-256 or constituent packet timestamps across the 31 recordings; windows overlap within each recording.",
+    "transition_exclusion": "Lan3/standing first 3.5 s relative to first window target excluded from presence fitting and scoring. Video initially shows background and the subject entering."
+  },
+  "matched_video": {
+    "reference": "Camera field of view in the matching Lan2.MOV or Lan3.MOV. Video is exclusively offline. No video labels are transferred to the Ubuntu reference sessions.",
+    "time_alignment_git_ref": "e94e3968c19cfbe4fe2584e28e4689c244da669d:machine-learning/results/pose-sync-check/final-csi-rebuild/video_clock_anchors.csv",
+    "visual_review": "Reviewed every matched target frame in both empty clips and ambiguous observations in the occupied clips. In Lan3/empty MediaPipe returned six visible core joints in 115/190 empty images. All empty clip pose labels are masked.",
+    "sources": {
+      "Lan2": {
+        "video": "Lan2.MOV",
+        "sha256": "170ac61aace7a3fe230f07aef19514a33c445a04022c7182c402de0093846818",
+        "clock_anchors": 3,
+        "clock_residual_max_ms": 1.008,
+        "activities": {
+          "empty": {
+            "windows": 191,
+            "video_start_s": 68.336,
+            "video_end_s": 126.263,
+            "pose_with_6_core_joints": 0,
+            "any_visible_joint": 0,
+            "max_frame_error_ms": 16.642
+          },
+          "standing": {
+            "windows": 188,
+            "video_start_s": 161.012,
+            "video_end_s": 218.851,
+            "pose_with_6_core_joints": 188,
+            "any_visible_joint": 188,
+            "max_frame_error_ms": 16.41
+          },
+          "left_arm": {
+            "windows": 186,
+            "video_start_s": 253.789,
+            "video_end_s": 311.317,
+            "pose_with_6_core_joints": 186,
+            "any_visible_joint": 186,
+            "max_frame_error_ms": 16.605
+          },
+          "right_arm": {
+            "windows": 186,
+            "video_start_s": 345.803,
+            "video_end_s": 403.341,
+            "pose_with_6_core_joints": 186,
+            "any_visible_joint": 186,
+            "max_frame_error_ms": 16.589
+          },
+          "walking": {
+            "windows": 185,
+            "video_start_s": 438.37,
+            "video_end_s": 496.117,
+            "pose_with_6_core_joints": 180,
+            "any_visible_joint": 180,
+            "max_frame_error_ms": 16.581
+          },
+          "mixed": {
+            "windows": 188,
+            "video_start_s": 530.848,
+            "video_end_s": 588.696,
+            "pose_with_6_core_joints": 188,
+            "any_visible_joint": 188,
+            "max_frame_error_ms": 16.539
+          }
+        }
+      },
+      "Lan3": {
+        "video": "Lan3.MOV",
+        "sha256": "ce195cddd50f37c1f40e50cd385df96d3808c8409c52e914482a2e63c7e18d84",
+        "clock_anchors": 5,
+        "clock_residual_max_ms": 6.774,
+        "activities": {
+          "empty": {
+            "windows": 190,
+            "video_start_s": 46.368,
+            "video_end_s": 104.293,
+            "pose_with_6_core_joints": 115,
+            "any_visible_joint": 170,
+            "max_frame_error_ms": 16.58
+          },
+          "standing": {
+            "windows": 181,
+            "video_start_s": 138.808,
+            "video_end_s": 196.029,
+            "pose_with_6_core_joints": 173,
+            "any_visible_joint": 179,
+            "max_frame_error_ms": 16.662
+          },
+          "left_arm": {
+            "windows": 187,
+            "video_start_s": 231.521,
+            "video_end_s": 289.335,
+            "pose_with_6_core_joints": 187,
+            "any_visible_joint": 187,
+            "max_frame_error_ms": 16.631
+          },
+          "right_arm": {
+            "windows": 183,
+            "video_start_s": 323.943,
+            "video_end_s": 380.355,
+            "pose_with_6_core_joints": 183,
+            "any_visible_joint": 183,
+            "max_frame_error_ms": 16.57
+          },
+          "walking": {
+            "windows": 193,
+            "video_start_s": 416.445,
+            "video_end_s": 474.377,
+            "pose_with_6_core_joints": 192,
+            "any_visible_joint": 192,
+            "max_frame_error_ms": 16.638
+          },
+          "mixed": {
+            "windows": 179,
+            "video_start_s": 508.97,
+            "video_end_s": 565.289,
+            "pose_with_6_core_joints": 179,
+            "any_visible_joint": 179,
+            "max_frame_error_ms": 16.613
+          }
+        }
+      }
+    },
+    "presence_protocol": "Both November 5 rounds entirely excluded from the presence fit. Held-out raw end timestamps matched to the same video export. Scores before the three-window display confirmation; occupied scoring restricted to synchronized visible pose, reviewed absence scored within the empty clips.",
+    "presence": [
+      {
+        "npz": "Lan2_windows.npz",
+        "sha256": "bb89ab52fda6932f80c9cc454008e2331edf231966eb9afeb1fa7086d4dc395b",
+        "held_out_day": "Lan2+3",
+        "activities": {
+          "empty": {
+            "scored": 191,
+            "above_threshold": 0,
+            "unscored_windows": 0
+          },
+          "standing": {
+            "scored": 188,
+            "above_threshold": 188,
+            "unscored_windows": 0
+          },
+          "left_arm": {
+            "scored": 186,
+            "above_threshold": 186,
+            "unscored_windows": 0
+          },
+          "right_arm": {
+            "scored": 186,
+            "above_threshold": 186,
+            "unscored_windows": 0
+          },
+          "walking": {
+            "scored": 180,
+            "above_threshold": 180,
+            "unscored_windows": 5
+          },
+          "mixed": {
+            "scored": 188,
+            "above_threshold": 188,
+            "unscored_windows": 0
+          }
+        }
+      },
+      {
+        "npz": "Lan3_windows.npz",
+        "sha256": "6e779ed77bc193a857ec433995123eb7ca12fd1113d363516d9cd66686b968f1",
+        "held_out_day": "Lan2+3",
+        "activities": {
+          "empty": {
+            "scored": 190,
+            "above_threshold": 0,
+            "unscored_windows": 0
+          },
+          "standing": {
+            "scored": 173,
+            "above_threshold": 100,
+            "unscored_windows": 8
+          },
+          "left_arm": {
+            "scored": 187,
+            "above_threshold": 187,
+            "unscored_windows": 0
+          },
+          "right_arm": {
+            "scored": 183,
+            "above_threshold": 183,
+            "unscored_windows": 0
+          },
+          "walking": {
+            "scored": 192,
+            "above_threshold": 192,
+            "unscored_windows": 1
+          },
+          "mixed": {
+            "scored": 179,
+            "above_threshold": 179,
+            "unscored_windows": 0
+          }
+        }
+      }
+    ],
+    "pose_protocol": "Two whole-round pose refits. Each uses poses and normalization from the opposite video; presence classifier for each refit excludes the entire November 5 day. Same participant and room. Score visible camera landmarks; a suppressed pose counts as a miss. PCK radius = 0.05 of 1920x1080 diagonal. Side is anatomical. Only camera-visible, separated wrist/shoulder comparisons are scored.",
+    "pose_cross_round": {
+      "2_to_3": {
+        "npz_sha256": "6e779ed77bc193a857ec433995123eb7ca12fd1113d363516d9cd66686b968f1",
+        "frame_size": [
+          1920,
+          1080
+        ],
+        "video_frame_error_ms_median_p95_max": [
+          8.502,
+          15.807,
+          16.662
+        ],
+        "windows": 1113,
+        "valid_video_pose_windows": 914,
+        "activities": {
+          "empty": {
+            "windows": 190,
+            "present": 0,
+            "drawn": 0
+          },
+          "standing": {
+            "windows": 181,
+            "present": 101,
+            "drawn": 101,
+            "pose_when_visible": {
+              "correct": 100,
+              "total": 173,
+              "fraction": 0.5780346820809249
+            },
+            "mean_visible_joint_error_px": 54.412282797140485,
+            "pck_05": {
+              "correct": 2999,
+              "total": 5667,
+              "fraction": 0.5292041644609141
+            },
+            "left_wrist_error_px": 69.08130157683594,
+            "right_wrist_error_px": 79.27608379621793,
+            "left_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 0,
+                "fraction": null
+              },
+              "lowered": {
+                "correct": 100,
+                "total": 173,
+                "fraction": 0.5780346820809249
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 3,
+                "fraction": 0.0
+              },
+              "lowered": {
+                "correct": 96,
+                "total": 169,
+                "fraction": 0.5680473372781065
+              }
+            },
+            "arm_pair": {
+              "correct": 96,
+              "total": 172,
+              "fraction": 0.5581395348837209
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "hip_x_span_px": 45.523183822631836,
+            "hip_x_correlation": -0.5067666211910808
+          },
+          "left_arm": {
+            "windows": 187,
+            "present": 187,
+            "drawn": 187,
+            "pose_when_visible": {
+              "correct": 187,
+              "total": 187,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 93.82995400101952,
+            "pck_05": {
+              "correct": 4859,
+              "total": 6171,
+              "fraction": 0.7873926430076162
+            },
+            "left_wrist_error_px": 268.31791449117435,
+            "right_wrist_error_px": 133.6412523875796,
+            "left_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 88,
+                "fraction": 0.0
+              },
+              "lowered": {
+                "correct": 90,
+                "total": 90,
+                "fraction": 1.0
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 0,
+                "fraction": null
+              },
+              "lowered": {
+                "correct": 187,
+                "total": 187,
+                "fraction": 1.0
+              }
+            },
+            "arm_pair": {
+              "correct": 90,
+              "total": 178,
+              "fraction": 0.5056179775280899
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "hip_x_span_px": 25.8431396484375,
+            "hip_x_correlation": 0.10362568138333211
+          },
+          "right_arm": {
+            "windows": 183,
+            "present": 183,
+            "drawn": 183,
+            "pose_when_visible": {
+              "correct": 183,
+              "total": 183,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 67.21868377808617,
+            "pck_05": {
+              "correct": 5323,
+              "total": 6039,
+              "fraction": 0.8814373240602749
+            },
+            "left_wrist_error_px": 158.79848754845406,
+            "right_wrist_error_px": 110.11755788586393,
+            "left_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 0,
+                "fraction": null
+              },
+              "lowered": {
+                "correct": 135,
+                "total": 183,
+                "fraction": 0.7377049180327869
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 93,
+                "total": 95,
+                "fraction": 0.9789473684210527
+              },
+              "lowered": {
+                "correct": 61,
+                "total": 83,
+                "fraction": 0.7349397590361446
+              }
+            },
+            "arm_pair": {
+              "correct": 118,
+              "total": 178,
+              "fraction": 0.6629213483146067
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "hip_x_span_px": 15.264015197753906,
+            "hip_x_correlation": 0.008319200100018765
+          },
+          "walking": {
+            "windows": 193,
+            "present": 193,
+            "drawn": 193,
+            "pose_when_visible": {
+              "correct": 192,
+              "total": 192,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 109.34956266118385,
+            "pck_05": {
+              "correct": 3640,
+              "total": 5705,
+              "fraction": 0.6380368098159509
+            },
+            "left_wrist_error_px": 146.0079151095209,
+            "right_wrist_error_px": 185.01865170699529,
+            "left_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 1,
+                "fraction": 0.0
+              },
+              "lowered": {
+                "correct": 131,
+                "total": 147,
+                "fraction": 0.891156462585034
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 0,
+                "fraction": null
+              },
+              "lowered": {
+                "correct": 104,
+                "total": 121,
+                "fraction": 0.859504132231405
+              }
+            },
+            "arm_pair": {
+              "correct": 61,
+              "total": 77,
+              "fraction": 0.7922077922077922
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 44,
+              "total": 56,
+              "fraction": 0.7857142857142857
+            },
+            "hip_x_span_px": 333.98400020599365,
+            "hip_x_correlation": 0.7733689717130625
+          },
+          "mixed": {
+            "windows": 179,
+            "present": 179,
+            "drawn": 179,
+            "pose_when_visible": {
+              "correct": 179,
+              "total": 179,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 95.848270170408,
+            "pck_05": {
+              "correct": 4122,
+              "total": 5675,
+              "fraction": 0.7263436123348017
+            },
+            "left_wrist_error_px": 178.28522736991124,
+            "right_wrist_error_px": 188.70914525821286,
+            "left_arm": {
+              "raised": {
+                "correct": 40,
+                "total": 69,
+                "fraction": 0.5797101449275363
+              },
+              "lowered": {
+                "correct": 60,
+                "total": 72,
+                "fraction": 0.8333333333333334
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 50,
+                "total": 71,
+                "fraction": 0.704225352112676
+              },
+              "lowered": {
+                "correct": 72,
+                "total": 103,
+                "fraction": 0.6990291262135923
+              }
+            },
+            "arm_pair": {
+              "correct": 79,
+              "total": 137,
+              "fraction": 0.5766423357664233
+            },
+            "both_raised": {
+              "correct": 29,
+              "total": 50,
+              "fraction": 0.58
+            },
+            "both_raised_while_moving": {
+              "correct": 27,
+              "total": 46,
+              "fraction": 0.5869565217391305
+            },
+            "both_lowered_while_moving": {
+              "correct": 21,
+              "total": 31,
+              "fraction": 0.6774193548387096
+            },
+            "hip_x_span_px": 335.89438819885254,
+            "hip_x_correlation": 0.9302860075871431
+          }
+        }
+      },
+      "3_to_2": {
+        "npz_sha256": "bb89ab52fda6932f80c9cc454008e2331edf231966eb9afeb1fa7086d4dc395b",
+        "frame_size": [
+          1920,
+          1080
+        ],
+        "video_frame_error_ms_median_p95_max": [
+          8.797,
+          15.804,
+          16.642
+        ],
+        "windows": 1124,
+        "valid_video_pose_windows": 928,
+        "activities": {
+          "empty": {
+            "windows": 191,
+            "present": 0,
+            "drawn": 0
+          },
+          "standing": {
+            "windows": 188,
+            "present": 188,
+            "drawn": 188,
+            "pose_when_visible": {
+              "correct": 188,
+              "total": 188,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 90.45433132033423,
+            "pck_05": {
+              "correct": 5206,
+              "total": 6153,
+              "fraction": 0.8460913375589143
+            },
+            "left_wrist_error_px": 85.35192861141635,
+            "right_wrist_error_px": 314.9926182941096,
+            "left_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 21,
+                "fraction": 0.0
+              },
+              "lowered": {
+                "correct": 153,
+                "total": 155,
+                "fraction": 0.9870967741935484
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 6,
+                "total": 25,
+                "fraction": 0.24
+              },
+              "lowered": {
+                "correct": 39,
+                "total": 162,
+                "fraction": 0.24074074074074073
+              }
+            },
+            "arm_pair": {
+              "correct": 29,
+              "total": 175,
+              "fraction": 0.1657142857142857
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 21,
+              "fraction": 0.0
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "hip_x_span_px": 69.35035514831543,
+            "hip_x_correlation": -0.1166326639427578
+          },
+          "left_arm": {
+            "windows": 186,
+            "present": 186,
+            "drawn": 186,
+            "pose_when_visible": {
+              "correct": 186,
+              "total": 186,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 155.2373227136736,
+            "pck_05": {
+              "correct": 2511,
+              "total": 6138,
+              "fraction": 0.4090909090909091
+            },
+            "left_wrist_error_px": 293.1710794984724,
+            "right_wrist_error_px": 161.20637581524102,
+            "left_arm": {
+              "raised": {
+                "correct": 9,
+                "total": 96,
+                "fraction": 0.09375
+              },
+              "lowered": {
+                "correct": 68,
+                "total": 81,
+                "fraction": 0.8395061728395061
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 0,
+                "fraction": null
+              },
+              "lowered": {
+                "correct": 156,
+                "total": 186,
+                "fraction": 0.8387096774193549
+              }
+            },
+            "arm_pair": {
+              "correct": 52,
+              "total": 177,
+              "fraction": 0.2937853107344633
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "hip_x_span_px": 358.53600025177,
+            "hip_x_correlation": -0.1347753671051275
+          },
+          "right_arm": {
+            "windows": 186,
+            "present": 186,
+            "drawn": 186,
+            "pose_when_visible": {
+              "correct": 186,
+              "total": 186,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 41.67764080070963,
+            "pck_05": {
+              "correct": 5897,
+              "total": 6138,
+              "fraction": 0.9607363962202672
+            },
+            "left_wrist_error_px": 24.301104997814466,
+            "right_wrist_error_px": 86.64552100495925,
+            "left_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 0,
+                "fraction": null
+              },
+              "lowered": {
+                "correct": 186,
+                "total": 186,
+                "fraction": 1.0
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 97,
+                "total": 100,
+                "fraction": 0.97
+              },
+              "lowered": {
+                "correct": 67,
+                "total": 85,
+                "fraction": 0.788235294117647
+              }
+            },
+            "arm_pair": {
+              "correct": 164,
+              "total": 185,
+              "fraction": 0.8864864864864865
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "hip_x_span_px": 27.575969696044922,
+            "hip_x_correlation": 0.27827299000075806
+          },
+          "walking": {
+            "windows": 185,
+            "present": 185,
+            "drawn": 185,
+            "pose_when_visible": {
+              "correct": 180,
+              "total": 180,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 71.99457771726092,
+            "pck_05": {
+              "correct": 4505,
+              "total": 5431,
+              "fraction": 0.8294973301417787
+            },
+            "left_wrist_error_px": 98.29529823817569,
+            "right_wrist_error_px": 78.57093167813767,
+            "left_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 1,
+                "fraction": 0.0
+              },
+              "lowered": {
+                "correct": 133,
+                "total": 134,
+                "fraction": 0.9925373134328358
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 0,
+                "total": 0,
+                "fraction": null
+              },
+              "lowered": {
+                "correct": 133,
+                "total": 133,
+                "fraction": 1.0
+              }
+            },
+            "arm_pair": {
+              "correct": 86,
+              "total": 88,
+              "fraction": 0.9772727272727273
+            },
+            "both_raised": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_raised_while_moving": {
+              "correct": 0,
+              "total": 0,
+              "fraction": null
+            },
+            "both_lowered_while_moving": {
+              "correct": 53,
+              "total": 54,
+              "fraction": 0.9814814814814815
+            },
+            "hip_x_span_px": 441.08170223236084,
+            "hip_x_correlation": 0.9421599110596199
+          },
+          "mixed": {
+            "windows": 188,
+            "present": 188,
+            "drawn": 188,
+            "pose_when_visible": {
+              "correct": 188,
+              "total": 188,
+              "fraction": 1.0
+            },
+            "mean_visible_joint_error_px": 91.76411082039206,
+            "pck_05": {
+              "correct": 4597,
+              "total": 5877,
+              "fraction": 0.7822018036413136
+            },
+            "left_wrist_error_px": 186.53605144948946,
+            "right_wrist_error_px": 219.15022532207908,
+            "left_arm": {
+              "raised": {
+                "correct": 14,
+                "total": 55,
+                "fraction": 0.2545454545454545
+              },
+              "lowered": {
+                "correct": 105,
+                "total": 108,
+                "fraction": 0.9722222222222222
+              }
+            },
+            "right_arm": {
+              "raised": {
+                "correct": 7,
+                "total": 46,
+                "fraction": 0.15217391304347827
+              },
+              "lowered": {
+                "correct": 100,
+                "total": 103,
+                "fraction": 0.970873786407767
+              }
+            },
+            "arm_pair": {
+              "correct": 84,
+              "total": 125,
+              "fraction": 0.672
+            },
+            "both_raised": {
+              "correct": 7,
+              "total": 35,
+              "fraction": 0.2
+            },
+            "both_raised_while_moving": {
+              "correct": 3,
+              "total": 23,
+              "fraction": 0.13043478260869565
+            },
+            "both_lowered_while_moving": {
+              "correct": 30,
+              "total": 33,
+              "fraction": 0.9090909090909091
+            },
+            "hip_x_span_px": 428.82714557647705,
+            "hip_x_correlation": 0.9634910126421145
+          }
+        }
+      }
+    },
+    "shipped_model_training_round_replay": {
+      "23_to_2": {
+        "empty": {
+          "windows": 191,
+          "drawn": 0
+        },
+        "standing": {
+          "windows": 188,
+          "drawn": 188,
+          "pck_05": {
+            "correct": 6146,
+            "total": 6153,
+            "fraction": 0.9988623435722411
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "left_arm": {
+          "windows": 186,
+          "drawn": 186,
+          "pck_05": {
+            "correct": 6135,
+            "total": 6138,
+            "fraction": 0.9995112414467253
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "right_arm": {
+          "windows": 186,
+          "drawn": 186,
+          "pck_05": {
+            "correct": 6127,
+            "total": 6138,
+            "fraction": 0.9982078853046595
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "walking": {
+          "windows": 185,
+          "drawn": 185,
+          "pck_05": {
+            "correct": 5365,
+            "total": 5431,
+            "fraction": 0.9878475418891548
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "mixed": {
+          "windows": 188,
+          "drawn": 188,
+          "pck_05": {
+            "correct": 5829,
+            "total": 5877,
+            "fraction": 0.9918325676365493
+          },
+          "both_raised_while_moving": {
+            "correct": 23,
+            "total": 23,
+            "fraction": 1.0
+          }
+        }
+      },
+      "23_to_3": {
+        "empty": {
+          "windows": 190,
+          "drawn": 0
+        },
+        "standing": {
+          "windows": 181,
+          "drawn": 163,
+          "pck_05": {
+            "correct": 5288,
+            "total": 5667,
+            "fraction": 0.9331215810834657
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "left_arm": {
+          "windows": 187,
+          "drawn": 187,
+          "pck_05": {
+            "correct": 6158,
+            "total": 6171,
+            "fraction": 0.997893372224923
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "right_arm": {
+          "windows": 183,
+          "drawn": 183,
+          "pck_05": {
+            "correct": 6022,
+            "total": 6039,
+            "fraction": 0.9971849643980791
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "walking": {
+          "windows": 193,
+          "drawn": 193,
+          "pck_05": {
+            "correct": 5614,
+            "total": 5705,
+            "fraction": 0.9840490797546012
+          },
+          "both_raised_while_moving": {
+            "correct": 0,
+            "total": 0,
+            "fraction": null
+          }
+        },
+        "mixed": {
+          "windows": 179,
+          "drawn": 179,
+          "pck_05": {
+            "correct": 5623,
+            "total": 5675,
+            "fraction": 0.9908370044052863
+          },
+          "both_raised_while_moving": {
+            "correct": 46,
+            "total": 46,
+            "fraction": 1.0
+          }
+        }
+      }
+    },
+    "limits": "Repeated overlapping windows in two same-day recordings. Whole-round refits were compared during algorithm development. Training-round replays describe fit only. Still seated has no synchronized video here. These development folds do not establish field accuracy in a different room."
+  },
+  "pose_training_alternative": {
+    "description": "Extra single-arm oversampling and stronger wrist loss evaluated on the two whole-round development folds. It improved left-wrist recall but lost correct standing arm pairs and both-raised-while-moving frames. This alternative was not deployed.",
+    "held_out_rounds": {
+      "Lan3": {
+        "left_arm_raised": {
+          "correct": 20,
+          "total": 88,
+          "fraction": 0.22727272727272727
+        },
+        "standing_arm_pair": {
+          "correct": 28,
+          "total": 172,
+          "fraction": 0.16279069767441862
+        },
+        "both_raised_while_moving": {
+          "correct": 21,
+          "total": 46,
+          "fraction": 0.45652173913043476
+        }
+      },
+      "Lan2": {
+        "left_arm_raised": {
+          "correct": 62,
+          "total": 96,
+          "fraction": 0.6458333333333334
+        },
+        "standing_arm_pair": {
+          "correct": 30,
+          "total": 175,
+          "fraction": 0.17142857142857143
+        },
+        "both_raised_while_moving": {
+          "correct": 1,
+          "total": 23,
+          "fraction": 0.043478260869565216
+        }
+      }
+    }
+  },
+  "no_video_reference_only": {
+    "use": "Owner-recalled scenarios consulted for debugging and replay behavior only. Included in neither fitted weights nor video accuracy metrics. Latest failed live run was not saved. No fresh hardware capture in this test environment.",
+    "replays": [
+      {
+        "recording": "1c7cb0d9ecee49c290d0d787255b5779",
+        "activity_reported_by_owner": "empty",
+        "raw_sha256": "0c95eacfd49468a85be62bd5011cd42551a42204f47b32356dc89d2ae2ff4e20",
+        "log_sha256": "e75faa92ac1e9c673fc17c1c1c4eb1bd360d7ddc0e558dac68f18c4f6aa39e4e",
+        "source": "replay",
+        "counts": {
+          "records": 1096,
+          "accepted": 584,
+          "filtered": 512,
+          "backlog": 0,
+          "gaps": 15,
+          "timestamp_order_errors": 2,
+          "incompatible_records": 0,
+          "no_signal_records": 0,
+          "window_candidates": 194,
+          "rejected_cadence": 3,
+          "dropped_windows": 0,
+          "predictions": 191,
+          "present_predictions": 0,
+          "empty_predictions": 189,
+          "confirming_predictions": 2,
+          "pose_predictions": 0,
+          "pose_suppressed": 0,
+          "model_failures": 0
+        },
+        "score_above_threshold": 2,
+        "score_median": 0.0108,
+        "score_max": 0.9962,
+        "first_confirmed_ms_after_first_packet": null,
+        "confirmation_times_ms_after_first_packet": [
+          2607,
+          2804
+        ],
+        "chart_pose_timestamp_and_session_matches_seen": 191
+      },
+      {
+        "recording": "7005d27a0bd84b67923d1cf9df0d7f0c",
+        "activity_reported_by_owner": "mixed",
+        "raw_sha256": "c64a1191a3d1b4d391ec1bce7f8e045dbee3cb219285d3d66a84effb55855b07",
+        "log_sha256": "da3ed579e3673a739e6168319c3140260035439dd7cae1bee24a39b6f1ab2b6b",
+        "source": "replay",
+        "counts": {
+          "records": 1092,
+          "accepted": 583,
+          "filtered": 509,
+          "backlog": 0,
+          "gaps": 10,
+          "timestamp_order_errors": 0,
+          "incompatible_records": 0,
+          "no_signal_records": 0,
+          "window_candidates": 193,
+          "rejected_cadence": 6,
+          "dropped_windows": 0,
+          "predictions": 187,
+          "present_predictions": 165,
+          "empty_predictions": 0,
+          "confirming_predictions": 22,
+          "pose_predictions": 165,
+          "pose_suppressed": 0,
+          "model_failures": 0
+        },
+        "score_above_threshold": 187,
+        "score_median": 1.0,
+        "score_max": 1.0,
+        "first_confirmed_ms_after_first_packet": 3830,
+        "confirmation_times_ms_after_first_packet": [
+          3426,
+          3627,
+          9570,
+          9771,
+          15618,
+          15819,
+          21759,
+          21961,
+          28309,
+          28511,
+          34555,
+          34758,
+          40601,
+          41207,
+          41810,
+          42012,
+          46848,
+          47049,
+          53394,
+          53595,
+          59441,
+          59642
+        ],
+        "chart_pose_timestamp_and_session_matches_seen": 185
+      }
+    ]
+  },
+  "leave_day_out_recording_label_diagnostics": [
+    {
+      "capture": "signal-processing/csi-data/labeled/test_2026110302522810528_20261103-025233_JoZE",
+      "day": "Lan1",
+      "activity": "empty",
+      "raw_sha256": "715c0aeea54d9d3a64bd463f1a221058582b741ee004244869b39e3185f67c49",
+      "log_sha256": "f9b9538b02716435243ab4b7928608bf1d213b2a9527d58516cec137ca883b0e",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 187,
+      "positive": 0,
+      "median_score": 0.0066,
+      "max_score": 0.0115
+    },
+    {
+      "capture": "signal-processing/csi-data/labeled/test_2026110302540618331_20261103-025411_AYIw",
+      "day": "Lan1",
+      "activity": "standing",
+      "raw_sha256": "401dbdc6ed8075b816a888203c8012a89f113bc4534a98eebcddf567b64f100b",
+      "log_sha256": "58441000cd1dc70aa47710430fc1fc80c410669ea5ce36bfaf90446d91b2b867",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 199,
+      "positive": 0,
+      "median_score": 0.0098,
+      "max_score": 0.2222
+    },
+    {
+      "capture": "signal-processing/csi-data/labeled/test_2026110302554424564_20261103-025548_HjHe",
+      "day": "Lan1",
+      "activity": "left_arm",
+      "raw_sha256": "e3e1be6489a9aa71b9d02a027b35db0d51d53685d219376d86733d60ba7af344",
+      "log_sha256": "f2da4aa599a17c23f8ff424467143bc3f7129501233d4237adb03bac9d56aab1",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 194,
+      "positive": 60,
+      "median_score": 0.5179,
+      "max_score": 0.9616
+    },
+    {
+      "capture": "signal-processing/csi-data/labeled/test_2026110302572127312_20261103-025726_cggD",
+      "day": "Lan1",
+      "activity": "right_arm",
+      "raw_sha256": "ad006720973534b7a7fd170972bc36250338f6cbc79c92402d2b73e19bc349f4",
+      "log_sha256": "1c140b19209653685dbf15206920754c68f06e60fd8ac612d14dd0de14f5426d",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 194,
+      "positive": 31,
+      "median_score": 0.4217,
+      "max_score": 0.9892
+    },
+    {
+      "capture": "signal-processing/csi-data/labeled/test_202611030258593111_20261103-025903_6TUB",
+      "day": "Lan1",
+      "activity": "walking",
+      "raw_sha256": "0112fd50ff4fa5cd69d0d034d800e02b78a090f56979e5dfd76a405e01a4d298",
+      "log_sha256": "44644cb24982b535894a83a6794d38509b57dd3d2c1027ca8934518ee419820e",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 184,
+      "positive": 177,
+      "median_score": 0.9991,
+      "max_score": 1.0
+    },
+    {
+      "capture": "signal-processing/csi-data/labeled/test_2026110303003721028_20261103-030041_G9GZ",
+      "day": "Lan1",
+      "activity": "mixed",
+      "raw_sha256": "12008180acf1b3d62cb0a85aa036735690bc3539be2d4a57285adbc3c760f641",
+      "log_sha256": "4038533cdf16c4bf5e60356e65f421325ec8f89b1b4c442eaf9980b2072a3c2d",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 194,
+      "positive": 194,
+      "median_score": 0.9994,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan2/empty",
+      "day": "Lan2+3",
+      "activity": "empty",
+      "raw_sha256": "acb9a9852c1fd78e2437f2e9eb35ef0c82271897f40f234f48bfad40498b8930",
+      "log_sha256": "4e88ba631e6798186a1072f6d5fa835406a417d17278c7309347872248b6e950",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 191,
+      "positive": 0,
+      "median_score": 0.0898,
+      "max_score": 0.2385
+    },
+    {
+      "capture": "Lan2/standing",
+      "day": "Lan2+3",
+      "activity": "standing",
+      "raw_sha256": "da6d007198fab5f62e0e70a6d7d13edc136ed27d0ae196e2ece2b4995964b796",
+      "log_sha256": "00db7287cb368dd633dedd22c4ebd8385481412355e6c923a63a70ed7fd3a1aa",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 188,
+      "positive": 188,
+      "median_score": 0.9998,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan2/left_arm",
+      "day": "Lan2+3",
+      "activity": "left_arm",
+      "raw_sha256": "aec922ebd4d4f5932ea9c8986fe6e761bd0c46a3fe4a7e22ea37a3a626e6f127",
+      "log_sha256": "7bcaa683a6c509d196166c60aeaf170886ad34315b80ac8c9cb40861231ed1e8",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 186,
+      "positive": 186,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan2/right_arm",
+      "day": "Lan2+3",
+      "activity": "right_arm",
+      "raw_sha256": "59ee84b96c13daf5141b7c12cea1514cca590df3505f7c3cc6d34942a8e9d9d1",
+      "log_sha256": "9e1f7fb19304f81c2d1c1bdff6c32746b23f64a16517b20648e23a2b06762c32",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 186,
+      "positive": 186,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan2/walking",
+      "day": "Lan2+3",
+      "activity": "walking",
+      "raw_sha256": "bcd1cbe11206f54e833b8f7ac6c0d6a6b4ab6862844b9d9a66c6fa1a789d0889",
+      "log_sha256": "9bc6b8bc23adea02d25223d71950b561e8fa3ef0e1b48af6b2e6f8520f55452d",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 185,
+      "positive": 185,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan2/mixed",
+      "day": "Lan2+3",
+      "activity": "mixed",
+      "raw_sha256": "ec2b9be6f8ec761f8293a4f62a3b924f28d3f4447b067caf28b00f7da9dc153a",
+      "log_sha256": "14637e2e12166c3fd790063b3d3ffbd3cb0416dcc48c57639de06edee5155cf0",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 188,
+      "positive": 188,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan3/empty",
+      "day": "Lan2+3",
+      "activity": "empty",
+      "raw_sha256": "7dbdb071319b3f7bc596b17eab6e23e21adbbe0235284bebba1a0dcba91185e8",
+      "log_sha256": "1f81b4e887e2b1775d90e999ec1797e13f0de264366981a2977ca212b85f9504",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 190,
+      "positive": 0,
+      "median_score": 0.0011,
+      "max_score": 0.0016
+    },
+    {
+      "capture": "Lan3/standing",
+      "day": "Lan2+3",
+      "activity": "standing",
+      "raw_sha256": "11cd2e15224ae116548068cbf2aad6c3f7c8ac33e4122a543be55faaf95f9323",
+      "log_sha256": "eafb67102e6d9d0ba9c9149316722483428c74f25faa70fb6206e79f7331b636",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 7,
+      "windows": 174,
+      "positive": 101,
+      "median_score": 0.807,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan3/left_arm",
+      "day": "Lan2+3",
+      "activity": "left_arm",
+      "raw_sha256": "63e4e7e9a813d439f1c9e404e824cfa1825e973cbc5a7124378da228d58de567",
+      "log_sha256": "b6f8abeb5fbcca1a55b6c242d2d28e9b316b368130c6839b9f509fd5b0861de4",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 187,
+      "positive": 187,
+      "median_score": 0.9999,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan3/right_arm",
+      "day": "Lan2+3",
+      "activity": "right_arm",
+      "raw_sha256": "d82f798f90520c19439215f36f782c04171d1659134dcc98058c934a80d8ed3c",
+      "log_sha256": "40a17ac754fbdf7d8012e96b8d1b88a4046a2d30d064cf8c12d90e42a499c121",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 183,
+      "positive": 183,
+      "median_score": 0.9999,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan3/walking",
+      "day": "Lan2+3",
+      "activity": "walking",
+      "raw_sha256": "c468df9fe2554362930005b262c9b396889519c32b0f40a17aaebd07a218acd4",
+      "log_sha256": "566dce227fc19a1898db57caa570c59cceae48aa097184487e90ad5d0e5108e0",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 193,
+      "positive": 193,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Lan3/mixed",
+      "day": "Lan2+3",
+      "activity": "mixed",
+      "raw_sha256": "029181e3d0e78c3b94bb87ea1df88f0a98a3a3c58766bba9bb9b93902690657e",
+      "log_sha256": "ea804a4fb973a172bc9e2e5bb641df58ba37c394265b3c4b1553481632e8f4d1",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 179,
+      "positive": 179,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/empty_01_20261025-052422_4eki",
+      "day": "Oct25",
+      "activity": "empty",
+      "raw_sha256": "6e17266f42dc7bd4cf83c2a8de907b2e41e8ea992be21b141576eb4cc5d29250",
+      "log_sha256": "8a7704502f365c71bbc75485dff1b220e683a34ca35fbfbacecd9332d5f283fc",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 181,
+      "positive": 0,
+      "median_score": 0.0002,
+      "max_score": 0.0003
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/empty_02_20261025-052524_y54d",
+      "day": "Oct25",
+      "activity": "empty",
+      "raw_sha256": "432928d7b542d61cdc8ed0cabeabf54de783b35e864156f3aa3307eefddd585a",
+      "log_sha256": "2c466b117c55263acb7c70504c89560a5ed0fc666822b4409f50eea5a8e3e2d1",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 184,
+      "positive": 0,
+      "median_score": 0.0003,
+      "max_score": 0.0004
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/empty_03_20261025-052627_Yatl",
+      "day": "Oct25",
+      "activity": "empty",
+      "raw_sha256": "338b85597534f570f714844726768f8b2d946222bf4f73206e3fd16967cfea50",
+      "log_sha256": "4816c743276ce2aaa029952968810b4d09e54b9a2a6fcb84b8a8c1c4e7569ad8",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 162,
+      "positive": 0,
+      "median_score": 0.0003,
+      "max_score": 0.0005
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/seated_01_20261025-053147_5Ct9",
+      "day": "Oct25",
+      "activity": "seated",
+      "raw_sha256": "34b30f9ab48745b1fd2fc51cd4f875cf8fe072f52ff71120971eb93e87d376db",
+      "log_sha256": "34a919852a7ea9cf8cf7d2e6bf25a871bc5c96bc65100f73b75bfd6cce548137",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 192,
+      "positive": 12,
+      "median_score": 0.0007,
+      "max_score": 0.998
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/seated_02_20261025-053249_2XoF",
+      "day": "Oct25",
+      "activity": "seated",
+      "raw_sha256": "ffc614298e939f83369592dd23bbf5e0d3db76d5a82533c3b7ec462aca71392a",
+      "log_sha256": "ed30927919932490bd9cfafd01cb9cd5a4eca351341e25162813747d91133e0e",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 184,
+      "positive": 17,
+      "median_score": 0.0004,
+      "max_score": 0.9999
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/seated_03_20261025-053352_4IxC",
+      "day": "Oct25",
+      "activity": "seated",
+      "raw_sha256": "5ff608eff8b71fb19b4574edad07795e595c5e27a9a2ebaf0b49efed6ee68580",
+      "log_sha256": "d3b43696848a040b372b3868b5698857260204c776da01c2508e9aa1c4a937dd",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 187,
+      "positive": 26,
+      "median_score": 0.0005,
+      "max_score": 1.0
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/walking_01_20261025-053626_PiI7",
+      "day": "Oct25",
+      "activity": "walking",
+      "raw_sha256": "135b0da3ffb0b45695420b89aba9b88065087c7d4bffaa499ce814f99a642757",
+      "log_sha256": "3980f06f956877e420d5f6a682a5ba3cf7fa86da31ef92b83cbde1c1eab56443",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 187,
+      "positive": 187,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/walking_02_20261025-053728_fIo1",
+      "day": "Oct25",
+      "activity": "walking",
+      "raw_sha256": "9c07884562c9b188ffa26b60fe6168862a1f236363189348a304279938bdade7",
+      "log_sha256": "19ebbe38f55356216900b93b9093eceb4b132fe05ba3dd59716ddaa50e0c1c6b",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 177,
+      "positive": 177,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "hardware/csi_extracted/labeled/walking_03_20261025-053831_TBAm",
+      "day": "Oct25",
+      "activity": "walking",
+      "raw_sha256": "8898d277d795462a0100b8596f0a5cc92c1d983a046b53a50bbae1a68670a6a8",
+      "log_sha256": "4137444eb7f975c6ad0b26b8b9ac35fb1f6068d3924374debfeab62960e5b2ca",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 180,
+      "positive": 180,
+      "median_score": 1.0,
+      "max_score": 1.0
+    },
+    {
+      "capture": "Ubuntu16/empty",
+      "day": "Ubuntu16",
+      "activity": "empty",
+      "raw_sha256": "6ad10ce77b24d49ca15f98016ee36ffedf107c45e134abc48d19379648f9fbc9",
+      "log_sha256": "ecf53201826432837bda106d1d70974860b7f10173037e84a5e1d4fe0410ee61",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 193,
+      "positive": 0,
+      "median_score": 0.0003,
+      "max_score": 0.0054
+    },
+    {
+      "capture": "Ubuntu16/walking",
+      "day": "Ubuntu16",
+      "activity": "walking",
+      "raw_sha256": "fddd77507fb6ef8bd0477dde5ce5ec49b0301cf986bcc65d51629ae0cf923fa4",
+      "log_sha256": "6b239d81a697274f0e450319e0103e890c27b69c59d3ced771cd01a0f28eab7f",
+      "trailing_unpaired_raw_bytes": 0,
+      "excluded_initial_windows": 0,
+      "windows": 201,
+      "positive": 201,
+      "median_score": 1.0,
+      "max_score": 1.0
+    }
+  ],
+  "integration": {
+    "backend_ml_signal_pytest": 41,
+    "dashboard_node_tests": 8,
+    "commands": [
+      "python -m pytest -q backend/test_backend.py machine-learning/tests/test_pipeline.py signal-processing/tests/test_pipeline_smoke.py",
+      "node --test frontend/tests/dashboard-stream.test.mjs"
+    ],
+    "browser": "Chrome at 390 and 1280 px, Start/Stop over local WebSocket with Intel fixture bytes appended by a substitute recorder; duration control checked for automatic capture and hidden for manual/replay. Physical IAX not exercised."
+  }
+}

@@ -121,8 +121,11 @@ test('keeps the live trace independent of matched poses and clears it on a new s
   assert.equal(stream.points.length, 4);
   assert.equal(segmentSeries(stream.points).length, 1);
 
-  stream.accept(status(11, 'starting', {...live, session_id: 'session-b'}), 130);
-  assert.equal(stream.accept(chart(12, T + 300, {...live, type: 'signal'}), 131), false);
+  stream.accept(status(11, 'insufficient_data', {...live, reason: 'CSI_NO_ENERGY'}), 128);
+  assert.equal(stream.snapshot(129).signal, null);
+  assert.equal(stream.snapshot(129).pose, null);
+  stream.accept(status(12, 'starting', {...live, session_id: 'session-b'}), 130);
+  assert.equal(stream.accept(chart(13, T + 300, {...live, type: 'signal'}), 131), false);
   assert.equal(stream.snapshot(133).signal, null);
   assert.equal(stream.points.length, 0);
 });

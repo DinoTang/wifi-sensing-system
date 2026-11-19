@@ -67,6 +67,7 @@ class SessionMetrics:
         self.max_gap_ms: int | None = None
         self.artifacts: dict[str, str] = {}
         self.transitions: deque[dict] = deque(maxlen=TRANSITION_LIMIT)
+        self.presence_trace: deque[dict] = deque(maxlen=TIMING_SAMPLE_LIMIT)
         self.transition_count = 0
         self.timings: dict[str, deque[float]] = {
             name: deque(maxlen=TIMING_SAMPLE_LIMIT)
@@ -110,6 +111,8 @@ class SessionMetrics:
             "timing_ms": {name: summarize(values) for name, values in self.timings.items()},
             "timing_sample_limit": TIMING_SAMPLE_LIMIT,
             "websocket": self.websocket.copy(),
+            "presence_trace": list(self.presence_trace),
+            "presence_trace_limit": TIMING_SAMPLE_LIMIT,
             "transitions": list(self.transitions),
             "transition_count": self.transition_count,
         }

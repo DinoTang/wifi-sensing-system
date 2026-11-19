@@ -84,7 +84,7 @@
       byId('detail').textContent = `CSI ${new Date(message.timestamp_ms).toLocaleTimeString('vi-VN')} · Model ${message.model_version}`
         + (Number.isFinite(timing) ? ` · Backend ${timing} ms` : '');
       const probability = Number.isFinite(message.presence_probability)
-        ? ` · Xác suất có người ${(100 * message.presence_probability).toFixed(1)}%` : '';
+        ? ` · Điểm mô hình ${(100 * message.presence_probability).toFixed(1)}%` : '';
       byId('presence').textContent = message.calibration_active ? 'Đang lấy nền phòng trống'
         : message.presence_reason === 'EMPTY_REFERENCE_REQUIRED'
         ? 'Cần hiệu chuẩn phòng trống trên dashboard'

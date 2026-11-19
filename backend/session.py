@@ -115,6 +115,7 @@ class Session:
         self.model_version: str | None = None
         self.metrics: SessionMetrics | None = None
         self.person_present: bool | None = None
+        self.presence_decision: dict | None = None
         self.calibrating = False
         self.calibration_saved = False
         self.calibration_features = deque(maxlen=MAX_WINDOWS)
@@ -198,6 +199,7 @@ class Session:
             "status": self.state,
             "reason": self.reason,
             "person_present": self.person_present,
+            "presence_decision": self.presence_decision if self.state == "ready" else None,
             "empty_room": self.reference_status(),
             "keypoints": [],
             "capture": {"rate": VHT_RATE, "shape": [VHT["nrx"], VHT["ntx"], VHT["ntone"]], "features": FEATURES,
@@ -219,6 +221,7 @@ class Session:
             "report_version": 1, "session_id": self.session_id, "source": self.settings.source,
             "status": self.state, "reason": self.reason,
             "model": {"version": self.model_version, "artifact_sha256": self.metrics.artifacts.copy()},
+            "presence_decision": self.presence_decision,
             "empty_room": self.reference_status(),
             "configuration": {
                 "rate": VHT_RATE, "payload_bytes": VHT["csi_len"],
@@ -644,7 +647,7 @@ class Session:
             self.counts["dropped_windows"] += 1
             return
         reference_result = self.empty_room.compare(window.amplitudes) if self.empty_room else None
-        needs_reference = self.reference_path() is not None and self.empty_room is None
+        needs_reference = (live or self.settings.empty_reference is not None) and self.empty_room is None
         reported_probability = probability
         reported_confidence = confidence_method
         if reference_result is not None and reference_result["matched"]:
@@ -660,6 +663,12 @@ class Session:
         confirmed = self.confirm_presence(present and not needs_reference, target)
         presence_pending = needs_reference or (present and not confirmed)
         self.person_present = None if presence_pending else confirmed
+        self.presence_decision = {
+            "timestamp_ms": target, "model_presence_probability": probability,
+            "person_present": self.person_present, "pending": presence_pending,
+            "reason": "EMPTY_REFERENCE_REQUIRED" if needs_reference else None,
+            "empty_room": reference_result,
+        }
         if not confirmed:
             keypoints = []
             pose_reason = pose_calibration = None

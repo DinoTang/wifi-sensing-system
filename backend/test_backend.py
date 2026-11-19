@@ -661,6 +661,7 @@ def test_isolated_packet_spike_does_not_report_presence_in_empty_capture(model):
 def test_presence_needs_fresh_consecutive_windows_and_hides_joints(tmp_path):
     async def run():
         session = Session(Settings(tmp_path, "live"))
+        session.empty_room = SimpleNamespace(compare=lambda _: {"matched": False}, summary=lambda: {})
         keypoints = [{"id": i, "x_norm": .5, "y_norm": .3} for i in range(33)]
         candidate = False
 
@@ -693,6 +694,38 @@ def test_presence_needs_fresh_consecutive_windows_and_hides_joints(tmp_path):
         assert session.counts["confirming_predictions"] == 5
         assert session.counts["present_predictions"] == 1
         assert session.counts["empty_predictions"] == 2
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("automatic", [False, True], ids=["external-recorder", "automatic-recorder"])
+def test_live_high_model_score_waits_for_room_reference(tmp_path, automatic):
+    async def run():
+        capture = IntelCaptureSettings(tmp_path / "iax") if automatic else None
+        session = Session(Settings(tmp_path, "live", intel_capture=capture))
+
+        def predict_window(amplitudes, timestamp):
+            return {"status": "success", "person_present": True, "presence_probability": .999,
+                    "confidence_method": "test", "coordinate_system": {},
+                    "keypoints": [{"id": i, "x_norm": .5, "y_norm": .3} for i in range(33)]}
+
+        model = SimpleNamespace(predict_window=predict_window)
+        for n in range(8):
+            target = 1_790_000_000_000 + n * 200
+            now = time.perf_counter()
+            window = Window(session.generation, tuple(range(target - 1900, target + 1, 100)),
+                            np.full((20, 224), 100, np.float32), (100.,) * 20, now, now, 0.)
+            await session.predict(model, window)
+            result = session.latest["pose"]
+            assert result["person_present"] is False and result["keypoints"] == []
+            assert result["presence_probability"] is None and result["presence_pending"] is True
+            assert result["presence_reason"] == "EMPTY_REFERENCE_REQUIRED"
+            diagnostic = session.status()["presence_decision"]
+            assert diagnostic["model_presence_probability"] == .999
+            assert diagnostic["person_present"] is None
+        assert session.counts["present_predictions"] == 0
+        session.invalidate_window("disconnected", "CSI_TIMEOUT")
+        assert session.status()["presence_decision"] is None
 
     asyncio.run(run())
 

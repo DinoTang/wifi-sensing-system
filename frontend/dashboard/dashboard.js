@@ -273,6 +273,8 @@ function updateHeader(phase) {
       : 'Để phòng trống và bấm Hiệu chuẩn phòng trống trong 30 giây trước khi kiểm tra hiện diện.';
     if (reference?.error) referenceNote = 'Nền đã lưu không dùng được. Hiệu chuẩn lại khi phòng trống.';
     if (reference?.calibrating) referenceNote = `Đang lấy nền. Giữ phòng trống · ${reference.collected_windows} cửa sổ hợp lệ.`;
+  } else if (source === 'live' && !reference?.available) {
+    referenceNote = 'Mở backend với --source live --auto-capture để lấy nền phòng trống.';
   }
   setText('empty-room-note', referenceNote);
   element('empty-room-note').hidden = !referenceNote;
@@ -363,7 +365,9 @@ function renderPresence(chart, pose, phase) {
     : pending ? 'Đang xác nhận' : pose ? (pose.present ? 'Có người' : 'Phòng trống') : 'Chưa có kết quả';
   const motion = pose?.motion;
   const note = calibrating ? 'Giữ vùng thu trống đến khi thông báo đã lưu nền.'
-    : needsReference ? 'Dừng phiên, để phòng trống rồi bấm Hiệu chuẩn phòng trống trong 30 giây.'
+    : needsReference ? (stream.status?.capture?.automatic
+      ? 'Dừng phiên, để phòng trống rồi bấm Hiệu chuẩn phòng trống trong 30 giây.'
+      : 'Mở backend với --source live --auto-capture để lấy nền phòng trống.')
     : pose?.emptyRoom?.matched ? 'CSI khớp với nền phòng trống đã hiệu chuẩn.'
     : pending ? 'Đợi thêm cửa sổ CSI liên tiếp để xác nhận có người.' : pose
     ? (mode === 'mock' ? 'Trạng thái mẫu' : 'Dự đoán của mô hình từ CSI')
